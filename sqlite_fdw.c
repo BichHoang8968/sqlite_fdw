@@ -1451,12 +1451,6 @@ sqliteBeginForeignScan(ForeignScanState *node, int eflags)
 	festate->conn = conn;
 	festate->cursor_exists = false;
 
-	festate->temp_cxt = AllocSetContextCreate(estate->es_query_cxt,
-											  "sqlite_fdw temporary data",
-											  ALLOCSET_SMALL_MINSIZE,
-											  ALLOCSET_SMALL_INITSIZE,
-											  ALLOCSET_SMALL_MAXSIZE);
-
 	/*
 	 * Get info we'll need for converting data fetched from the foreign server
 	 * into local representation and error reporting during that process.
