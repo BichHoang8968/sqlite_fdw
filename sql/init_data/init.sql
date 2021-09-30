@@ -41,4 +41,7 @@ CREATE TABLE shorty (
 
 CREATE TABLE "A a" (col int primary key);
 
+-- test for issue #44 github
+CREATE VIRTUAL TABLE fts_table USING fts5(name, description, tokenize = porter);
+
 analyze;

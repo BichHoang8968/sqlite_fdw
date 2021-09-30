@@ -304,7 +304,11 @@ static void
 #endif
 );
 
-static void sqlite_prepare_wrapper(sqlite3 * db, char *query, sqlite3_stmt * *result, const char **pzTail);
+static void sqlite_prepare_wrapper(ForeignServer *server,
+								   sqlite3 * db, char *query,
+								   sqlite3_stmt * *result,
+								   const char **pzTail,
+								   bool is_cache);
 static void sqlite_to_pg_type(StringInfo str, char *typname);
 
 static TupleTableSlot **sqlite_execute_insert(EState *estate,
@@ -484,8 +488,8 @@ sqlite_fdw_version(PG_FUNCTION_ARGS)
 
 /* Wrapper for sqlite3_prepare */
 static void
-sqlite_prepare_wrapper(sqlite3 * db, char *query, sqlite3_stmt * *stmt,
-					   const char **pzTail)
+sqlite_prepare_wrapper(ForeignServer *server, sqlite3 *db, char *query, sqlite3_stmt * *stmt,
+					   const char **pzTail, bool is_cache)
 {
 	int			rc;
 
@@ -498,6 +502,9 @@ sqlite_prepare_wrapper(sqlite3 * db, char *query, sqlite3_stmt * *stmt,
 				 errmsg("SQL error during prepare: %s %s", sqlite3_errmsg(db), query)
 				 ));
 	}
+	/* cache stmt to finalize at last */
+	if (is_cache)
+		sqlite_cache_stmt(server, stmt);
 }
 
 
@@ -1476,7 +1483,7 @@ sqliteBeginForeignScan(ForeignScanState *node, int eflags)
 	festate->stmt = NULL;
 
 	/* Prepare Sqlite statement */
-	sqlite_prepare_wrapper(festate->conn, festate->query, &festate->stmt, NULL);
+	sqlite_prepare_wrapper(server, festate->conn, festate->query, &festate->stmt, NULL, true);
 
 	/* Prepare for output conversion of parameters used in remote query. */
 	numParams = list_length(fsplan->fdw_exprs);
@@ -1654,7 +1661,6 @@ sqliteEndForeignScan(ForeignScanState *node)
 
 	if (festate->stmt)
 	{
-		sqlite3_finalize(festate->stmt);
 		festate->stmt = NULL;
 	}
 }
@@ -1976,7 +1982,8 @@ sqliteBeginForeignModify(ModifyTableState *mtstate,
 
 	fmstate->num_slots = 1;
 	/* Prepare sqlite statment */
-	sqlite_prepare_wrapper(fmstate->conn, fmstate->query, &fmstate->stmt, NULL);
+	sqlite_prepare_wrapper(server, fmstate->conn, fmstate->query, &fmstate->stmt, NULL, true);
+
 	resultRelInfo->ri_FdwState = fmstate;
 
 	fmstate->junk_idx = palloc0(RelationGetDescr(rel)->natts * sizeof(AttrNumber));
@@ -2499,7 +2506,7 @@ sqliteBeginDirectModify(ForeignScanState *node, int eflags)
 	dmstate->stmt = NULL;
 
 	/* Prepare Sqlite statement */
-	sqlite_prepare_wrapper(dmstate->conn, dmstate->query, &dmstate->stmt, NULL);
+	sqlite_prepare_wrapper(server, dmstate->conn, dmstate->query, &dmstate->stmt, NULL, true);
 
 	/*
 	 * Prepare for processing of parameters used in remote query, if any.
@@ -2566,7 +2573,6 @@ sqliteEndDirectModify(ForeignScanState *node)
 
 	if (dmstate->stmt)
 	{
-		sqlite3_finalize(dmstate->stmt);
 		dmstate->stmt = NULL;
 	}
 }
@@ -2826,7 +2832,6 @@ sqliteEndForeignModify(EState *estate,
 	elog(DEBUG1, "sqlite_fdw : %s", __func__);
 	if (fmstate && fmstate->stmt)
 	{
-		sqlite3_finalize(fmstate->stmt);
 		fmstate->stmt = NULL;
 	}
 }
@@ -2951,7 +2956,7 @@ sqliteImportForeignSchema(ImportForeignSchemaStmt *stmt,
 			appendStringInfoChar(&buf, ')');
 		}
 
-		sqlite_prepare_wrapper(db, buf.data, (sqlite3_stmt * *) & sql_stmt, NULL);
+		sqlite_prepare_wrapper(server, db, buf.data, (sqlite3_stmt * *) & sql_stmt, NULL, false);
 
 		/* Scan all rows for this table */
 		for (;;)
@@ -2981,7 +2986,7 @@ sqliteImportForeignSchema(ImportForeignSchemaStmt *stmt,
 			query = palloc0(strlen(table) + 30);
 			sprintf(query, "PRAGMA table_info(%s)", quote_identifier(table));
 
-			sqlite_prepare_wrapper(db, query, (sqlite3_stmt * *) & pragma_stmt, NULL);
+			sqlite_prepare_wrapper(server, db, query, (sqlite3_stmt * *) & pragma_stmt, NULL, false);
 
 			for (;;)
 			{
@@ -5036,9 +5041,6 @@ sqlite_execute_insert(EState *estate,
 	ListCell   *lc;
 	Datum		value = 0;
 	MemoryContext oldcontext;
-#if PG_VERSION_NUM >= 140000
-	StringInfoData sql;
-#endif
 	int			rc = SQLITE_OK;
 	int			nestlevel;
 	int			bindnum = 0;
@@ -5055,7 +5057,12 @@ sqlite_execute_insert(EState *estate,
 #if PG_VERSION_NUM >= 140000
 	if (fmstate->num_slots != *numSlots)
 	{
-		sqlite3_finalize(fmstate->stmt);
+		StringInfoData sql;
+		ForeignTable *table;
+		ForeignServer *server;
+
+		table = GetForeignTable(RelationGetRelid(fmstate->rel));
+		server = GetForeignServer(table->serverid);
 		fmstate->stmt = NULL;
 
 		initStringInfo(&sql);
@@ -5065,7 +5072,7 @@ sqlite_execute_insert(EState *estate,
 		fmstate->query = sql.data;
 		fmstate->num_slots = *numSlots;
 
-		sqlite_prepare_wrapper(fmstate->conn, fmstate->query, &fmstate->stmt, NULL);
+		sqlite_prepare_wrapper(server, fmstate->conn, fmstate->query, &fmstate->stmt, NULL, true);
 	}
 #endif
 
