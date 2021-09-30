@@ -535,6 +535,22 @@ SELECT * FROM public.sqlite_fdw_version();
 --Testcase 155:
 SELECT sqlite_fdw_version();
 
+-- issue #44 github
+--Testcase 156:
+CREATE FOREIGN TABLE fts_table (name text,  description text) SERVER sqlite_svr;
+
+--Testcase 157:
+INSERT INTO fts_table VALUES ('this is name', 'this is description');
+
+--Testcase 158:
+SELECT * FROM fts_table; -- should work
+
+--Testcase 159:
+ALTER TABLE fts_table ALTER COLUMN name TYPE int;
+
+--Testcase 160:
+SELECT * FROM fts_table; -- should fail
+
 --Testcase 142:
 DROP FUNCTION test_param_WHERE();
 --Testcase 143:
@@ -553,6 +569,8 @@ DROP FOREIGN TABLE multiprimary2;
 DROP FOREIGN TABLE columntest;
 --Testcase 150:
 DROP FOREIGN TABLE noprimary;
+--Testcase 161:
+DROP FOREIGN TABLE fts_table;
 
 --Testcase 151:
 DROP SERVER sqlite_svr;
