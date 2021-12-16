@@ -78,7 +78,8 @@ static void sqlitefdw_inval_callback(Datum arg, int cacheid, uint32 hashvalue);
 static bool sqlite_disconnect_cached_connections(Oid serverid);
 #endif
 static void sqlite_finalize_list_stmt(List **list);
-static List *sqlite_append_stmt_to_list(List *list, sqlite3_stmt *stmt);
+static List *sqlite_append_stmt_to_list(List *list, sqlite3_stmt * stmt);
+
 /*
  * sqlite_get_connection:
  * 			Get a connection which can be used to execute queries on
@@ -896,7 +897,7 @@ sqlite_cache_stmt(ForeignServer *server, sqlite3_stmt * *stmt)
 	 * Find cached entry for requested connection.
 	 */
 	entry = hash_search(ConnectionHash, &key, HASH_ENTER, &found);
-	
+
 	/* We must always have found the entry */
 	Assert(found);
 
@@ -913,7 +914,7 @@ sqlite_finalize_list_stmt(List **list)
 
 	foreach(lc, *list)
 	{
-		sqlite3_stmt   *stmt = (sqlite3_stmt *) lfirst(lc);
+		sqlite3_stmt *stmt = (sqlite3_stmt *) lfirst(lc);
 
 		elog(DEBUG1, "sqlite_fdw: finalize %s", sqlite3_sql(stmt));
 		sqlite3_finalize(stmt);
@@ -927,11 +928,11 @@ sqlite_finalize_list_stmt(List **list)
  * append sqlite3 stmt to the head of linked list
  */
 static List *
-sqlite_append_stmt_to_list(List *list, sqlite3_stmt *stmt)
+sqlite_append_stmt_to_list(List *list, sqlite3_stmt * stmt)
 {
-	/* 
-	 * CurrentMemoryContext is released before cleanup transaction (when the list is called),
-	 * so, use TopMemoryContext instead.
+	/*
+	 * CurrentMemoryContext is released before cleanup transaction (when the
+	 * list is called), so, use TopMemoryContext instead.
 	 */
 	MemoryContext oldcontext = MemoryContextSwitchTo(TopMemoryContext);
 

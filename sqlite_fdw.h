@@ -136,6 +136,7 @@ typedef struct SQLiteFdwExecState
 	int			num_slots;		/* number of slots to insert */
 
 	char	   *orig_query;		/* original text of INSERT command */
+	List	   *target_attrs;	/* list of target attribute numbers */
 	int			values_end;		/* length up to the end of VALUES */
 
 	sqlite_opt *sqliteFdwOptions;	/* SQLite FDW options */
@@ -311,7 +312,7 @@ extern void sqlite_deparse_select_stmt_for_rel(StringInfo buf, PlannerInfo *root
 											   List **retrieved_attrs, List **params_list);
 extern void sqlite_deparse_insert(StringInfo buf, PlannerInfo *root, Index rtindex, Relation rel, List *targetAttrs, bool doNothing, int *values_end_len);
 #if PG_VERSION_NUM >= 140000
-extern void sqlite_rebuild_insert(StringInfo buf, char *orig_query, int values_end_len, int num_cols, int num_rows);
+extern void sqlite_rebuild_insert(StringInfo buf, Relation rel, char *orig_query, List *target_attrs, int values_end_len, int num_params, int num_rows);
 extern void sqlite_deparse_truncate(StringInfo buf, List *rels);
 #endif
 extern void sqlite_deparse_update(StringInfo buf, PlannerInfo *root, Index rtindex, Relation rel, List *targetAttrs, List *attname);

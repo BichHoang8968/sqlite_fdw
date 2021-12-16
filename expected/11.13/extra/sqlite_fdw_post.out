@@ -8887,6 +8887,7 @@ IMPORT FOREIGN SCHEMA public FROM SERVER sqlite_svr INTO import_dest1;
  import_dest1 | foreign_tbl       | sqlite_svr | ("table" 'foreign_tbl')       | 
  import_dest1 | ft3               | sqlite_svr | ("table" 'ft3')               | 
  import_dest1 | grem1             | sqlite_svr | ("table" 'grem1')             | 
+ import_dest1 | grem1_post14      | sqlite_svr | ("table" 'grem1_post14')      | 
  import_dest1 | loc1              | sqlite_svr | ("table" 'loc1')              | 
  import_dest1 | local_tbl         | sqlite_svr | ("table" 'local_tbl')         | 
  import_dest1 | loct              | sqlite_svr | ("table" 'loct')              | 
@@ -8905,7 +8906,7 @@ IMPORT FOREIGN SCHEMA public FROM SERVER sqlite_svr INTO import_dest1;
  import_dest1 | tru_rtable0       | sqlite_svr | ("table" 'tru_rtable0')       | 
  import_dest1 | tru_rtable_child  | sqlite_svr | ("table" 'tru_rtable_child')  | 
  import_dest1 | tru_rtable_parent | sqlite_svr | ("table" 'tru_rtable_parent') | 
-(28 rows)
+(29 rows)
 
 --Testcase 478:
 \d import_dest1.*
@@ -9002,6 +9003,13 @@ FDW options: ("table" 'ft3')
  b      | bigint |           |          |         | 
 Server: sqlite_svr
 FDW options: ("table" 'grem1')
+
+            Foreign table "import_dest1.grem1_post14"
+ Column |  Type  | Collation | Nullable | Default | FDW options  
+--------+--------+-----------+----------+---------+--------------
+ a      | bigint |           |          |         | (key 'true')
+Server: sqlite_svr
+FDW options: ("table" 'grem1_post14')
 
                 Foreign table "import_dest1.loc1"
  Column |  Type  | Collation | Nullable | Default | FDW options  
@@ -9173,6 +9181,7 @@ IMPORT FOREIGN SCHEMA public FROM SERVER sqlite_svr INTO import_dest2
  import_dest2 | foreign_tbl       | sqlite_svr | ("table" 'foreign_tbl')       | 
  import_dest2 | ft3               | sqlite_svr | ("table" 'ft3')               | 
  import_dest2 | grem1             | sqlite_svr | ("table" 'grem1')             | 
+ import_dest2 | grem1_post14      | sqlite_svr | ("table" 'grem1_post14')      | 
  import_dest2 | loc1              | sqlite_svr | ("table" 'loc1')              | 
  import_dest2 | local_tbl         | sqlite_svr | ("table" 'local_tbl')         | 
  import_dest2 | loct              | sqlite_svr | ("table" 'loct')              | 
@@ -9191,7 +9200,7 @@ IMPORT FOREIGN SCHEMA public FROM SERVER sqlite_svr INTO import_dest2
  import_dest2 | tru_rtable0       | sqlite_svr | ("table" 'tru_rtable0')       | 
  import_dest2 | tru_rtable_child  | sqlite_svr | ("table" 'tru_rtable_child')  | 
  import_dest2 | tru_rtable_parent | sqlite_svr | ("table" 'tru_rtable_parent') | 
-(28 rows)
+(29 rows)
 
 --Testcase 480:
 \d import_dest2.*
@@ -9288,6 +9297,13 @@ FDW options: ("table" 'ft3')
  b      | bigint |           |          |         | 
 Server: sqlite_svr
 FDW options: ("table" 'grem1')
+
+            Foreign table "import_dest2.grem1_post14"
+ Column |  Type  | Collation | Nullable | Default | FDW options  
+--------+--------+-----------+----------+---------+--------------
+ a      | bigint |           |          |         | (key 'true')
+Server: sqlite_svr
+FDW options: ("table" 'grem1_post14')
 
                 Foreign table "import_dest2.loc1"
  Column |  Type  | Collation | Nullable | Default | FDW options  
@@ -9470,6 +9486,7 @@ IMPORT FOREIGN SCHEMA public EXCEPT ("T 1", loct6, nonesuch)
  import_dest3 | foreign_tbl       | sqlite_svr | ("table" 'foreign_tbl')       | 
  import_dest3 | ft3               | sqlite_svr | ("table" 'ft3')               | 
  import_dest3 | grem1             | sqlite_svr | ("table" 'grem1')             | 
+ import_dest3 | grem1_post14      | sqlite_svr | ("table" 'grem1_post14')      | 
  import_dest3 | loc1              | sqlite_svr | ("table" 'loc1')              | 
  import_dest3 | local_tbl         | sqlite_svr | ("table" 'local_tbl')         | 
  import_dest3 | loct              | sqlite_svr | ("table" 'loct')              | 
@@ -9488,7 +9505,7 @@ IMPORT FOREIGN SCHEMA public EXCEPT ("T 1", loct6, nonesuch)
  import_dest3 | tru_rtable0       | sqlite_svr | ("table" 'tru_rtable0')       | 
  import_dest3 | tru_rtable_child  | sqlite_svr | ("table" 'tru_rtable_child')  | 
  import_dest3 | tru_rtable_parent | sqlite_svr | ("table" 'tru_rtable_parent') | 
-(28 rows)
+(29 rows)
 
 -- Assorted error cases
 IMPORT FOREIGN SCHEMA public FROM SERVER sqlite_svr INTO import_dest3;
@@ -9798,7 +9815,7 @@ DROP USER MAPPING FOR CURRENT_USER SERVER sqlite_svr;
 DROP USER MAPPING FOR CURRENT_USER SERVER sqlite_svr2;
 --Testcase 735:
 DROP SERVER sqlite_svr CASCADE;
-NOTICE:  drop cascades to 120 other objects
+NOTICE:  drop cascades to 124 other objects
 DETAIL:  drop cascades to foreign table "S 1"."T 0"
 drop cascades to foreign table "S 1"."T 1"
 drop cascades to foreign table "S 1"."T 2"
@@ -9819,6 +9836,7 @@ drop cascades to foreign table "S 1".local_tbl
 drop cascades to foreign table "S 1".ft3
 drop cascades to foreign table "S 1".foreign_tbl
 drop cascades to foreign table "S 1".grem1
+drop cascades to foreign table "S 1".grem1_post14
 drop cascades to foreign table "S 1".t1_constraint
 drop cascades to foreign table "S 1".tru_rtable0
 drop cascades to foreign table "S 1".tru_pk_table
@@ -9855,6 +9873,7 @@ drop cascades to foreign table import_dest1.local_tbl
 drop cascades to foreign table import_dest1.ft3
 drop cascades to foreign table import_dest1.foreign_tbl
 drop cascades to foreign table import_dest1.grem1
+drop cascades to foreign table import_dest1.grem1_post14
 drop cascades to foreign table import_dest1.t1_constraint
 drop cascades to foreign table import_dest1.tru_rtable0
 drop cascades to foreign table import_dest1.tru_pk_table
@@ -9883,6 +9902,7 @@ drop cascades to foreign table import_dest2.local_tbl
 drop cascades to foreign table import_dest2.ft3
 drop cascades to foreign table import_dest2.foreign_tbl
 drop cascades to foreign table import_dest2.grem1
+drop cascades to foreign table import_dest2.grem1_post14
 drop cascades to foreign table import_dest2.t1_constraint
 drop cascades to foreign table import_dest2.tru_rtable0
 drop cascades to foreign table import_dest2.tru_pk_table
@@ -9896,10 +9916,7 @@ drop cascades to foreign table import_dest3.loct6
 drop cascades to foreign table import_dest3."T 0"
 drop cascades to foreign table import_dest3."T 2"
 drop cascades to foreign table import_dest3."T 3"
-drop cascades to foreign table import_dest3."T 4"
-drop cascades to foreign table import_dest3.base_tbl
-drop cascades to foreign table import_dest3.loc1
-and 20 other objects (see server log for list)
+and 24 other objects (see server log for list)
 --Testcase 736:
 DROP SERVER sqlite_svr2 CASCADE;
 NOTICE:  drop cascades to foreign table ft6

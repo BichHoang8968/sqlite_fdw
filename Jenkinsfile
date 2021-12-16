@@ -1,9 +1,9 @@
-def NODE_NAME = 'node_2'
+def NODE_NAME = 'AWS_Instance_CentOS'
 def MAIL_TO = '$DEFAULT_RECIPIENTS'
 def BRANCH_NAME = 'Branch [' + env.BRANCH_NAME + ']'
 def BUILD_INFO = 'Jenkins job: ' + env.BUILD_URL + '\n'
 
-def PGS_BRANCH = 'port14beta2'
+def PGS_BRANCH = 'port14.0'
 def make_check_test(String target, String version) {
     def prefix = ""
     script {
@@ -17,7 +17,7 @@ def make_check_test(String target, String version) {
     catchError() {
         sh """
             rm -rf make_check_existed_test.out || true
-            docker exec postgresserver_multi_for_sqlite_existed_test /bin/bash -c 'su -c "/tmp/sqlite_existed_test.sh ${env.GIT_BRANCH} ${target}${version}" postgres'
+            docker exec postgresserver_multi_for_sqlite_existed_test /bin/bash -c 'su -c "/home/test/sqlite_existed_test.sh ${env.GIT_BRANCH} ${target}${version}" postgres'
             docker exec -w /home/postgres/${target}${version}/contrib/sqlite_fdw postgresserver_multi_for_sqlite_existed_test /bin/bash -c 'su -c "make clean && make ${prefix} && export LANGUAGE="en_US.UTF-8" && export LANG="en_US.UTF-8" && export LC_ALL="en_US.UTF-8" && make check ${prefix} | tee make_check_existed_test.out" postgres'
             docker cp postgresserver_multi_for_sqlite_existed_test:/home/postgres/${target}${version}/contrib/sqlite_fdw/results/ results_${target}${version}
             docker cp postgresserver_multi_for_sqlite_existed_test:/home/postgres/${target}${version}/contrib/sqlite_fdw/make_check_existed_test.out make_check_existed_test.out
@@ -81,63 +81,63 @@ pipeline {
                 }
             }
         }
-        stage('make_check_FDW_Test_With_Postgres_10_17') {
+        stage('make_check_FDW_Test_With_Postgres_10_18') {
             steps {
                 catchError() {
-                    make_check_test("postgresql", "10.17")
+                    make_check_test("postgresql", "10.18")
                 }
             }
             post {
                 unstable { 
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v10.17 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v10.18 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
             }			
         }
-        stage('make_check_FDW_Test_With_Postgres_11_12') {
+        stage('make_check_FDW_Test_With_Postgres_11_13') {
             steps {
                 catchError() {
-                   make_check_test("postgresql","11.12")
+                   make_check_test("postgresql","11.13")
                 }
             }
             post {
                 unstable { 
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v11.12 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v11.13 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
             }			
         }
-        stage('make_check_FDW_Test_With_Postgres_12_7') {
+        stage('make_check_FDW_Test_With_Postgres_12_8') {
             steps {
                 catchError() {
-                   make_check_test("postgresql","12.7")
+                   make_check_test("postgresql","12.8")
                 }
             }
             post {
                 unstable { 
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v12.7 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v12.8 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
             }			
         }
-        stage('make_check_FDW_Test_With_Postgres_13_3') {
+        stage('make_check_FDW_Test_With_Postgres_13_4') {
             steps {
                 catchError() {
-                   make_check_test("postgresql","13.3")
+                   make_check_test("postgresql","13.4")
                 }
             }
             post {
                 unstable { 
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v13.3 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v13.4 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
             }			
         }
-        stage('make_check_FDW_Test_With_Postgres_14beta2') {
+        stage('make_check_FDW_Test_With_Postgres_14_0') {
             steps {
                 catchError() {
-                   make_check_test("postgresql","14beta2")
+                   make_check_test("postgresql","14.0")
                 }
             }
             post {
                 unstable { 
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v14beta2 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v14.0 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
             }			
         }
@@ -145,7 +145,7 @@ pipeline {
             steps {
                 catchError() {
                     sh """
-                        docker exec postgresserver_multi_for_sqlite_existed_test /bin/bash -c 'su -c "/tmp/initialize_pgspider_existed_test.sh $PGS_BRANCH" postgres'
+                        docker exec postgresserver_multi_for_sqlite_existed_test /bin/bash -c 'su -c "/home/test/initialize_pgspider_existed_test.sh $PGS_BRANCH" postgres'
                     """
                 }
             }

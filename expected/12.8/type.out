@@ -309,7 +309,7 @@ SELECT * FROM type_JSON;
 DELETE FROM type_JSON;
 --Testcase 47:
 DROP EXTENSION sqlite_fdw CASCADE;
-NOTICE:  drop cascades to 37 other objects
+NOTICE:  drop cascades to 39 other objects
 DETAIL:  drop cascades to server sqlite_svr
 drop cascades to foreign table department
 drop cascades to foreign table employee
@@ -320,6 +320,8 @@ drop cascades to foreign table multiprimary
 drop cascades to foreign table columntest
 drop cascades to foreign table noprimary
 drop cascades to foreign table limittest
+drop cascades to foreign table grem1_1
+drop cascades to foreign table grem1_2
 drop cascades to foreign table "type_STRING"
 drop cascades to foreign table "type_BOOLEAN"
 drop cascades to foreign table "type_BYTE"

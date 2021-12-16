@@ -1571,6 +1571,103 @@ SELECT * FROM fract_only;
 --Testcase 580:
 DROP FOREIGN TABLE fract_only;
 
+-- Check conversion to integers
+-- SQLite promises to preserve the first 15 significant decimal digits of the floating point value.
+-- However, it makes no guarantees about the accuracy of computations on floating point values, as no such guarantees are possible.
+-- A floating-point value as written in an SQL statement may not be the same as the value represented internally.
+-- Actual result is different from expected result.
+--Testcase 1485:
+CREATE FOREIGN TABLE num_tmp (n1 numeric, n2 numeric, id int options (key 'true')) SERVER sqlite_svr;
+
+--Testcase 1486:
+DELETE FROM num_tmp;
+--Testcase 1487:
+INSERT INTO num_tmp(n1) VALUES (-9223372036854775808.5);
+--Testcase 1488:
+SELECT n1::int8 FROM num_tmp; -- should fail
+
+--Testcase 1489:
+DELETE FROM num_tmp;
+--Testcase 1490:
+INSERT INTO num_tmp(n1) VALUES (-9223372036854775808.4);
+--Testcase 1491:
+SELECT n1::int8 FROM num_tmp; -- should fail
+
+--Testcase 1492:
+DELETE FROM num_tmp;
+--Testcase 1493:
+INSERT INTO num_tmp(n1) VALUES (9223372036854775807.4);
+--Testcase 1494:
+SELECT n1::int8 FROM num_tmp; -- should fail
+
+--Testcase 1495:
+DELETE FROM num_tmp;
+--Testcase 1496:
+INSERT INTO num_tmp(n1) VALUES (9223372036854775807.5);
+--Testcase 1497:
+SELECT n1::int8 FROM num_tmp; -- should fail
+
+--Testcase 1498:
+DELETE FROM num_tmp;
+--Testcase 1499:
+INSERT INTO num_tmp(n1) VALUES (-2147483648.5);
+--Testcase 1500:
+SELECT n1::int4 FROM num_tmp; -- should fail
+
+--Testcase 1501:
+DELETE FROM num_tmp;
+--Testcase 1502:
+INSERT INTO num_tmp(n1) VALUES (-2147483648.4);
+--Testcase 1503:
+SELECT n1::int4 FROM num_tmp; -- ok
+
+--Testcase 1504:
+DELETE FROM num_tmp;
+--Testcase 1505:
+INSERT INTO num_tmp(n1) VALUES (2147483647.4);
+--Testcase 1506:
+SELECT n1::int4 FROM num_tmp; -- ok
+
+--Testcase 1507:
+DELETE FROM num_tmp;
+--Testcase 1508:
+INSERT INTO num_tmp(n1) VALUES (2147483647.5);
+--Testcase 1509:
+SELECT n1::int4 FROM num_tmp; -- should fail
+
+--Testcase 1510:
+DELETE FROM num_tmp;
+--Testcase 1511:
+INSERT INTO num_tmp(n1) VALUES (-32768.5);
+--Testcase 1512:
+SELECT n1::int2 FROM num_tmp; -- should fail
+
+--Testcase 1513:
+DELETE FROM num_tmp;
+--Testcase 1514:
+INSERT INTO num_tmp(n1) VALUES (-32768.4);
+--Testcase 1515:
+SELECT n1::int2 FROM num_tmp; -- ok
+
+--Testcase 1516:
+DELETE FROM num_tmp;
+--Testcase 1517:
+INSERT INTO num_tmp(n1) VALUES (32767.4);
+--Testcase 1518:
+SELECT n1::int2 FROM num_tmp; -- ok
+
+--Testcase 1519:
+DELETE FROM num_tmp;
+--Testcase 1520:
+INSERT INTO num_tmp(n1) VALUES (32767.5);
+--Testcase 1521:
+SELECT n1::int2 FROM num_tmp; -- should fail
+
+--Testcase 1555:
+DELETE FROM num_tmp;
+--Testcase 1555:
+DROP FOREIGN TABLE num_tmp;
+
 -- Check inf/nan conversion behavior
 --Testcase 581:
 CREATE FOREIGN TABLE FLOAT8_TMP(f1 float8, f2 float8, id int OPTIONS (key 'true')) SERVER sqlite_svr;
@@ -2028,6 +2125,16 @@ SELECT x,
   to_char(x::float4, '9.999EEEE') as float4
 FROM v;
 
+--Testcase 1522:
+DELETE FROM v;
+--Testcase 1523:
+INSERT INTO v(x) VALUES (-16379),(-16378),(-1234),(-789),(-45),(-5),(-4),(-3),(-2),(-1),(0),
+                        (1),(2),(3),(4),(5),(38),(275),(2345),(45678),(131070),(131071);
+--Testcase 1524:
+SELECT x,
+  to_char(('1.2345e'||x)::numeric, '9.999EEEE') as numeric
+FROM v;
+
 --Testcase 1479:
 DELETE FROM v;
 --Testcase 1480:
@@ -2334,6 +2441,13 @@ INSERT INTO num_tmp VALUES (4769999999999999999999999999999999999999999999999999
 --Testcase 718:
 SELECT n1 * n2 FROM num_tmp;
 
+--Testcase 1525:
+DELETE FROM num_tmp;
+--Testcase 1526:
+INSERT INTO num_tmp VALUES ((0.1 - 2e-16383), (0.1 - 3e-16383));
+--Testcase 1527:
+SELECT trim_scale(n1 * n2) FROM num_tmp;
+
 --
 -- Test some corner cases for division
 --
@@ -2480,35 +2594,42 @@ DELETE FROM num_tmp;
 --Testcase 777:
 INSERT INTO num_tmp VALUES (3.789, 21);
 --Testcase 778:
-select n1 ^ n2 FROM num_tmp;
+SELECT n1 ^ n2 FROM num_tmp;
 
 --Testcase 779:
 DELETE FROM num_tmp;
 --Testcase 780:
 INSERT INTO num_tmp VALUES (3.789, 35);
 --Testcase 781:
-select n1 ^ n2 FROM num_tmp;
+SELECT n1 ^ n2 FROM num_tmp;
 
 --Testcase 782:
 DELETE FROM num_tmp;
 --Testcase 783:
 INSERT INTO num_tmp VALUES (1.2, 345);
 --Testcase 784:
-select n1 ^ n2 FROM num_tmp;
+SELECT n1 ^ n2 FROM num_tmp;
 
 --Testcase 785:
 DELETE FROM num_tmp;
 --Testcase 786:
 INSERT INTO num_tmp VALUES (0.12, (-20));
 --Testcase 787:
-select n1 ^ n2 FROM num_tmp;
+SELECT n1 ^ n2 FROM num_tmp;
 
 --Testcase 1220:
 DELETE FROM num_tmp;
 --Testcase 1221:
 INSERT INTO num_tmp VALUES (1.000000000123, (-2147483648));
 --Testcase 1222:
-select n1 ^ n2 FROM num_tmp;
+SELECT n1 ^ n2 FROM num_tmp;
+
+--Testcase 1528:
+DELETE FROM num_tmp;
+--Testcase 1529:
+INSERT INTO num_tmp VALUES (0.9999999999, 23300000000000);
+--Testcase 1530:
+SELECT coalesce(nullif(n1 ^ n2, 0), 0) FROM num_tmp;
 
 -- cases that used to error out
 --Testcase 788:
@@ -2516,14 +2637,57 @@ DELETE FROM num_tmp;
 --Testcase 789:
 INSERT INTO num_tmp VALUES (0.12, (-25));
 --Testcase 790:
-select n1 ^ n2 FROM num_tmp;
+SELECT n1 ^ n2 FROM num_tmp;
 
 --Testcase 791:
 DELETE FROM num_tmp;
 --Testcase 792:
 INSERT INTO num_tmp VALUES (0.5678, (-85));
 --Testcase 793:
-select n1 ^ n2 FROM num_tmp;
+SELECT n1 ^ n2 FROM num_tmp;
+
+--Testcase 1531:
+DELETE FROM num_tmp;
+--Testcase 1532:
+INSERT INTO num_tmp VALUES (0.9999999999, 70000000000000);
+--Testcase 1533:
+SELECT coalesce(nullif(n1 ^ n2, 0), 0) FROM num_tmp;
+
+-- negative base to integer powers
+--Testcase 1534:
+DELETE FROM num_tmp;
+--Testcase 1535:
+INSERT INTO num_tmp VALUES ((-1.0), 2147483646);
+--Testcase 1536:
+SELECT n1 ^ n2 FROM num_tmp;
+
+--Testcase 1537:
+DELETE FROM num_tmp;
+--Testcase 1538:
+INSERT INTO num_tmp VALUES ((-1.0), 2147483647);
+--Testcase 1539:
+SELECT n1 ^ n2 FROM num_tmp;
+
+--Testcase 1540:
+DELETE FROM num_tmp;
+--Testcase 1541:
+INSERT INTO num_tmp VALUES ((-1.0), 2147483648);
+--Testcase 1542:
+SELECT n1 ^ n2 FROM num_tmp;
+
+--Testcase 1543:
+DELETE FROM num_tmp;
+--Testcase 1544:
+INSERT INTO num_tmp VALUES ((-1.0), 1000000000000000);
+--Testcase 1545:
+SELECT n1 ^ n2 FROM num_tmp;
+
+--Testcase 1546:
+DELETE FROM num_tmp;
+--Testcase 1547:
+INSERT INTO num_tmp VALUES ((-1.0), 1000000000000001);
+--Testcase 1548:
+SELECT n1 ^ n2 FROM num_tmp;
 
 --
 -- Tests for raising to non-integer powers
@@ -2692,6 +2856,20 @@ DELETE FROM num_tmp;
 INSERT INTO num_tmp VALUES ('-inf'::numeric);
 --Testcase 1231:
 select exp(n1) from num_tmp;
+
+--Testcase 1549:
+DELETE FROM num_tmp;
+--Testcase 1550:
+INSERT INTO num_tmp VALUES ('-5000'::numeric);
+--Testcase 1551:
+select coalesce(nullif(exp(n1), 0), 0) from num_tmp;
+
+--Testcase 1552:
+DELETE FROM num_tmp;
+--Testcase 1553:
+INSERT INTO num_tmp VALUES ('-10000'::numeric);
+--Testcase 1554:
+select coalesce(nullif(exp(n1), 0), 0) from num_tmp;
 
 -- cases that used to generate inaccurate results
 --Testcase 851:
