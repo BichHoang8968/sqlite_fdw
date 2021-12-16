@@ -1310,6 +1310,22 @@ insert into multi_arg_agg values (1,3,'foo'),(0,null,null),(2,2,'bar'),(3,1,'baz
 select aggfns(distinct a,b,c order by a,c using ~<~,b) filter (where a > 1) from multi_arg_agg, generate_series(1,2) i;
 rollback;
 
+-- check handling of bare boolean Var in FILTER
+--Testcase 672:
+select max(0) filter (where b1) from bool_test;
+--Testcase 673:
+select (select max(0) filter (where b1)) from bool_test;
+
+-- check for correct detection of nested-aggregate errors in FILTER
+--Testcase 674:
+select max(unique1) filter (where sum(ten) > 0) from tenk1;
+--Testcase 675:
+select (select max(unique1) filter (where sum(ten) > 0) from int8_tbl) from tenk1;
+--Testcase 676:
+select max(unique1) filter (where bool_or(ten > 0)) from tenk1;
+--Testcase 677:
+select (select max(unique1) filter (where bool_or(ten > 0)) from int8_tbl) from tenk1;
+
 -- ordered-set aggregates
 
 begin;
@@ -2006,13 +2022,13 @@ rollback;
 -- does not lead to array overflow due to unexpected duplicate hash keys
 -- see CAFeeJoKKu0u+A_A9R9316djW-YW3-+Gtgvy3ju655qRHR3jtdA@mail.gmail.com
 --Testcase 641:
-set enable_resultcache to off;
+set enable_memoize to off;
 --Testcase 558:
 explain (costs off)
   select 1 from tenk1
    where (hundred, thousand) in (select twothousand, twothousand from onek);
 --Testcase 642:
-reset enable_resultcache;
+reset enable_memoize;
 
 --
 -- Hash Aggregation Spill tests

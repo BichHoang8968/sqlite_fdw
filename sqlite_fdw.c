@@ -488,7 +488,7 @@ sqlite_fdw_version(PG_FUNCTION_ARGS)
 
 /* Wrapper for sqlite3_prepare */
 static void
-sqlite_prepare_wrapper(ForeignServer *server, sqlite3 *db, char *query, sqlite3_stmt * *stmt,
+sqlite_prepare_wrapper(ForeignServer *server, sqlite3 * db, char *query, sqlite3_stmt * *stmt,
 					   const char **pzTail, bool is_cache)
 {
 	int			rc;
@@ -1944,6 +1944,7 @@ sqliteBeginForeignModify(ModifyTableState *mtstate,
 
 	fmstate->conn = sqlite_get_connection(server, false);
 	fmstate->query = strVal(list_nth(fdw_private, FdwModifyPrivateUpdateSql));
+	fmstate->target_attrs = (List *) list_nth(fdw_private, FdwModifyPrivateTargetAttnums);
 	fmstate->retrieved_attrs = (List *) list_nth(fdw_private, FdwModifyPrivateTargetAttnums);
 	fmstate->values_end = intVal(list_nth(fdw_private, FdwModifyPrivateLen));
 	fmstate->orig_query = pstrdup(fmstate->query);
@@ -1964,7 +1965,15 @@ sqliteBeginForeignModify(ModifyTableState *mtstate,
 		Form_pg_attribute attr = TupleDescAttr(RelationGetDescr(rel), attnum - 1);
 
 		Assert(!attr->attisdropped);
-
+#if PG_VERSION_NUM >= 140000
+		/* Ignore generated columns; */
+		if (attr->attgenerated)
+		{
+			if (list_length(fmstate->retrieved_attrs) >= 1)
+				fmstate->p_nums = 1;
+			continue;
+		}
+#endif
 		getTypeOutputInfo(attr->atttypid, &typefnoid, &isvarlena);
 		fmgr_info(typefnoid, &fmstate->p_flinfo[fmstate->p_nums]);
 		fmstate->p_nums++;
@@ -2156,7 +2165,9 @@ sqlite_find_modifytable_subplan(PlannerInfo *root,
 		if (subplan_index < list_length(appendplan->appendplans))
 			subplan = (Plan *) list_nth(appendplan->appendplans, subplan_index);
 	}
-	else if (IsA(subplan, Result) && IsA(outerPlan(subplan), Append))
+	else if (IsA(subplan, Result) &&
+			 outerPlan(subplan) != NULL &&
+			 IsA(outerPlan(subplan), Append))
 	{
 		Append	   *appendplan = (Append *) outerPlan(subplan);
 
@@ -2769,7 +2780,14 @@ sqliteExecForeignUpdate(EState *estate,
 		Oid			type;
 		bool		is_null;
 		Datum		value = 0;
+#if PG_VERSION_NUM >= 140000
+		TupleDesc	tupdesc = RelationGetDescr(fmstate->rel);
+		Form_pg_attribute attr = TupleDescAttr(tupdesc, attnum - 1);
 
+		/* Ignore generated columns and skip bind value */
+		if (attr->attgenerated)
+			continue;
+#endif
 		/* first attribute cannot be in target list attribute */
 		type = TupleDescAttr(slot->tts_tupleDescriptor, attnum - 1)->atttypid;
 
@@ -5041,6 +5059,10 @@ sqlite_execute_insert(EState *estate,
 	ListCell   *lc;
 	Datum		value = 0;
 	MemoryContext oldcontext;
+#if PG_VERSION_NUM >= 140000
+	Relation	rel = resultRelInfo->ri_RelationDesc;
+	TupleDesc	tupdesc = RelationGetDescr(rel);
+#endif
 	int			rc = SQLITE_OK;
 	int			nestlevel;
 	int			bindnum = 0;
@@ -5066,8 +5088,8 @@ sqlite_execute_insert(EState *estate,
 		fmstate->stmt = NULL;
 
 		initStringInfo(&sql);
-		sqlite_rebuild_insert(&sql, fmstate->orig_query,
-							  fmstate->values_end,
+		sqlite_rebuild_insert(&sql, fmstate->rel, fmstate->orig_query,
+							  fmstate->target_attrs, fmstate->values_end,
 							  fmstate->p_nums, *numSlots - 1);
 		fmstate->query = sql.data;
 		fmstate->num_slots = *numSlots;
@@ -5083,6 +5105,13 @@ sqlite_execute_insert(EState *estate,
 			int			attnum = lfirst_int(lc) - 1;
 			Oid			type = TupleDescAttr(slots[i]->tts_tupleDescriptor, attnum)->atttypid;
 			bool		isnull;
+#if PG_VERSION_NUM >= 140000
+			Form_pg_attribute attr = TupleDescAttr(tupdesc, attnum);
+
+			/* Ignore generated columns and skip bind value */
+			if (attr->attgenerated)
+				continue;
+#endif
 
 			value = slot_getattr(slots[i], attnum + 1, &isnull);
 			sqlite_bind_sql_var(type, bindnum, value, fmstate->stmt, &isnull);
@@ -5416,7 +5445,7 @@ sqlite_get_batch_size_option(Relation rel)
 
 		if (strcmp(def->defname, "batch_size") == 0)
 		{
-			batch_size = strtol(defGetString(def), NULL, 10);
+			(void) parse_int(defGetString(def), &batch_size, 0, NULL);
 			break;
 		}
 	}

@@ -741,6 +741,7 @@ select * from t12 left join t22 on (t12.a = t22.a);
 --Testcase 120:
 select t12.x from t12 join t32 on (t12.a = t32.x);
 
+--Testcase 536:
 drop table t2a;
 
 --
@@ -788,7 +789,7 @@ set work_mem to '64kB';
 --Testcase 506:
 set enable_mergejoin to off;
 --Testcase 507:
-set enable_resultcache to off;
+set enable_memoize to off;
 
 --Testcase 127:
 explain (costs off)
@@ -803,7 +804,7 @@ reset work_mem;
 --Testcase 509:
 reset enable_mergejoin;
 --Testcase 510:
-reset enable_resultcache;
+reset enable_memoize;
 
 --
 -- regression test for 8.2 bug with improper re-ordering of left joins
@@ -934,6 +935,7 @@ select * from
       left join zv1 on (f3 = f1)
 where f2 = 53;
 
+--Testcase 537:
 drop view zv1;
 
 --
@@ -1454,6 +1456,10 @@ select unique1 from tenk1, f_immutable_int4(1) x where x = unique1;
 --Testcase 427:
 explain (costs off)
 select unique1 from tenk1, lateral f_immutable_int4(1) x where x = unique1;
+
+--Testcase 538:
+explain (costs off)
+select unique1 from tenk1, lateral f_immutable_int4(1) x where x in (select 17);
 
 --Testcase 428:
 explain (costs off)
@@ -2176,6 +2182,21 @@ select i8.*, ss.v, t.unique2
     left join lateral (select i4.f1 + 1 as v) as ss on true
     left join tenk1 t on t.unique2 = ss.v
 where q2 = 456;
+
+-- -- and check a related issue where we miscompute required relids for
+-- -- a PHV that's been translated to a child rel
+-- create temp table parttbl (a integer primary key) partition by range (a);
+-- create temp table parttbl1 partition of parttbl for values from (1) to (100);
+-- insert into parttbl values (11), (12);
+-- explain (costs off)
+-- select * from
+--   (select *, 12 as phv from parttbl) as ss
+--   right join int4_tbl on true
+-- where ss.a = ss.phv and f1 = 0;
+-- select * from
+--   (select *, 12 as phv from parttbl) as ss
+--   right join int4_tbl on true
+-- where ss.a = ss.phv and f1 = 0;
 
 -- bug #8444: we've historically allowed duplicate aliases within aliased JOINs
 

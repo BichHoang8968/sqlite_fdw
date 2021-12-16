@@ -20,6 +20,7 @@ $d$;
 CREATE USER MAPPING FOR CURRENT_USER SERVER sqlite_svr;
 --Testcase 485:
 CREATE USER MAPPING FOR CURRENT_USER SERVER sqlite_svr2;
+--Testcase 955:
 CREATE USER MAPPING FOR public SERVER sqlite_svr3;
 -- ===================================================================
 -- create objects used through FDW sqlite server
@@ -81,6 +82,7 @@ CREATE FOREIGN TABLE ft1 (
 	c7 char(10) default 'ft1',
 	c8 text
 ) SERVER sqlite_svr;
+--Testcase 956:
 ALTER FOREIGN TABLE ft1 DROP COLUMN c0;
 
 --Testcase 490:
@@ -95,6 +97,7 @@ CREATE FOREIGN TABLE ft2 (
 	c7 char(10) default 'ft2',
 	c8 text
 ) SERVER sqlite_svr;
+--Testcase 957:
 ALTER FOREIGN TABLE ft2 DROP COLUMN cx;
 
 --Testcase 491:
@@ -118,15 +121,20 @@ CREATE FOREIGN TABLE ft6 (
 	c3 text
 ) SERVER sqlite_svr2 OPTIONS (table 'T 4');
 
+--Testcase 958:
 CREATE FOREIGN TABLE ft7 (
 	c1 int NOT NULL,
 	c2 int NOT NULL,
 	c3 text
 ) SERVER sqlite_svr3 OPTIONS (table 'T 4');
 
+--Testcase 959:
 ALTER FOREIGN TABLE ft1 OPTIONS (table 'T 1');
+--Testcase 960:
 ALTER FOREIGN TABLE ft2 OPTIONS (table 'T 1');
+--Testcase 961:
 ALTER FOREIGN TABLE ft1 ALTER COLUMN c1 OPTIONS (column_name 'C 1');
+--Testcase 962:
 ALTER FOREIGN TABLE ft2 ALTER COLUMN c1 OPTIONS (column_name 'C 1');
 --Testcase 5:
 \det+
@@ -136,6 +144,7 @@ ALTER FOREIGN TABLE ft2 ALTER COLUMN c1 OPTIONS (column_name 'C 1');
 \set VERBOSITY terse
 --Testcase 6:
 SELECT c3, c4 FROM ft1 ORDER BY c3, c1 LIMIT 1;  -- should work
+--Testcase 963:
 ALTER SERVER sqlite_svr OPTIONS (SET database 'no such database');
 --Testcase 7:
 SELECT c3, c4 FROM ft1 ORDER BY c3, c1 LIMIT 1;  -- should fail
@@ -206,7 +215,9 @@ WITH t1 AS (SELECT * FROM ft1 WHERE c1 <= 10) SELECT t2.c1, t2.c2, t2.c3, t2.c4 
 --Testcase 26:
 SELECT 'fixed', NULL FROM ft1 t1 WHERE c1 = 1;
 -- Test forcing the remote server to produce sorted data for a merge join.
+--Testcase 964:
 SET enable_hashjoin TO false;
+--Testcase 965:
 SET enable_nestloop TO false;
 -- inner join; expressions in the clauses appear in the equivalence class list
 --Testcase 27:
@@ -242,19 +253,25 @@ EXPLAIN (VERBOSE, COSTS OFF)
 	SELECT t1."C 1", t2.c1, t3.c1 FROM "S 1"."T 1" t1 full join ft1 t2 full join ft2 t3 on (t2.c1 = t3.c1) on (t3.c1 = t1."C 1") OFFSET 100 LIMIT 10;
 --Testcase 36:
 SELECT t1."C 1", t2.c1, t3.c1 FROM "S 1"."T 1" t1 full join ft1 t2 full join ft2 t3 on (t2.c1 = t3.c1) on (t3.c1 = t1."C 1") OFFSET 100 LIMIT 10;
+--Testcase 966:
 RESET enable_hashjoin;
+--Testcase 967:
 RESET enable_nestloop;
 
 -- Test executing assertion in estimate_path_cost_size() that makes sure that
 -- retrieved_rows for foreign rel re-used to cost pre-sorted foreign paths is
 -- a sensible value even when the rel has tuples=0
 -- CREATE TABLE loct_empty (c1 int NOT NULL, c2 text);
+--Testcase 968:
 CREATE FOREIGN TABLE ft_empty (c1 int NOT NULL, c2 text)
   SERVER sqlite_svr OPTIONS (table 'loct_empty');
+--Testcase 969:
 INSERT INTO "S 1".loct_empty
   SELECT id, 'AAA' || to_char(id, 'FM000') FROM generate_series(1, 100) id;
+--Testcase 970:
 DELETE FROM "S 1".loct_empty;
 -- ANALYZE ft_empty;
+--Testcase 971:
 EXPLAIN (VERBOSE, COSTS OFF) SELECT * FROM ft_empty ORDER BY c1;
 
 -- ===================================================================
@@ -358,7 +375,9 @@ EXPLAIN (VERBOSE, COSTS OFF)
 SELECT * FROM ft1 t1 WHERE t1.c1 === t1.c2 order by t1.c2 limit 1;
 
 -- but let's put them in an extension ...
+--Testcase 972:
 ALTER EXTENSION sqlite_fdw ADD FUNCTION sqlite_fdw_abs(int);
+--Testcase 973:
 ALTER EXTENSION sqlite_fdw ADD OPERATOR === (int, int);
 --ALTER SERVER sqlite_svr2 OPTIONS (ADD extensions 'sqlite_fdw');
 
@@ -515,14 +534,16 @@ EXPLAIN (VERBOSE, COSTS OFF)
 SELECT t1.c1, t2.c2, t3.c3 FROM ft2 t1 LEFT JOIN ft2 t2 ON (t1.c1 = t2.c1) FULL JOIN ft4 t3 ON (t2.c1 = t3.c1) OFFSET 10 LIMIT 10;
 --Testcase 104:
 SELECT t1.c1, t2.c2, t3.c3 FROM ft2 t1 LEFT JOIN ft2 t2 ON (t1.c1 = t2.c1) FULL JOIN ft4 t3 ON (t2.c1 = t3.c1) ORDER BY t1.c1 OFFSET 10 LIMIT 10;
-SET enable_resultcache TO off;
+--Testcase 974:
+SET enable_memoize TO off;
 -- right outer join + left outer join
 --Testcase 105:
 EXPLAIN (VERBOSE, COSTS OFF)
 SELECT t1.c1, t2.c2, t3.c3 FROM ft2 t1 RIGHT JOIN ft2 t2 ON (t1.c1 = t2.c1) LEFT JOIN ft4 t3 ON (t2.c1 = t3.c1) OFFSET 10 LIMIT 10;
 --Testcase 106:
 SELECT t1.c1, t2.c2, t3.c3 FROM ft2 t1 RIGHT JOIN ft2 t2 ON (t1.c1 = t2.c1) LEFT JOIN ft4 t3 ON (t2.c1 = t3.c1) OFFSET 10 LIMIT 10;
-RESET enable_resultcache;
+--Testcase 975:
+RESET enable_memoize;
 -- left outer join + right outer join
 --Testcase 107:
 EXPLAIN (VERBOSE, COSTS OFF)
@@ -544,6 +565,7 @@ SELECT t1.c1, t2.c2, t1.c3 FROM ft1 t1 FULL JOIN ft2 t2 ON (t1.c1 = t2.c1) WHERE
 --Testcase 505:
 EXPLAIN (VERBOSE, COSTS OFF)
 SELECT t1.c1, t2.c2, t1.c3 FROM ft1 t1 FULL JOIN ft2 t2 ON (t1.c1 = t2.c1) WHERE sqlite_fdw_abs(t1.c1) > 0 OFFSET 10 LIMIT 10;
+--Testcase 976:
 ALTER SERVER loopback OPTIONS (ADD extensions 'postgres_fdw');
 -- join two tables with FOR UPDATE clause
 -- tests whole-row reference for row marks
@@ -669,7 +691,9 @@ CREATE TABLE local_tbl (c1 int NOT NULL, c2 int NOT NULL, c3 text, CONSTRAINT lo
 --Testcase 507:
 INSERT INTO local_tbl SELECT id, id % 10, to_char(id, 'FM0000') FROM generate_series(1, 1000) id;
 ANALYZE local_tbl;
+--Testcase 977:
 SET enable_nestloop TO false;
+--Testcase 978:
 SET enable_hashjoin TO false;
 --Testcase 147:
 EXPLAIN (VERBOSE, COSTS OFF)
@@ -678,7 +702,9 @@ SELECT * FROM ft1, ft2, ft4, ft5, local_tbl WHERE ft1.c1 = ft2.c1 AND ft1.c2 = f
 --Testcase 148:
 SELECT * FROM ft1, ft2, ft4, ft5, local_tbl WHERE ft1.c1 = ft2.c1 AND ft1.c2 = ft4.c1
     AND ft1.c2 = ft5.c1 AND ft1.c2 = local_tbl.c1 AND ft1.c1 < 100 AND ft2.c1 < 100 ORDER BY ft1.c1 FOR UPDATE;
+--Testcase 979:
 RESET enable_nestloop;
+--Testcase 980:
 RESET enable_hashjoin;
 --DROP TABLE local_tbl;
 
@@ -694,12 +720,14 @@ GRANT SELECT ON ft5 TO regress_view_owner;
 CREATE VIEW v4 AS SELECT * FROM ft4;
 --Testcase 511:
 CREATE VIEW v5 AS SELECT * FROM ft5;
+--Testcase 981:
 ALTER VIEW v5 OWNER TO regress_view_owner;
 --Testcase 149:
 EXPLAIN (VERBOSE, COSTS OFF)
 SELECT t1.c1, t2.c2 FROM v4 t1 LEFT JOIN v5 t2 ON (t1.c1 = t2.c1) ORDER BY t1.c1, t2.c1 OFFSET 10 LIMIT 10;  -- can't be pushed down, different view owners
 --Testcase 150:
 SELECT t1.c1, t2.c2 FROM v4 t1 LEFT JOIN v5 t2 ON (t1.c1 = t2.c1) ORDER BY t1.c1, t2.c1 OFFSET 10 LIMIT 10;
+--Testcase 982:
 ALTER VIEW v4 OWNER TO regress_view_owner;
 --Testcase 151:
 EXPLAIN (VERBOSE, COSTS OFF)
@@ -712,12 +740,14 @@ EXPLAIN (VERBOSE, COSTS OFF)
 SELECT t1.c1, t2.c2 FROM v4 t1 LEFT JOIN ft5 t2 ON (t1.c1 = t2.c1) ORDER BY t1.c1, t2.c1 OFFSET 10 LIMIT 10;  -- can't be pushed down, view owner not current user
 --Testcase 154:
 SELECT t1.c1, t2.c2 FROM v4 t1 LEFT JOIN ft5 t2 ON (t1.c1 = t2.c1) ORDER BY t1.c1, t2.c1 OFFSET 10 LIMIT 10;
+--Testcase 983:
 ALTER VIEW v4 OWNER TO CURRENT_USER;
 --Testcase 155:
 EXPLAIN (VERBOSE, COSTS OFF)
 SELECT t1.c1, t2.c2 FROM v4 t1 LEFT JOIN ft5 t2 ON (t1.c1 = t2.c1) ORDER BY t1.c1, t2.c1 OFFSET 10 LIMIT 10;  -- can be pushed down
 --Testcase 156:
 SELECT t1.c1, t2.c2 FROM v4 t1 LEFT JOIN ft5 t2 ON (t1.c1 = t2.c1) ORDER BY t1.c1, t2.c1 OFFSET 10 LIMIT 10;
+--Testcase 984:
 ALTER VIEW v4 OWNER TO regress_view_owner;
 
 -- cleanup
@@ -932,6 +962,7 @@ create aggregate least_agg(variadic items anyarray) (
 );
 
 -- Disable hash aggregation for plan stability.
+--Testcase 985:
 set enable_hashagg to false;
 
 -- Not pushed down due to user defined aggregate
@@ -962,6 +993,7 @@ explain (verbose, costs off)
 select c2, least_agg(c1) from ft1 group by c2 order by c2;
 
 -- Cleanup
+--Testcase 986:
 reset enable_hashagg;
 --Testcase 528:
 drop aggregate least_agg(variadic items anyarray);
@@ -1019,11 +1051,17 @@ select array_agg(c1 order by c1 using operator(public.<^)) from ft2 where c2 = 6
 --ANALYZE ft2;
 
 -- Add into extension
+--Testcase 987:
 alter extension sqlite_fdw add operator class my_op_class using btree;
+--Testcase 988:
 alter extension sqlite_fdw add function my_op_cmp(a int, b int);
+--Testcase 989:
 alter extension sqlite_fdw add operator family my_op_family using btree;
+--Testcase 990:
 alter extension sqlite_fdw add operator public.<^(int, int);
+--Testcase 991:
 alter extension sqlite_fdw add operator public.=^(int, int);
+--Testcase 992:
 alter extension sqlite_fdw add operator public.>^(int, int);
 --alter server loopback options (set extensions 'postgres_fdw');
 
@@ -1035,11 +1073,17 @@ select array_agg(c1 order by c1 using operator(public.<^)) from ft2 where c2 = 6
 select array_agg(c1 order by c1 using operator(public.<^)) from ft2 where c2 = 6 and c1 < 100 group by c2;
 
 -- Remove from extension
+--Testcase 993:
 alter extension sqlite_fdw drop operator class my_op_class using btree;
+--Testcase 994:
 alter extension sqlite_fdw drop function my_op_cmp(a int, b int);
+--Testcase 995:
 alter extension sqlite_fdw drop operator family my_op_family using btree;
+--Testcase 996:
 alter extension sqlite_fdw drop operator public.<^(int, int);
+--Testcase 997:
 alter extension sqlite_fdw drop operator public.=^(int, int);
+--Testcase 998:
 alter extension sqlite_fdw drop operator public.>^(int, int);
 --alter server loopback options (set extensions 'postgres_fdw');
 
@@ -1099,12 +1143,14 @@ select sum(c2) * (random() <= 1)::int as sum from ft1 order by 1;
 select sum(c2) * (random() <= 1)::int as sum from ft1 order by 1;
 
 -- LATERAL join, with parameterization
+--Testcase 999:
 set enable_hashagg to false;
 --Testcase 210:
 explain (verbose, costs off)
 select c2, sum from "S 1"."T 1" t1, lateral (select sum(t2.c1 + t1."C 1") sum from ft2 t2 group by t2.c1) qry where t1.c2 * 2 = qry.sum and t1.c2 < 3 and t1."C 1" < 100 order by 1;
 --Testcase 211:
 select c2, sum from "S 1"."T 1" t1, lateral (select sum(t2.c1 + t1."C 1") sum from ft2 t2 group by t2.c1) qry where t1.c2 * 2 = qry.sum and t1.c2 < 3 and t1."C 1" < 100 order by 1;
+--Testcase 1000:
 reset enable_hashagg;
 
 -- bug #15613: bad plan for foreign table scan with lateral reference
@@ -1266,6 +1312,7 @@ PREPARE st7 AS INSERT INTO ft1 (c1,c2,c3) VALUES (1001,101,'foo');
 EXPLAIN (VERBOSE, COSTS OFF) EXECUTE st7;
 --Testcase 548:
 INSERT INTO "S 1"."T 0" SELECT * FROM "S 1"."T 1";
+--Testcase 1001:
 ALTER FOREIGN TABLE ft1 OPTIONS (SET table 'T 0');
 --Testcase 261:
 EXPLAIN (VERBOSE, COSTS OFF) EXECUTE st6;
@@ -1273,6 +1320,7 @@ EXPLAIN (VERBOSE, COSTS OFF) EXECUTE st6;
 EXECUTE st6;
 --Testcase 263:
 EXPLAIN (VERBOSE, COSTS OFF) EXECUTE st7;
+--Testcase 1002:
 ALTER FOREIGN TABLE ft1 OPTIONS (SET table 'T 1');
 
 --Testcase 549:
@@ -1340,34 +1388,42 @@ DROP FUNCTION f_test(int);
 -- REINDEX
 -- ===================================================================
 -- remote table is not created here
+--Testcase 1003:
 CREATE FOREIGN TABLE reindex_foreign (c1 int, c2 int)
   SERVER sqlite_svr2 OPTIONS (table 'reindex_local');
 REINDEX TABLE reindex_foreign; -- error
 REINDEX TABLE CONCURRENTLY reindex_foreign; -- error
+--Testcase 1004:
 DROP FOREIGN TABLE reindex_foreign;
 -- partitions and foreign tables
+--Testcase 1005:
 CREATE TABLE reind_fdw_parent (c1 int) PARTITION BY RANGE (c1);
+--Testcase 1006:
 CREATE TABLE reind_fdw_0_10 PARTITION OF reind_fdw_parent
   FOR VALUES FROM (0) TO (10);
+--Testcase 1007:
 CREATE FOREIGN TABLE reind_fdw_10_20 PARTITION OF reind_fdw_parent
   FOR VALUES FROM (10) TO (20)
   SERVER sqlite_svr OPTIONS (table 'reind_local_10_20');
 REINDEX TABLE reind_fdw_parent; -- ok
 REINDEX TABLE CONCURRENTLY reind_fdw_parent; -- ok
+--Testcase 1008:
 DROP TABLE reind_fdw_parent;
 
 -- ===================================================================
 -- conversion error
 -- ===================================================================
+--Testcase 1009:
 ALTER FOREIGN TABLE ft1 ALTER COLUMN c8 TYPE int;
 --Testcase 273:
-SELECT * FROM ft1 WHERE c1 = 1;
+SELECT * FROM ft1 ftx(x1,x2,x3,x4,x5,x6,x7,x8) WHERE x1 = 1;
 --Testcase 274:
-SELECT  ft1.c1,  ft2.c2, ft1.c8 FROM ft1, ft2 WHERE ft1.c1 = ft2.c1 AND ft1.c1 = 1;
+SELECT  ftx.x1,  ft2.c2, ftx.x8 FROM ft1 ftx(x1,x2,x3,x4,x5,x6,x7,x8), ft2 WHERE ftx.x1 = ft2.c1 AND ftx.x1 = 1;
 --Testcase 275:
-SELECT  ft1.c1,  ft2.c2, ft1 FROM ft1, ft2 WHERE ft1.c1 = ft2.c1 AND ft1.c1 = 1;
+SELECT  ftx.x1,  ft2.c2, ftx FROM ft1 ftx(x1,x2,x3,x4,x5,x6,x7,x8), ft2 WHERE ftx.x1 = ft2.c1 AND ftx.x1 = 1;
 --Testcase 276:
 SELECT sum(c2), array_agg(c8) FROM ft1 GROUP BY c8;
+--Testcase 1010:
 ALTER FOREIGN TABLE ft1 ALTER COLUMN c8 TYPE text;
 
 -- ===================================================================
@@ -1545,9 +1601,11 @@ UPDATE ft2 AS target SET (c2) = (
 
 -- Test UPDATE involving a join that can be pushed down,
 -- but a SET clause that can't be
+--Testcase 1011:
 EXPLAIN (VERBOSE, COSTS OFF)
 UPDATE ft2 d SET c2 = CASE WHEN random() >= 0 THEN d.c2 ELSE 0 END
   FROM ft2 AS t WHERE d.c1 = t.c1 AND d.c1 > 1000;
+--Testcase 1012:
 UPDATE ft2 d SET c2 = CASE WHEN random() >= 0 THEN d.c2 ELSE 0 END
   FROM ft2 AS t WHERE d.c1 = t.c1 AND d.c1 > 1000;
 
@@ -1737,41 +1795,49 @@ ALTER FOREIGN TABLE ft1 RENAME TO ft1_org;
 --Testcase 753:
 ALTER FOREIGN TABLE ft1_constraint RENAME TO ft1;
 -- Consistent check constraints provide consistent results
+--Testcase 1013:
 ALTER FOREIGN TABLE ft1 ADD CONSTRAINT ft1_c2positive CHECK (c2 >= 0);
 --Testcase 587:
 EXPLAIN (VERBOSE, COSTS OFF) SELECT count(*) FROM ft1 WHERE c2 < 0;
 --Testcase 588:
 SELECT count(*) FROM ft1 WHERE c2 < 0;
+--Testcase 1014:
 SET constraint_exclusion = 'on';
 --Testcase 589:
 EXPLAIN (VERBOSE, COSTS OFF) SELECT count(*) FROM ft1 WHERE c2 < 0;
 --Testcase 590:
 SELECT count(*) FROM ft1 WHERE c2 < 0;
+--Testcase 1015:
 RESET constraint_exclusion;
 -- check constraint is enforced on the remote side, not locally
 --Testcase 745:
 INSERT INTO ft1(c1, c2) VALUES(1111, -2);  -- c2positive
 --Testcase 746:
 UPDATE ft1 SET c2 = -c2 WHERE c1 = 1;  -- c2positive
+--Testcase 1016:
 ALTER FOREIGN TABLE ft1 DROP CONSTRAINT ft1_c2positive;
 
 -- But inconsistent check constraints provide inconsistent results
+--Testcase 1017:
 ALTER FOREIGN TABLE ft1 ADD CONSTRAINT ft1_c2negative CHECK (c2 < 0);
 --Testcase 591:
 EXPLAIN (VERBOSE, COSTS OFF) SELECT count(*) FROM ft1 WHERE c2 >= 0;
 --Testcase 592:
 SELECT count(*) FROM ft1 WHERE c2 >= 0;
+--Testcase 1018:
 SET constraint_exclusion = 'on';
 --Testcase 593:
 EXPLAIN (VERBOSE, COSTS OFF) SELECT count(*) FROM ft1 WHERE c2 >= 0;
 --Testcase 594:
 SELECT count(*) FROM ft1 WHERE c2 >= 0;
+--Testcase 1019:
 RESET constraint_exclusion;
 -- local check constraint is not actually enforced
 --Testcase 595:
 INSERT INTO ft1(c1, c2) VALUES(1111, 2);
 --Testcase 596:
 UPDATE ft1 SET c2 = c2 + 1 WHERE c1 = 1;
+--Testcase 1020:
 ALTER FOREIGN TABLE ft1 DROP CONSTRAINT ft1_c2negative;
 
 -- ===================================================================
@@ -1832,6 +1898,7 @@ CREATE TRIGGER row_before_insupd_trigger BEFORE INSERT OR UPDATE ON foreign_tbl 
 
 --Testcase 615:
 CREATE TABLE parent_tbl (a int, b int) PARTITION BY RANGE(a);
+--Testcase 1021:
 ALTER TABLE parent_tbl ATTACH PARTITION foreign_tbl FOR VALUES FROM (0) TO (100);
 
 --Testcase 616:
@@ -1907,13 +1974,44 @@ select f1, f2 from rem1;
 create foreign table grem1 (
   a int options (key 'true'),
   b int generated always as (a * 2) stored)
-  server sqlite_svr;
+  server sqlite_svr options(table 'grem1_post14');
 --Testcase 638:
+explain (verbose, costs off)
+insert into grem1 (a) values (1), (2);
+--Testcase 1022:
 insert into grem1 (a) values (1), (2);
 --Testcase 639:
+explain (verbose, costs off)
+update grem1 set a = 22 where a = 2;
+--Testcase 1023:
 update grem1 set a = 22 where a = 2;
 --Testcase 640:
 select * from grem1;
+--Testcase 1024:
+delete from grem1;
+
+-- -- test copy from
+-- copy grem1 from stdin;
+-- 1
+-- 2
+-- \.
+-- select * from grem1;
+-- delete from grem1;
+
+-- test batch insert
+--Testcase 1025:
+alter server sqlite_svr options (add batch_size '10');
+--Testcase 1026:
+explain (verbose, costs off)
+insert into grem1 (a) values (1), (2);
+--Testcase 1027:
+insert into grem1 (a) values (1), (2);
+--Testcase 1028:
+select * from grem1;
+--Testcase 1029:
+delete from grem1;
+--Testcase 1030:
+alter server sqlite_svr options (drop batch_size);
 
 -- ===================================================================
 -- test local triggers
@@ -2242,6 +2340,12 @@ DROP TRIGGER trig_local_before ON rem1;
 
 
 -- Test direct foreign table modification functionality
+--Testcase 1031:
+EXPLAIN (verbose, costs off)
+DELETE FROM rem1;                 -- can be pushed down
+--Testcase 1032:
+EXPLAIN (verbose, costs off)
+DELETE FROM rem1 WHERE false;     -- currently can't be pushed down
 
 -- Test with statement-level triggers
 --Testcase 687:
@@ -2357,6 +2461,7 @@ DROP TRIGGER trig_row_after_delete ON rem1;
 
 --Testcase 703:
 CREATE TABLE a (aa TEXT);
+--Testcase 1033:
 ALTER TABLE a SET (autovacuum_enabled = 'false');
 --Testcase 704:
 CREATE FOREIGN TABLE b (aa TEXT OPTIONS (key 'true'), bb TEXT) INHERITS (a)
@@ -2439,7 +2544,9 @@ create table bar (f1 int, f2 int);
 create foreign table bar2 (f3 int OPTIONS (key 'true')) inherits (bar)
   server sqlite_svr options (table 'loct2');
 
+--Testcase 1034:
 alter table foo set (autovacuum_enabled = 'false');
+--Testcase 1035:
 alter table bar set (autovacuum_enabled = 'false');
 
 --Testcase 437:
@@ -2477,22 +2584,30 @@ select * from bar where f1 in (select f1 from foo) for share;
 
 -- Now check SELECT FOR UPDATE/SHARE with an inherited source table,
 -- where the parent is itself a foreign table
+--Testcase 1036:
 create foreign table foo2child (f3 int) inherits (foo2)
   server sqlite_svr options (table 'loct4_2');
 
+--Testcase 1037:
 explain (verbose, costs off)
 select * from bar where f1 in (select f1 from foo2) for share;
+--Testcase 1038:
 select * from bar where f1 in (select f1 from foo2) for share;
 
+--Testcase 1039:
 drop foreign table foo2child;
 
 -- And with a local child relation of the foreign table parent
+--Testcase 1040:
 create table foo2child (f3 int) inherits (foo2);
 
+--Testcase 1041:
 explain (verbose, costs off)
 select * from bar where f1 in (select f1 from foo2) for share;
+--Testcase 1042:
 select * from bar where f1 in (select f1 from foo2) for share;
 
+--Testcase 1043:
 drop table foo2child;
 
 -- Check UPDATE with inherited target and an inherited source table
@@ -2532,7 +2647,9 @@ truncate table only foo;
 insert into foo2 select generate_series(0, :num_rows_foo, 2), generate_series(0, :num_rows_foo, 2), generate_series(0, :num_rows_foo, 2);
 --Testcase 712:
 insert into foo select generate_series(1, :num_rows_foo, 2), generate_series(1, :num_rows_foo, 2);
+--Testcase 1044:
 SET enable_hashjoin to false;
+--Testcase 1045:
 SET enable_nestloop to false;
 --alter foreign table foo2 options (use_remote_estimate 'true');
 --create index i_loct1_f1 on loct1(f1);
@@ -2553,7 +2670,9 @@ explain (verbose, costs off)
 	select foo.f1, foo2.f1 from foo left join foo2 on (foo.f1 = foo2.f1) order by foo.f2 offset 10 limit 10;
 --Testcase 717:
 select foo.f1, foo2.f1 from foo left join foo2 on (foo.f1 = foo2.f1) order by foo.f2 offset 10 limit 10;
+--Testcase 1046:
 RESET enable_hashjoin;
+--Testcase 1047:
 RESET enable_nestloop;
 
 -- Test that WHERE CURRENT OF is not supported
@@ -2616,6 +2735,7 @@ create foreign table remt1 (a int OPTIONS (key 'true'), b text)
 --Testcase 724:
 create foreign table remt2 (a int OPTIONS (key 'true'), b text)
   server sqlite_svr options (table 'loct4');
+--Testcase 1048:
 alter foreign table remt1 inherit parent;
 
 --Testcase 468:
@@ -2999,8 +3119,10 @@ drop table loc3;
 -- ===================================================================
 -- test for TRUNCATE
 -- ===================================================================
+--Testcase 1049:
 CREATE FOREIGN TABLE tru_ftable (id int)
        SERVER sqlite_svr OPTIONS (table 'tru_rtable0');
+--Testcase 1050:
 INSERT INTO "S 1".tru_rtable0 (SELECT x FROM generate_series(1,10) x);
 
 -- CREATE TABLE tru_ptable (id int) PARTITION BY HASH(id);
@@ -3011,34 +3133,50 @@ INSERT INTO "S 1".tru_rtable0 (SELECT x FROM generate_series(1,10) x);
 --        SERVER sqlite_svr OPTIONS (table 'tru_ptable');
 -- INSERT INTO tru_ptable (SELECT x FROM generate_series(11,20) x);
 
+--Testcase 1051:
 INSERT INTO "S 1".tru_pk_table (SELECT x FROM generate_series(1,10) x);
+--Testcase 1052:
 INSERT INTO "S 1".tru_fk_table(fkey) (SELECT x % 10 + 1 FROM generate_series(5,25) x);
+--Testcase 1053:
 CREATE FOREIGN TABLE tru_pk_ftable (id int)
        SERVER sqlite_svr OPTIONS (table 'tru_pk_table');
 
+--Testcase 1054:
 CREATE FOREIGN TABLE tru_ftable_parent (id int)
        SERVER sqlite_svr OPTIONS (table 'tru_rtable_parent');
+--Testcase 1055:
 CREATE FOREIGN TABLE tru_ftable_child () INHERITS (tru_ftable_parent)
        SERVER sqlite_svr OPTIONS (table 'tru_rtable_child');
+--Testcase 1056:
 INSERT INTO "S 1".tru_rtable_parent (SELECT x FROM generate_series(1,8) x);
+--Testcase 1057:
 INSERT INTO "S 1".tru_rtable_child  (SELECT x FROM generate_series(10, 18) x);
 
 -- normal truncate
+--Testcase 1058:
 SELECT sum(id) FROM tru_ftable;        -- 55
 TRUNCATE tru_ftable;
+--Testcase 1059:
 SELECT count(*) FROM "S 1".tru_rtable0;		-- 0
+--Testcase 1060:
 SELECT count(*) FROM tru_ftable;		-- 0
 
 -- 'truncatable' option
+--Testcase 1061:
 ALTER SERVER sqlite_svr OPTIONS (ADD truncatable 'false');
 TRUNCATE tru_ftable;			-- error
+--Testcase 1062:
 ALTER FOREIGN TABLE tru_ftable OPTIONS (ADD truncatable 'true');
 TRUNCATE tru_ftable;			-- accepted
+--Testcase 1063:
 ALTER FOREIGN TABLE tru_ftable OPTIONS (SET truncatable 'false');
 TRUNCATE tru_ftable;			-- error
+--Testcase 1064:
 ALTER SERVER sqlite_svr OPTIONS (DROP truncatable);
+--Testcase 1065:
 ALTER FOREIGN TABLE tru_ftable OPTIONS (SET truncatable 'false');
 TRUNCATE tru_ftable;			-- error
+--Testcase 1066:
 ALTER FOREIGN TABLE tru_ftable OPTIONS (SET truncatable 'true');
 TRUNCATE tru_ftable;			-- accepted
 
@@ -3051,30 +3189,41 @@ TRUNCATE tru_ftable;			-- accepted
 -- SELECT count(*) FROM tru_rtable1;		-- 0
 
 -- 'CASCADE' option
+--Testcase 1067:
 SELECT sum(id) FROM tru_pk_ftable;      -- 55
 -- SQLite FDW support TRUNCATE command by executing DELETE statement without WHERE clause.
 -- In order to delete records in parent and child table subsequently,
 -- SQLite FDW executes "PRAGMA foreign_keys = ON" before executing DELETE statement.
 TRUNCATE tru_pk_ftable; -- success
 TRUNCATE tru_pk_ftable CASCADE; -- success
+--Testcase 1068:
 SELECT count(*) FROM tru_pk_ftable;    -- 0
+--Testcase 1069:
 SELECT count(*) FROM "S 1".tru_fk_table;		-- also truncated,0
 
 -- truncate two tables at a command
+--Testcase 1070:
 INSERT INTO tru_ftable (SELECT x FROM generate_series(1,8) x);
+--Testcase 1071:
 INSERT INTO tru_pk_ftable (SELECT x FROM generate_series(3,10) x);
+--Testcase 1072:
 SELECT count(*) from tru_ftable; -- 8
+--Testcase 1073:
 SELECT count(*) from tru_pk_ftable; -- 8
 TRUNCATE tru_ftable, tru_pk_ftable;
+--Testcase 1074:
 SELECT count(*) from tru_ftable; -- 0
+--Testcase 1075:
 SELECT count(*) from tru_pk_ftable; -- 0
 
 -- truncate with ONLY clause
 -- Since ONLY is specified, the table tru_ftable_child that inherits
 -- tru_ftable_parent locally is not truncated.
 TRUNCATE ONLY tru_ftable_parent;
+--Testcase 1076:
 SELECT sum(id) FROM tru_ftable_parent;  -- 126
 TRUNCATE tru_ftable_parent;
+--Testcase 1077:
 SELECT count(*) FROM tru_ftable_parent; -- 0
 
 -- -- in case when remote table has inherited children
@@ -3096,6 +3245,7 @@ SELECT count(*) FROM tru_ftable_parent; -- 0
 -- SELECT count(*) FROM tru_ftable;    -- 0
 
 -- cleanup
+--Testcase 1078:
 DROP FOREIGN TABLE tru_ftable_parent, tru_ftable_child, tru_pk_ftable,tru_ftable;
 -- DROP TABLE tru_rtable0, tru_rtable1, tru_ptable, tru_ptable__p0, tru_pk_table, tru_fk_table,
 -- tru_rtable_parent,tru_rtable_child, tru_rtable0_child;
@@ -3354,7 +3504,7 @@ CREATE FOREIGN TABLE ft1_nopw (
 ALTER FOREIGN TABLE ft1_nopw OPTIONS (table 'T 1');
 ALTER FOREIGN TABLE ft1_nopw ALTER COLUMN c1 OPTIONS (column_name 'C 1');
 
-SELECT * FROM ft1_nopw LIMIT 1;
+SELECT 1 FROM ft1_nopw LIMIT 1;
 
 -- If we add a password to the connstr it'll fail, because we don't allow passwords
 -- in connstrs only in user mappings.
@@ -3372,13 +3522,13 @@ $d$;
 
 ALTER USER MAPPING FOR CURRENT_USER SERVER sqlite_nopw OPTIONS (ADD password 'dummypw');
 
-SELECT * FROM ft1_nopw LIMIT 1;
+SELECT 1 FROM ft1_nopw LIMIT 1;
 
 -- Unpriv user cannot make the mapping passwordless
 ALTER USER MAPPING FOR CURRENT_USER SERVER sqlite_nopw OPTIONS (ADD password_required 'false');
 
 
-SELECT * FROM ft1_nopw LIMIT 1;
+SELECT 1 FROM ft1_nopw LIMIT 1;
 
 RESET ROLE;
 
@@ -3388,7 +3538,7 @@ ALTER USER MAPPING FOR regress_nosuper SERVER sqlite_nopw OPTIONS (ADD password_
 SET ROLE regress_nosuper;
 
 -- Should finally work now
-SELECT * FROM ft1_nopw LIMIT 1;
+SELECT 1 FROM ft1_nopw LIMIT 1;
 
 -- unpriv user also cannot set sslcert / sslkey on the user mapping
 -- first set password_required so we see the right error messages
@@ -3402,13 +3552,13 @@ DROP USER MAPPING FOR CURRENT_USER SERVER sqlite_nopw;
 
 -- This will fail again as it'll resolve the user mapping for public, which
 -- lacks password_required=false
-SELECT * FROM ft1_nopw LIMIT 1;
+SELECT 1 FROM ft1_nopw LIMIT 1;
 
 RESET ROLE;
 
 -- The user mapping for public is passwordless and lacks the password_required=false
 -- mapping option, but will work because the current user is a superuser.
-SELECT * FROM ft1_nopw LIMIT 1;
+SELECT 1 FROM ft1_nopw LIMIT 1;
 
 -- cleanup
 DROP USER MAPPING FOR public SERVER sqlite_nopw;
@@ -3435,11 +3585,11 @@ ROLLBACK;
 -- -- Change application_name of remote connection to special one
 -- -- so that we can easily terminate the connection later.
 -- ALTER SERVER sqlite_svr OPTIONS (application_name 'fdw_retry_check');
--- -- If debug_invalidate_system_caches_always is active, it results in
+-- -- If debug_discard_caches is active, it results in
 -- -- dropping remote connections after every transaction, making it
 -- -- impossible to test termination meaningfully.  So turn that off
 -- -- for this test.
--- SET debug_invalidate_system_caches_always = 0;
+-- SET debug_discard_caches = 0;
 -- -- Make sure we have a remote connection.
 -- SELECT 1 FROM ft1 LIMIT 1;
 -- -- Terminate the remote connection and wait for the termination to complete.
@@ -3461,37 +3611,47 @@ ROLLBACK;
 -- \set VERBOSITY default
 -- COMMIT;
 
--- RESET debug_invalidate_system_caches_always;
+-- RESET debug_discard_caches;
 
 -- =============================================================================
 -- test connection invalidation cases and sqlite_fdw_get_connections function
 -- =============================================================================
 -- Let's ensure to close all the existing cached connections.
+--Testcase 1079:
 SELECT 1 FROM sqlite_fdw_disconnect_all();
 -- No cached connections, so no records should be output.
+--Testcase 1080:
 SELECT server_name FROM sqlite_fdw_get_connections() ORDER BY 1;
 -- This test case is for closing the connection in sqlitefdw_xact_callback
 BEGIN;
 -- Connection xact depth becomes 1 i.e. the connection is in midst of the xact.
+--Testcase 1081:
 SELECT 1 FROM ft1 LIMIT 1;
+--Testcase 1082:
 SELECT 1 FROM ft7 LIMIT 1;
 -- List all the existing cached connections. sqlite_svr and sqlite_svr3 should be
 -- output.
+--Testcase 1083:
 SELECT server_name FROM sqlite_fdw_get_connections() ORDER BY 1;
 -- Connections are not closed at the end of the alter and drop statements.
 -- That's because the connections are in midst of this xact,
 -- they are just marked as invalid in sqlitefdw_inval_callback.
+--Testcase 1084:
 ALTER SERVER sqlite_svr OPTIONS (ADD keep_connections 'off');
+--Testcase 1085:
 DROP SERVER sqlite_svr3 CASCADE;
 -- List all the existing cached connections. sqlite_svr and sqlite_svr3
 -- should be output as invalid connections. Also the server name for
 -- sqlite_svr3 should be NULL because the server was dropped.
+--Testcase 1086:
 SELECT * FROM sqlite_fdw_get_connections() ORDER BY 1;
 -- The invalid connections get closed in sqlitefdw_xact_callback during commit.
 COMMIT;
+--Testcase 1087:
 ALTER SERVER sqlite_svr OPTIONS (DROP keep_connections);
 -- All cached connections were closed while committing above xact, so no
 -- records should be output.
+--Testcase 1088:
 SELECT server_name FROM sqlite_fdw_get_connections() ORDER BY 1;
 
 -- =======================================================================
@@ -3499,67 +3659,98 @@ SELECT server_name FROM sqlite_fdw_get_connections() ORDER BY 1;
 -- =======================================================================
 BEGIN;
 -- Ensure to cache loopback connection.
+--Testcase 1089:
 SELECT 1 FROM ft1 LIMIT 1;
 -- Ensure to cache loopback2 connection.
+--Testcase 1090:
 SELECT 1 FROM ft6 LIMIT 1;
 -- List all the existing cached connections. sqlite_svr and sqlite_svr2 should be
 -- output.
+--Testcase 1091:
 SELECT server_name FROM sqlite_fdw_get_connections() ORDER BY 1;
 -- Issue a warning and return false as sqlite_svr connection is still in use and
 -- can not be closed.
+--Testcase 1092:
 SELECT sqlite_fdw_disconnect('sqlite_svr');
 -- List all the existing cached connections. sqlite_svr and sqlite_svr2 should be
 -- output.
+--Testcase 1093:
 SELECT server_name FROM sqlite_fdw_get_connections() ORDER BY 1;
 -- Return false as connections are still in use, warnings are issued.
 -- But disable warnings temporarily because the order of them is not stable.
+--Testcase 1094:
 SET client_min_messages = 'ERROR';
+--Testcase 1095:
 SELECT sqlite_fdw_disconnect_all();
+--Testcase 1096:
 RESET client_min_messages;
 COMMIT;
 -- Ensure that sqlite_svr2 connection is closed.
+--Testcase 1097:
 SELECT 1 FROM sqlite_fdw_disconnect('sqlite_svr2');
+--Testcase 1098:
 SELECT server_name FROM sqlite_fdw_get_connections() WHERE server_name = 'sqlite_svr2';
 -- Return false as sqlite_svr2 connection is closed already.
+--Testcase 1099:
 SELECT sqlite_fdw_disconnect('sqlite_svr2');
 -- Return an error as there is no foreign server with given name.
+--Testcase 1100:
 SELECT sqlite_fdw_disconnect('unknownserver');
 -- Let's ensure to close all the existing cached connections.
+--Testcase 1101:
 SELECT 1 FROM sqlite_fdw_disconnect_all();
 -- No cached connections, so no records should be output.
+--Testcase 1102:
 SELECT server_name FROM sqlite_fdw_get_connections() ORDER BY 1;
 
 -- =============================================================================
 -- test case for having multiple cached connections for a foreign server
 -- =============================================================================
+--Testcase 1103:
 CREATE ROLE regress_multi_conn_user1 SUPERUSER;
+--Testcase 1104:
 CREATE ROLE regress_multi_conn_user2 SUPERUSER;
+--Testcase 1105:
 CREATE USER MAPPING FOR regress_multi_conn_user1 SERVER sqlite_svr;
+--Testcase 1106:
 CREATE USER MAPPING FOR regress_multi_conn_user2 SERVER sqlite_svr;
 
 BEGIN;
 -- Will cache sqlite_svr connection with user mapping for regress_multi_conn_user1
+--Testcase 1107:
 SET ROLE regress_multi_conn_user1;
+--Testcase 1108:
 SELECT 1 FROM ft1 LIMIT 1;
+--Testcase 1109:
 RESET ROLE;
 
 -- Will cache sqlite_svr connection with user mapping for regress_multi_conn_user2
+--Testcase 1110:
 SET ROLE regress_multi_conn_user2;
+--Testcase 1111:
 SELECT 1 FROM ft1 LIMIT 1;
+--Testcase 1112:
 RESET ROLE;
 
 -- Should output two connections for sqlite_svr server
+--Testcase 1113:
 SELECT server_name FROM sqlite_fdw_get_connections() ORDER BY 1;
 COMMIT;
 -- Let's ensure to close all the existing cached connections.
+--Testcase 1114:
 SELECT 1 FROM sqlite_fdw_disconnect_all();
 -- No cached connections, so no records should be output.
+--Testcase 1115:
 SELECT server_name FROM sqlite_fdw_get_connections() ORDER BY 1;
 
 -- Clean up
+--Testcase 1116:
 DROP USER MAPPING FOR regress_multi_conn_user1 SERVER sqlite_svr;
+--Testcase 1117:
 DROP USER MAPPING FOR regress_multi_conn_user2 SERVER sqlite_svr;
+--Testcase 1118:
 DROP ROLE regress_multi_conn_user1;
+--Testcase 1119:
 DROP ROLE regress_multi_conn_user2;
 
 -- ===================================================================
@@ -3567,12 +3758,16 @@ DROP ROLE regress_multi_conn_user2;
 -- ===================================================================
 -- By default, the connections associated with foreign server are cached i.e.
 -- keep_connections option is on. Set it to off.
+--Testcase 1120:
 ALTER SERVER sqlite_svr OPTIONS (keep_connections 'off');
 -- connection to sqlite_svr server is closed at the end of xact
 -- as keep_connections was set to off.
+--Testcase 1121:
 SELECT 1 FROM ft1 LIMIT 1;
 -- No cached connections, so no records should be output.
+--Testcase 1122:
 SELECT server_name FROM sqlite_fdw_get_connections() ORDER BY 1;
+--Testcase 1123:
 ALTER SERVER sqlite_svr OPTIONS (SET keep_connections 'on');
 
 -- ===================================================================
@@ -3581,39 +3776,49 @@ ALTER SERVER sqlite_svr OPTIONS (SET keep_connections 'on');
 
 BEGIN;
 
+--Testcase 1124:
 CREATE SERVER batch10 FOREIGN DATA WRAPPER sqlite_fdw OPTIONS( batch_size '10' );
 
+--Testcase 1125:
 SELECT count(*)
 FROM pg_foreign_server
 WHERE srvname = 'batch10'
 AND srvoptions @> array['batch_size=10'];
 
+--Testcase 1126:
 ALTER SERVER batch10 OPTIONS( SET batch_size '20' );
 
+--Testcase 1127:
 SELECT count(*)
 FROM pg_foreign_server
 WHERE srvname = 'batch10'
 AND srvoptions @> array['batch_size=10'];
 
+--Testcase 1128:
 SELECT count(*)
 FROM pg_foreign_server
 WHERE srvname = 'batch10'
 AND srvoptions @> array['batch_size=20'];
 
+--Testcase 1129:
 CREATE FOREIGN TABLE table30 ( x int ) SERVER batch10 OPTIONS ( batch_size '30' );
 
+--Testcase 1130:
 SELECT COUNT(*)
 FROM pg_foreign_table
 WHERE ftrelid = 'table30'::regclass
 AND ftoptions @> array['batch_size=30'];
 
+--Testcase 1131:
 ALTER FOREIGN TABLE table30 OPTIONS ( SET batch_size '40');
 
+--Testcase 1132:
 SELECT COUNT(*)
 FROM pg_foreign_table
 WHERE ftrelid = 'table30'::regclass
 AND ftoptions @> array['batch_size=30'];
 
+--Testcase 1133:
 SELECT COUNT(*)
 FROM pg_foreign_table
 WHERE ftrelid = 'table30'::regclass
@@ -3621,28 +3826,47 @@ AND ftoptions @> array['batch_size=40'];
 
 ROLLBACK;
 
+--Testcase 1134:
 CREATE FOREIGN TABLE ftable ( x int OPTIONS (key 'true') ) SERVER sqlite_svr OPTIONS ( table 'batch_table', batch_size '10' );
+--Testcase 1135:
 EXPLAIN (VERBOSE, COSTS OFF) INSERT INTO ftable SELECT * FROM generate_series(1, 10) i;
+--Testcase 1136:
 INSERT INTO ftable SELECT * FROM generate_series(1, 10) i;
+--Testcase 1137:
 INSERT INTO ftable SELECT * FROM generate_series(11, 31) i;
+--Testcase 1138:
 INSERT INTO ftable VALUES (32);
+--Testcase 1139:
 INSERT INTO ftable VALUES (33), (34);
+--Testcase 1140:
 SELECT COUNT(*) FROM ftable;
+--Testcase 1141:
 DELETE FROM ftable;
+--Testcase 1142:
 DROP FOREIGN TABLE ftable;
 
 -- try if large batches exceed max number of bind parameters
+--Testcase 1143:
 CREATE FOREIGN TABLE ftable ( x int OPTIONS (key 'true') ) SERVER sqlite_svr OPTIONS ( table 'batch_table', batch_size '100000' );
+--Testcase 1144:
 INSERT INTO ftable SELECT * FROM generate_series(1, 70000) i;
+--Testcase 1145:
 SELECT COUNT(*) FROM ftable;
+--Testcase 1146:
 DELETE FROM ftable;
+--Testcase 1147:
 DROP FOREIGN TABLE ftable;
 
 -- Disable batch insert
+--Testcase 1148:
 CREATE FOREIGN TABLE ftable ( x int ) SERVER sqlite_svr OPTIONS ( table 'batch_table', batch_size '1' );
+--Testcase 1149:
 EXPLAIN (VERBOSE, COSTS OFF) INSERT INTO ftable VALUES (1), (2);
+--Testcase 1150:
 INSERT INTO ftable VALUES (1), (2);
+--Testcase 1151:
 SELECT COUNT(*) FROM ftable;
+--Testcase 1152:
 DROP FOREIGN TABLE ftable;
 -- DROP TABLE batch_table;
 
@@ -3873,6 +4097,16 @@ DROP FOREIGN TABLE ftable;
 -- SELECT * FROM async_pt t1, async_p2 t2 WHERE t1.a = t2.a AND t1.b === 505;
 -- SELECT * FROM async_pt t1, async_p2 t2 WHERE t1.a = t2.a AND t1.b === 505;
 
+-- CREATE TABLE local_tbl (a int, b int, c text);
+-- INSERT INTO local_tbl VALUES (1505, 505, 'foo');
+-- ANALYZE local_tbl;
+
+-- EXPLAIN (VERBOSE, COSTS OFF)
+-- SELECT * FROM local_tbl t1 LEFT JOIN (SELECT *, (SELECT count(*) FROM async_pt WHERE a < 3000) FROM async_pt WHERE a < 3000) t2 ON t1.a = t2.a;
+-- EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
+-- SELECT * FROM local_tbl t1 LEFT JOIN (SELECT *, (SELECT count(*) FROM async_pt WHERE a < 3000) FROM async_pt WHERE a < 3000) t2 ON t1.a = t2.a;
+-- SELECT * FROM local_tbl t1 LEFT JOIN (SELECT *, (SELECT count(*) FROM async_pt WHERE a < 3000) FROM async_pt WHERE a < 3000) t2 ON t1.a = t2.a;
+
 -- EXPLAIN (VERBOSE, COSTS OFF)
 -- SELECT * FROM async_pt t1 WHERE t1.b === 505 LIMIT 1;
 -- EXPLAIN (ANALYZE, COSTS OFF, SUMMARY OFF, TIMING OFF)
@@ -3880,9 +4114,6 @@ DROP FOREIGN TABLE ftable;
 -- SELECT * FROM async_pt t1 WHERE t1.b === 505 LIMIT 1;
 
 -- -- Check with foreign modify
--- CREATE TABLE local_tbl (a int, b int, c text);
--- INSERT INTO local_tbl VALUES (1505, 505, 'foo');
-
 -- CREATE TABLE base_tbl3 (a int, b int, c text);
 -- CREATE FOREIGN TABLE remote_tbl (a int, b int, c text)
 --   SERVER loopback OPTIONS (table_name 'base_tbl3');
@@ -3942,6 +4173,23 @@ DROP FOREIGN TABLE ftable;
 
 -- ALTER SERVER loopback OPTIONS (DROP async_capable);
 -- ALTER SERVER loopback2 OPTIONS (DROP async_capable);
+
+-- ===================================================================
+-- test invalid server and foreign table options
+-- ===================================================================
+-- -- Invalid fdw_startup_cost option
+-- CREATE SERVER inv_scst FOREIGN DATA WRAPPER postgres_fdw
+-- 	OPTIONS(fdw_startup_cost '100$%$#$#');
+-- -- Invalid fdw_tuple_cost option
+-- CREATE SERVER inv_scst FOREIGN DATA WRAPPER postgres_fdw
+-- 	OPTIONS(fdw_tuple_cost '100$%$#$#');
+-- -- Invalid fetch_size option
+-- CREATE FOREIGN TABLE inv_fsz (c1 int )
+-- 	SERVER loopback OPTIONS (fetch_size '100$%$#$#');
+-- Invalid batch_size option
+--Testcase 954:
+CREATE FOREIGN TABLE inv_bsz (c1 int )
+	SERVER sqlite_svr OPTIONS (batch_size '100$%$#$#');
 
 -- Clean-up
 --Testcase 733:

@@ -490,9 +490,11 @@ SELECT c FROM multiprimary WHERE COALESCE(a,b,c) = 99;
 CREATE FOREIGN TABLE multiprimary2(a int, b int, c int OPTIONS(column_name 'b')) SERVER sqlite_svr OPTIONS (table 'multiprimary');
 --Testcase 117:
 SELECT * FROM multiprimary2;
+--Testcase 214:
 ALTER FOREIGN TABLE multiprimary2 ALTER COLUMN a OPTIONS(ADD column_name 'b');
 --Testcase 118:
 SELECT * FROM multiprimary2;
+--Testcase 215:
 ALTER FOREIGN TABLE multiprimary2 ALTER COLUMN b OPTIONS (column_name 'nosuch column');
 --Testcase 119:
 SELECT * FROM multiprimary2;
@@ -545,6 +547,29 @@ ALTER TABLE fts_table ALTER COLUMN name TYPE int;
 --Testcase 160:
 SELECT * FROM fts_table; -- should fail
 
+-- INSERT/UPDATE whole row with generated column
+--Testcase 216:
+CREATE FOREIGN TABLE grem1_1 (
+  a int generated always as (0) stored)
+  SERVER sqlite_svr OPTIONS(table 'grem1_1');
+
+--Testcase 217:
+INSERT INTO grem1_1 DEFAULT VALUES;
+--Testcase 218:
+SELECT * FROM grem1_1;
+
+--Testcase 219:
+CREATE FOREIGN TABLE grem1_2 (
+  a int generated always as (0) stored,
+  b int generated always as (1) stored,
+  c int generated always as (2) stored,
+  d int generated always as (3) stored)
+  SERVER sqlite_svr OPTIONS(table 'grem1_2');
+--Testcase 220:
+INSERT INTO grem1_2 DEFAULT VALUES;
+--Testcase 221:
+SELECT * FROM grem1_2;
+
 --Testcase 142:
 DROP FUNCTION test_param_WHERE();
 --Testcase 143:
@@ -565,6 +590,10 @@ DROP FOREIGN TABLE columntest;
 DROP FOREIGN TABLE noprimary;
 --Testcase 161:
 DROP FOREIGN TABLE fts_table;
+--Testcase 222:
+DROP FOREIGN TABLE grem1_1;
+--Testcase 223:
+DROP FOREIGN TABLE grem1_2;
 
 --Testcase 151:
 DROP SERVER sqlite_svr;
