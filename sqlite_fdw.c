@@ -3618,13 +3618,19 @@ static bool
 sqlite_foreign_grouping_ok(PlannerInfo *root, RelOptInfo *grouped_rel)
 {
 	Query	   *query = root->parse;
-	PathTarget *grouping_target = root->upper_targets[UPPERREL_GROUP_AGG];
+	PathTarget *grouping_target;
 	SqliteFdwRelationInfo *fpinfo = (SqliteFdwRelationInfo *) grouped_rel->fdw_private;
 	SqliteFdwRelationInfo *ofpinfo;
 	List	   *aggvars;
 	ListCell   *lc;
 	int			i;
 	List	   *tlist = NIL;
+
+#if PG_VERSION_NUM < 110000
+	grouping_target = root->upper_targets[UPPERREL_GROUP_AGG];
+#else
+	grouping_target = grouped_rel->reltarget;
+#endif
 
 	/* Grouping Sets are not pushable */
 	if (query->groupingSets)
