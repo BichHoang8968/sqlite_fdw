@@ -28,6 +28,18 @@ make install
 </pre>
 
 ## Usage
+
+### FDW options
+
+| **No** | Option name | Context | Required | Description |
+|--------|-------------|---------|----------|-------------|
+| 1 | database | SERVER | Required | SQLite database path. |
+| 2 | table | FOREIGN TABLE | Required | SQLite table name. |
+| 3 | key | ATTRIBUTE | Optional | Primary key or unique key of SQLite table. |
+| 4 | column_type | ATTRIBUTE | Optional | Option to convert INT SQLite column (epoch Unix Time) to be treated/visualized as TIMESTAMP in PostgreSQL. |
+| 5 | column_name | ATTRIBUTE | Optional | This option gives the column name to use for the column on the remote server. |
+| 6 | truncatable | SERVER,<br>FOREIGN TABLE | Optional | This option controls whether sqlite_fdw allows foreign tables to be truncated using the TRUNCATE command. |
+
 ### Load extension
 <pre>
 CREATE EXTENSION sqlite_fdw;
@@ -67,11 +79,11 @@ SELECT * FROM t1;
 </pre>
 
 ## Features
-- Support update to foreign table  
+- Support INSERT/UPDATE/DELETE (both Direct modification and Foreign modification).
 - WHERE clauses are pushdowned  
 - Aggregate function are pushdowned
 - Order By is pushdowned
-- Joins (left/right/inner) are pushdowned
+- Joins (left/right/inner/cross) are pushdowned
 - Limit and Offset are pushdowned (*when all tables queried are fdw)
 - Transactions  
 - Support TRUNCATE by deparsing into DELETE statement without WHERE clause  
@@ -80,12 +92,29 @@ SELECT * FROM t1;
 - Support discard cached connections to foreign servers by using function sqlite_fdw_disconnect(), sqlite_fdw_disconnect_all().  
 - Support Bulk Insert by using batch_size option  
 - Support Insert/Update with generated column  
-
+- Support GROUP BY, HAVING push-down.
+- Support ON CONFLICT DO NOTHING.
 ## Limitations
 - `COPY` command for foreign tables is not supported
 - IMPORT of generated column is not supported
-- Insert into a partitioned table which has foreign partitions is not supported
+- Insert into a partitioned table which has foreign partitions is not supported. Error "Not support partition insert" will display.
 - TRUNCATE in sqlite_fdw always delete data of both parent and child tables (no matter user inputs `TRUNCATE table CASCADE` or `TRUNCATE table RESTRICT`) if there are foreign-keys references with "ON DELETE CASCADE" clause.
+- RETURNING is not supported.
+
+## Notes
+- SQLite evaluates division by zero as NULL. It is different from PostgreSQL, which will display "Division by zero" error.
+- The data type of column of foreign table should match with data type of column in SQLite to avoid wrong result. For example, if the column of SQLite is float (which will be stored as float8), the column of foreign table should be float8, too. If the column of foreign table is float4, it may cause wrong result when select.
+- For 'key' option, user needs to specify the primary key column of SQLite table corresponding with the 'key' option. If not, wrong result may occur when update or delete.
+- When Sum of data in table is out of range, SQLite FDW will display "Infinity" value. It is different from PostgreSQL FDW, which will display "ERROR: value out of range: overflow" error.
+- For push-down case, the number after floating point may be different from the result of PostgreSQL.
+- For numeric type, SQLite FDW use sqlite3_column_double to get value, while SQLite shell uses sqlite3_column_text to get value. Those 2 APIs may return different numeric value. Therefore, for numeric type, the value returned from SQLite FDW may different from the value returned from SQLite shell.
+- SQLite FDW can return implementation-dependent order for column if the column is not specified in ORDER BY clause.
+- WITH TIES option is not pushed down.
+- upper, lower functions are not pushed down because they does not work with UNICODE character in SQLite.
+- When the column type is varchar array, if the string is shorter than the declared length, values of type character will be space-padded; values of type character varying will simply store the shorter string.
+- SQLite FDW only supports ARRAY const, for example, ANY (ARRAY[1, 2, 3]) or ANY ('{1, 2 ,3}'). SQlite FDW does not support ARRAY expression, for example, ANY (ARRAY[c1, 1, c1+0]). For ANY(ARRAY) clause, SQLite FDW deparses it using IN operator.
+- For sum function of SQLite, output of sum(bigint) is integer value. If input values are big, the overflow error may occurs on SQLite because it overflow within the range of signed 64bit. For PostgreSQL, it can calculate as over the precision of bigint, so overflow does not occur.
+- SQLite promises to preserve the 15 most significant digits of a floating point value. The big value which exceed 15 most significant digits may become different value after inserted.
 ## Contributing
 Opening issues and pull requests on GitHub are welcome.
 
