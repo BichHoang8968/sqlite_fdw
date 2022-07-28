@@ -59,7 +59,7 @@ typedef struct ConnCacheEntry
 static HTAB *ConnectionHash = NULL;
 
 /* tracks whether any work is needed in callback functions */
-static bool xact_got_connection = false;
+static volatile bool xact_got_connection = false;
 
 PG_FUNCTION_INFO_V1(sqlite_fdw_get_connections);
 PG_FUNCTION_INFO_V1(sqlite_fdw_disconnect);
