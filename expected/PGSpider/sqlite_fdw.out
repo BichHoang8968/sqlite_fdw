@@ -527,8 +527,10 @@ DELETE FROM numbers;
 BEGIN;
 --Testcase 59:
 INSERT INTO numbers VALUES(1, 'One');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 60:
 INSERT INTO numbers VALUES(2, 'Two');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 COMMIT;
 --Testcase 61:
 SELECT * from numbers;
@@ -541,6 +543,7 @@ SELECT * from numbers;
 BEGIN;
 --Testcase 62:
 INSERT INTO numbers VALUES(3, 'Three');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 ROLLBACK;
 --Testcase 63:
 SELECT * from numbers;
@@ -553,12 +556,15 @@ SELECT * from numbers;
 BEGIN;
 --Testcase 64:
 INSERT INTO numbers VALUES(4, 'Four');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 SAVEPOINT my_savepoint;
 --Testcase 65:
 INSERT INTO numbers VALUES(5, 'Five');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 ROLLBACK TO SAVEPOINT my_savepoint;
 --Testcase 66:
 INSERT INTO numbers VALUES(6, 'Six');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 COMMIT;
 --Testcase 67:
 SELECT * from numbers;
@@ -580,8 +586,10 @@ DELETE from numbers;
 BEGIN;
 --Testcase 70:
 INSERT INTO numbers VALUES(1, 'One');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 71:
 INSERT INTO numbers VALUES(2, 'Two');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 COMMIT;
 -- violate unique constraint
 --Testcase 72:

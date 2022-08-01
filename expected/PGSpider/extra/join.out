@@ -3100,18 +3100,25 @@ create foreign table c2 (
 ) server sqlite_svr;
 --Testcase 159:
 insert into a2 (code) values ('p');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 160:
 insert into a2 (code) values ('q');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 161:
 insert into b2 (a, num) values ('p', 1);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 162:
 insert into b2 (a, num) values ('p', 2);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 163:
 insert into c2 (name, a) values ('A', 'p');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 164:
 insert into c2 (name, a) values ('B', 'q');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 165:
 insert into c2 (name, a) values ('C', null);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 166:
 select c2.name, ss.code, ss.b_cnt, ss.const
 from c2 left join
@@ -4897,12 +4904,16 @@ CREATE FOREIGN TABLE c3 (id int OPTIONS (key 'true')) SERVER sqlite_svr;
 CREATE FOREIGN TABLE d3 (a int, b int) SERVER sqlite_svr;
 --Testcase 233:
 INSERT INTO a3 VALUES (0, 0), (1, NULL);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 234:
 INSERT INTO b3 VALUES (0, 0), (1, NULL);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 235:
 INSERT INTO c3 VALUES (0), (1);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 236:
 INSERT INTO d3 VALUES (1,3), (2,2), (3,1);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 -- all three cases should be optimizable into a3 simple seqscan
 --Testcase 237:
 explain (costs off) SELECT a3.* FROM a3 LEFT JOIN b3 ON a3.b_id = b3.id;
@@ -5185,8 +5196,10 @@ CREATE FOREIGN TABLE a4 (id int OPTIONS (key 'true')) SERVER sqlite_svr;
 CREATE FOREIGN TABLE b4 (id int OPTIONS (key 'true'), a_id int) SERVER sqlite_svr;
 --Testcase 258:
 INSERT INTO a4 VALUES (0), (1);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 259:
 INSERT INTO b4 VALUES (0, 0), (1, NULL);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 260:
 SELECT * FROM b4 LEFT JOIN a4 ON (b4.a_id = a4.id) WHERE (a4.id IS NULL OR a4.id > 0);
  id | a_id | id 
@@ -5208,6 +5221,7 @@ begin;
 create foreign table innertab (id int8 options (key 'true'), dat1 int8) server sqlite_svr;
 --Testcase 262:
 insert into innertab values(123, 42);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 263:
 SELECT * FROM
     (SELECT 1 AS x) ss1
@@ -6668,6 +6682,7 @@ begin;
 create table fkest (x integer, x10 integer, x10b integer, x100 integer);
 --Testcase 525:
 insert into fkest select x, x/10, x/10, x/100 from generate_series(1,1000) x;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 526:
 create unique index on fkest(x, x10, x100);
 analyze fkest;
@@ -6726,8 +6741,10 @@ create foreign table fkest (a int options (key 'true'), b int options (key 'true
 create foreign table fkest1 (a int options (key 'true'), b int options (key 'true')) server sqlite_svr;
 --Testcase 333:
 insert into fkest select x/10, x%10, x from generate_series(1,1000) x;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 334:
 insert into fkest1 select x/10, x%10 from generate_series(1,1000) x;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --alter table fkest1
 --  add constraint fkest1_a_b_fkey foreign key (a,b) references fkest;
 --analyze fkest;
