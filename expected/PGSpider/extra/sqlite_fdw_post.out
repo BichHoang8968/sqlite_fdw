@@ -6605,6 +6605,7 @@ select c2, count(*) from "S 1"."T 1" where c2 < 500 group by 1 order by 1;
 begin;
 --Testcase 324:
 update ft2 set c2 = 42 where c2 = 0;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 325:
 select c2, count(*) from ft2 where c2 < 500 group by 1 order by 1;
  c2  | count 
@@ -6627,6 +6628,7 @@ select c2, count(*) from ft2 where c2 < 500 group by 1 order by 1;
 savepoint s1;
 --Testcase 326:
 update ft2 set c2 = 44 where c2 = 4;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 327:
 select c2, count(*) from ft2 where c2 < 500 group by 1 order by 1;
  c2  | count 
@@ -6669,6 +6671,7 @@ select c2, count(*) from ft2 where c2 < 500 group by 1 order by 1;
 savepoint s2;
 --Testcase 329:
 update ft2 set c2 = 46 where c2 = 6;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 330:
 select c2, count(*) from ft2 where c2 < 500 group by 1 order by 1;
  c2  | count 
@@ -8626,6 +8629,7 @@ fetch from c;
 
 --Testcase 458:
 update bar set f2 = null where current of c;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 ERROR:  WHERE CURRENT OF is not supported for this table type
 rollback;
 --Testcase 459:

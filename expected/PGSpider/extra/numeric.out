@@ -33,914 +33,1364 @@ CREATE FOREIGN TABLE num_result (id1 int4 OPTIONS (key 'true'), id2 int4 OPTIONS
 BEGIN TRANSACTION;
 --Testcase 1:
 INSERT INTO num_exp_add VALUES (0,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 2:
 INSERT INTO num_exp_sub VALUES (0,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 3:
 INSERT INTO num_exp_mul VALUES (0,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 4:
 INSERT INTO num_exp_div VALUES (0,0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 5:
 INSERT INTO num_exp_add VALUES (0,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 6:
 INSERT INTO num_exp_sub VALUES (0,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 7:
 INSERT INTO num_exp_mul VALUES (0,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 8:
 INSERT INTO num_exp_div VALUES (0,1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 9:
 INSERT INTO num_exp_add VALUES (0,2,'-34338492.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 10:
 INSERT INTO num_exp_sub VALUES (0,2,'34338492.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 11:
 INSERT INTO num_exp_mul VALUES (0,2,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 12:
 INSERT INTO num_exp_div VALUES (0,2,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 13:
 INSERT INTO num_exp_add VALUES (0,3,'4.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 14:
 INSERT INTO num_exp_sub VALUES (0,3,'-4.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 15:
 INSERT INTO num_exp_mul VALUES (0,3,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 16:
 INSERT INTO num_exp_div VALUES (0,3,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 17:
 INSERT INTO num_exp_add VALUES (0,4,'7799461.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 18:
 INSERT INTO num_exp_sub VALUES (0,4,'-7799461.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 19:
 INSERT INTO num_exp_mul VALUES (0,4,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 20:
 INSERT INTO num_exp_div VALUES (0,4,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 21:
 INSERT INTO num_exp_add VALUES (0,5,'16397.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 22:
 INSERT INTO num_exp_sub VALUES (0,5,'-16397.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 23:
 INSERT INTO num_exp_mul VALUES (0,5,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 24:
 INSERT INTO num_exp_div VALUES (0,5,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 25:
 INSERT INTO num_exp_add VALUES (0,6,'93901.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 26:
 INSERT INTO num_exp_sub VALUES (0,6,'-93901.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 27:
 INSERT INTO num_exp_mul VALUES (0,6,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 28:
 INSERT INTO num_exp_div VALUES (0,6,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 29:
 INSERT INTO num_exp_add VALUES (0,7,'-83028485');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 30:
 INSERT INTO num_exp_sub VALUES (0,7,'83028485');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 31:
 INSERT INTO num_exp_mul VALUES (0,7,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 32:
 INSERT INTO num_exp_div VALUES (0,7,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 33:
 INSERT INTO num_exp_add VALUES (0,8,'74881');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 34:
 INSERT INTO num_exp_sub VALUES (0,8,'-74881');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 35:
 INSERT INTO num_exp_mul VALUES (0,8,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 36:
 INSERT INTO num_exp_div VALUES (0,8,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 37:
 INSERT INTO num_exp_add VALUES (0,9,'-24926804.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 38:
 INSERT INTO num_exp_sub VALUES (0,9,'24926804.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 39:
 INSERT INTO num_exp_mul VALUES (0,9,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 40:
 INSERT INTO num_exp_div VALUES (0,9,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 41:
 INSERT INTO num_exp_add VALUES (1,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 42:
 INSERT INTO num_exp_sub VALUES (1,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 43:
 INSERT INTO num_exp_mul VALUES (1,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 44:
 INSERT INTO num_exp_div VALUES (1,0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 45:
 INSERT INTO num_exp_add VALUES (1,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 46:
 INSERT INTO num_exp_sub VALUES (1,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 47:
 INSERT INTO num_exp_mul VALUES (1,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 48:
 INSERT INTO num_exp_div VALUES (1,1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 49:
 INSERT INTO num_exp_add VALUES (1,2,'-34338492.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 50:
 INSERT INTO num_exp_sub VALUES (1,2,'34338492.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 51:
 INSERT INTO num_exp_mul VALUES (1,2,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 52:
 INSERT INTO num_exp_div VALUES (1,2,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 53:
 INSERT INTO num_exp_add VALUES (1,3,'4.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 54:
 INSERT INTO num_exp_sub VALUES (1,3,'-4.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 55:
 INSERT INTO num_exp_mul VALUES (1,3,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 56:
 INSERT INTO num_exp_div VALUES (1,3,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 57:
 INSERT INTO num_exp_add VALUES (1,4,'7799461.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 58:
 INSERT INTO num_exp_sub VALUES (1,4,'-7799461.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 59:
 INSERT INTO num_exp_mul VALUES (1,4,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 60:
 INSERT INTO num_exp_div VALUES (1,4,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 61:
 INSERT INTO num_exp_add VALUES (1,5,'16397.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 62:
 INSERT INTO num_exp_sub VALUES (1,5,'-16397.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 63:
 INSERT INTO num_exp_mul VALUES (1,5,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 64:
 INSERT INTO num_exp_div VALUES (1,5,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 65:
 INSERT INTO num_exp_add VALUES (1,6,'93901.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 66:
 INSERT INTO num_exp_sub VALUES (1,6,'-93901.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 67:
 INSERT INTO num_exp_mul VALUES (1,6,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 68:
 INSERT INTO num_exp_div VALUES (1,6,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 69:
 INSERT INTO num_exp_add VALUES (1,7,'-83028485');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 70:
 INSERT INTO num_exp_sub VALUES (1,7,'83028485');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 71:
 INSERT INTO num_exp_mul VALUES (1,7,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 72:
 INSERT INTO num_exp_div VALUES (1,7,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 73:
 INSERT INTO num_exp_add VALUES (1,8,'74881');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 74:
 INSERT INTO num_exp_sub VALUES (1,8,'-74881');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 75:
 INSERT INTO num_exp_mul VALUES (1,8,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 76:
 INSERT INTO num_exp_div VALUES (1,8,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 77:
 INSERT INTO num_exp_add VALUES (1,9,'-24926804.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 78:
 INSERT INTO num_exp_sub VALUES (1,9,'24926804.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 79:
 INSERT INTO num_exp_mul VALUES (1,9,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 80:
 INSERT INTO num_exp_div VALUES (1,9,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 81:
 INSERT INTO num_exp_add VALUES (2,0,'-34338492.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 82:
 INSERT INTO num_exp_sub VALUES (2,0,'-34338492.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 83:
 INSERT INTO num_exp_mul VALUES (2,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 84:
 INSERT INTO num_exp_div VALUES (2,0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 85:
 INSERT INTO num_exp_add VALUES (2,1,'-34338492.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 86:
 INSERT INTO num_exp_sub VALUES (2,1,'-34338492.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 87:
 INSERT INTO num_exp_mul VALUES (2,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 88:
 INSERT INTO num_exp_div VALUES (2,1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 89:
 INSERT INTO num_exp_add VALUES (2,2,'-68676984.430794094');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 90:
 INSERT INTO num_exp_sub VALUES (2,2,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 91:
 INSERT INTO num_exp_mul VALUES (2,2,'1179132047626883.596862135856320209');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 92:
 INSERT INTO num_exp_div VALUES (2,2,'1.00000000000000000000');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 93:
 INSERT INTO num_exp_add VALUES (2,3,'-34338487.905397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 94:
 INSERT INTO num_exp_sub VALUES (2,3,'-34338496.525397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 95:
 INSERT INTO num_exp_mul VALUES (2,3,'-147998901.44836127257');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 96:
 INSERT INTO num_exp_div VALUES (2,3,'-7967167.56737750510440835266');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 97:
 INSERT INTO num_exp_add VALUES (2,4,'-26539030.803497047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 98:
 INSERT INTO num_exp_sub VALUES (2,4,'-42137953.627297047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 99:
 INSERT INTO num_exp_mul VALUES (2,4,'-267821744976817.8111137106593');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 100:
 INSERT INTO num_exp_div VALUES (2,4,'-4.40267480046830116685');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 101:
 INSERT INTO num_exp_add VALUES (2,5,'-34322095.176906047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 102:
 INSERT INTO num_exp_sub VALUES (2,5,'-34354889.253888047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 103:
 INSERT INTO num_exp_mul VALUES (2,5,'-563049578578.769242506736077');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 104:
 INSERT INTO num_exp_div VALUES (2,5,'-2094.18866914563535496429');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 105:
 INSERT INTO num_exp_add VALUES (2,6,'-34244590.637766787');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 106:
 INSERT INTO num_exp_sub VALUES (2,6,'-34432393.793027307');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 107:
 INSERT INTO num_exp_mul VALUES (2,6,'-3224438592470.18449811926184222');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 108:
 INSERT INTO num_exp_div VALUES (2,6,'-365.68599891479766440940');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 109:
 INSERT INTO num_exp_add VALUES (2,7,'-117366977.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 110:
 INSERT INTO num_exp_sub VALUES (2,7,'48689992.784602953');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 111:
 INSERT INTO num_exp_mul VALUES (2,7,'2851072985828710.485883795');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 112:
 INSERT INTO num_exp_div VALUES (2,7,'.41357483778485235518');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 113:
 INSERT INTO num_exp_add VALUES (2,8,'-34263611.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 114:
 INSERT INTO num_exp_sub VALUES (2,8,'-34413373.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 115:
 INSERT INTO num_exp_mul VALUES (2,8,'-2571300635581.146276407');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 116:
 INSERT INTO num_exp_div VALUES (2,8,'-458.57416721727870888476');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 117:
 INSERT INTO num_exp_add VALUES (2,9,'-59265296.260444467');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 118:
 INSERT INTO num_exp_sub VALUES (2,9,'-9411688.170349627');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 119:
 INSERT INTO num_exp_mul VALUES (2,9,'855948866655588.453741509242968740');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 120:
 INSERT INTO num_exp_div VALUES (2,9,'1.37757299946438931811');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 121:
 INSERT INTO num_exp_add VALUES (3,0,'4.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 122:
 INSERT INTO num_exp_sub VALUES (3,0,'4.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 123:
 INSERT INTO num_exp_mul VALUES (3,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 124:
 INSERT INTO num_exp_div VALUES (3,0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 125:
 INSERT INTO num_exp_add VALUES (3,1,'4.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 126:
 INSERT INTO num_exp_sub VALUES (3,1,'4.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 127:
 INSERT INTO num_exp_mul VALUES (3,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 128:
 INSERT INTO num_exp_div VALUES (3,1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 129:
 INSERT INTO num_exp_add VALUES (3,2,'-34338487.905397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 130:
 INSERT INTO num_exp_sub VALUES (3,2,'34338496.525397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 131:
 INSERT INTO num_exp_mul VALUES (3,2,'-147998901.44836127257');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 132:
 INSERT INTO num_exp_div VALUES (3,2,'-.00000012551512084352');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 133:
 INSERT INTO num_exp_add VALUES (3,3,'8.62');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 134:
 INSERT INTO num_exp_sub VALUES (3,3,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 135:
 INSERT INTO num_exp_mul VALUES (3,3,'18.5761');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 136:
 INSERT INTO num_exp_div VALUES (3,3,'1.00000000000000000000');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 137:
 INSERT INTO num_exp_add VALUES (3,4,'7799465.7219');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 138:
 INSERT INTO num_exp_sub VALUES (3,4,'-7799457.1019');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 139:
 INSERT INTO num_exp_mul VALUES (3,4,'33615678.685289');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 140:
 INSERT INTO num_exp_div VALUES (3,4,'.00000055260225961552');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 141:
 INSERT INTO num_exp_add VALUES (3,5,'16401.348491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 142:
 INSERT INTO num_exp_sub VALUES (3,5,'-16392.728491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 143:
 INSERT INTO num_exp_mul VALUES (3,5,'70671.23589621');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 144:
 INSERT INTO num_exp_div VALUES (3,5,'.00026285234387695504');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 145:
 INSERT INTO num_exp_add VALUES (3,6,'93905.88763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 146:
 INSERT INTO num_exp_sub VALUES (3,6,'-93897.26763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 147:
 INSERT INTO num_exp_mul VALUES (3,6,'404715.7995864206');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 148:
 INSERT INTO num_exp_div VALUES (3,6,'.00004589912234457595');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 149:
 INSERT INTO num_exp_add VALUES (3,7,'-83028480.69');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 150:
 INSERT INTO num_exp_sub VALUES (3,7,'83028489.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 151:
 INSERT INTO num_exp_mul VALUES (3,7,'-357852770.35');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 152:
 INSERT INTO num_exp_div VALUES (3,7,'-.00000005190989574240');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 153:
 INSERT INTO num_exp_add VALUES (3,8,'74885.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 154:
 INSERT INTO num_exp_sub VALUES (3,8,'-74876.69');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 155:
 INSERT INTO num_exp_mul VALUES (3,8,'322737.11');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 156:
 INSERT INTO num_exp_div VALUES (3,8,'.00005755799201399553');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 157:
 INSERT INTO num_exp_add VALUES (3,9,'-24926799.735047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 158:
 INSERT INTO num_exp_sub VALUES (3,9,'24926808.355047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 159:
 INSERT INTO num_exp_mul VALUES (3,9,'-107434525.43415438020');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 160:
 INSERT INTO num_exp_div VALUES (3,9,'-.00000017290624149854');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 161:
 INSERT INTO num_exp_add VALUES (4,0,'7799461.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 162:
 INSERT INTO num_exp_sub VALUES (4,0,'7799461.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 163:
 INSERT INTO num_exp_mul VALUES (4,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 164:
 INSERT INTO num_exp_div VALUES (4,0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 165:
 INSERT INTO num_exp_add VALUES (4,1,'7799461.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 166:
 INSERT INTO num_exp_sub VALUES (4,1,'7799461.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 167:
 INSERT INTO num_exp_mul VALUES (4,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 168:
 INSERT INTO num_exp_div VALUES (4,1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 169:
 INSERT INTO num_exp_add VALUES (4,2,'-26539030.803497047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 170:
 INSERT INTO num_exp_sub VALUES (4,2,'42137953.627297047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 171:
 INSERT INTO num_exp_mul VALUES (4,2,'-267821744976817.8111137106593');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 172:
 INSERT INTO num_exp_div VALUES (4,2,'-.22713465002993920385');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 173:
 INSERT INTO num_exp_add VALUES (4,3,'7799465.7219');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 174:
 INSERT INTO num_exp_sub VALUES (4,3,'7799457.1019');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 175:
 INSERT INTO num_exp_mul VALUES (4,3,'33615678.685289');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 176:
 INSERT INTO num_exp_div VALUES (4,3,'1809619.81714617169373549883');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 177:
 INSERT INTO num_exp_add VALUES (4,4,'15598922.8238');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 178:
 INSERT INTO num_exp_sub VALUES (4,4,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 179:
 INSERT INTO num_exp_mul VALUES (4,4,'60831598315717.14146161');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 180:
 INSERT INTO num_exp_div VALUES (4,4,'1.00000000000000000000');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 181:
 INSERT INTO num_exp_add VALUES (4,5,'7815858.450391');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 182:
 INSERT INTO num_exp_sub VALUES (4,5,'7783064.373409');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 183:
 INSERT INTO num_exp_mul VALUES (4,5,'127888068979.9935054429');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 184:
 INSERT INTO num_exp_div VALUES (4,5,'475.66281046305802686061');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 185:
 INSERT INTO num_exp_add VALUES (4,6,'7893362.98953026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 186:
 INSERT INTO num_exp_sub VALUES (4,6,'7705559.83426974');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 187:
 INSERT INTO num_exp_mul VALUES (4,6,'732381731243.745115764094');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 188:
 INSERT INTO num_exp_div VALUES (4,6,'83.05996138436129499606');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 189:
 INSERT INTO num_exp_add VALUES (4,7,'-75229023.5881');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 190:
 INSERT INTO num_exp_sub VALUES (4,7,'90827946.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 191:
 INSERT INTO num_exp_mul VALUES (4,7,'-647577464846017.9715');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 192:
 INSERT INTO num_exp_div VALUES (4,7,'-.09393717604145131637');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 193:
 INSERT INTO num_exp_add VALUES (4,8,'7874342.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 194:
 INSERT INTO num_exp_sub VALUES (4,8,'7724580.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 195:
 INSERT INTO num_exp_mul VALUES (4,8,'584031469984.4839');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 196:
 INSERT INTO num_exp_div VALUES (4,8,'104.15808298366741897143');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 197:
 INSERT INTO num_exp_add VALUES (4,9,'-17127342.633147420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 198:
 INSERT INTO num_exp_sub VALUES (4,9,'32726265.456947420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 199:
 INSERT INTO num_exp_mul VALUES (4,9,'-194415646271340.1815956522980');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 200:
 INSERT INTO num_exp_div VALUES (4,9,'-.31289456112403769409');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 201:
 INSERT INTO num_exp_add VALUES (5,0,'16397.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 202:
 INSERT INTO num_exp_sub VALUES (5,0,'16397.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 203:
 INSERT INTO num_exp_mul VALUES (5,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 204:
 INSERT INTO num_exp_div VALUES (5,0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 205:
 INSERT INTO num_exp_add VALUES (5,1,'16397.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 206:
 INSERT INTO num_exp_sub VALUES (5,1,'16397.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 207:
 INSERT INTO num_exp_mul VALUES (5,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 208:
 INSERT INTO num_exp_div VALUES (5,1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 209:
 INSERT INTO num_exp_add VALUES (5,2,'-34322095.176906047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 210:
 INSERT INTO num_exp_sub VALUES (5,2,'34354889.253888047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 211:
 INSERT INTO num_exp_mul VALUES (5,2,'-563049578578.769242506736077');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 212:
 INSERT INTO num_exp_div VALUES (5,2,'-.00047751189505192446');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 213:
 INSERT INTO num_exp_add VALUES (5,3,'16401.348491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 214:
 INSERT INTO num_exp_sub VALUES (5,3,'16392.728491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 215:
 INSERT INTO num_exp_mul VALUES (5,3,'70671.23589621');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 216:
 INSERT INTO num_exp_div VALUES (5,3,'3804.41728329466357308584');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 217:
 INSERT INTO num_exp_add VALUES (5,4,'7815858.450391');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 218:
 INSERT INTO num_exp_sub VALUES (5,4,'-7783064.373409');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 219:
 INSERT INTO num_exp_mul VALUES (5,4,'127888068979.9935054429');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 220:
 INSERT INTO num_exp_div VALUES (5,4,'.00210232958726897192');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 221:
 INSERT INTO num_exp_add VALUES (5,5,'32794.076982');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 222:
 INSERT INTO num_exp_sub VALUES (5,5,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 223:
 INSERT INTO num_exp_mul VALUES (5,5,'268862871.275335557081');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 224:
 INSERT INTO num_exp_div VALUES (5,5,'1.00000000000000000000');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 225:
 INSERT INTO num_exp_add VALUES (5,6,'110298.61612126');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 226:
 INSERT INTO num_exp_sub VALUES (5,6,'-77504.53913926');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 227:
 INSERT INTO num_exp_mul VALUES (5,6,'1539707782.76899778633766');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 228:
 INSERT INTO num_exp_div VALUES (5,6,'.17461941433576102689');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 229:
 INSERT INTO num_exp_add VALUES (5,7,'-83012087.961509');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 230:
 INSERT INTO num_exp_sub VALUES (5,7,'83044882.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 231:
 INSERT INTO num_exp_mul VALUES (5,7,'-1361421264394.416135');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 232:
 INSERT INTO num_exp_div VALUES (5,7,'-.00019748690453643710');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 233:
 INSERT INTO num_exp_add VALUES (5,8,'91278.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 234:
 INSERT INTO num_exp_sub VALUES (5,8,'-58483.961509');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 235:
 INSERT INTO num_exp_mul VALUES (5,8,'1227826639.244571');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 236:
 INSERT INTO num_exp_div VALUES (5,8,'.21897461960978085228');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 237:
 INSERT INTO num_exp_add VALUES (5,9,'-24910407.006556420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 238:
 INSERT INTO num_exp_sub VALUES (5,9,'24943201.083538420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 239:
 INSERT INTO num_exp_mul VALUES (5,9,'-408725765384.257043660243220');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 240:
 INSERT INTO num_exp_div VALUES (5,9,'-.00065780749354660427');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 241:
 INSERT INTO num_exp_add VALUES (6,0,'93901.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 242:
 INSERT INTO num_exp_sub VALUES (6,0,'93901.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 243:
 INSERT INTO num_exp_mul VALUES (6,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 244:
 INSERT INTO num_exp_div VALUES (6,0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 245:
 INSERT INTO num_exp_add VALUES (6,1,'93901.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 246:
 INSERT INTO num_exp_sub VALUES (6,1,'93901.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 247:
 INSERT INTO num_exp_mul VALUES (6,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 248:
 INSERT INTO num_exp_div VALUES (6,1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 249:
 INSERT INTO num_exp_add VALUES (6,2,'-34244590.637766787');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 250:
 INSERT INTO num_exp_sub VALUES (6,2,'34432393.793027307');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 251:
 INSERT INTO num_exp_mul VALUES (6,2,'-3224438592470.18449811926184222');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 252:
 INSERT INTO num_exp_div VALUES (6,2,'-.00273458651128995823');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 253:
 INSERT INTO num_exp_add VALUES (6,3,'93905.88763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 254:
 INSERT INTO num_exp_sub VALUES (6,3,'93897.26763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 255:
 INSERT INTO num_exp_mul VALUES (6,3,'404715.7995864206');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 256:
 INSERT INTO num_exp_div VALUES (6,3,'21786.90896293735498839907');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 257:
 INSERT INTO num_exp_add VALUES (6,4,'7893362.98953026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 258:
 INSERT INTO num_exp_sub VALUES (6,4,'-7705559.83426974');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 259:
 INSERT INTO num_exp_mul VALUES (6,4,'732381731243.745115764094');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 260:
 INSERT INTO num_exp_div VALUES (6,4,'.01203949512295682469');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 261:
 INSERT INTO num_exp_add VALUES (6,5,'110298.61612126');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 262:
 INSERT INTO num_exp_sub VALUES (6,5,'77504.53913926');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 263:
 INSERT INTO num_exp_mul VALUES (6,5,'1539707782.76899778633766');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 264:
 INSERT INTO num_exp_div VALUES (6,5,'5.72674008674192359679');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 265:
 INSERT INTO num_exp_add VALUES (6,6,'187803.15526052');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 266:
 INSERT INTO num_exp_sub VALUES (6,6,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 267:
 INSERT INTO num_exp_mul VALUES (6,6,'8817506281.4517452372676676');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 268:
 INSERT INTO num_exp_div VALUES (6,6,'1.00000000000000000000');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 269:
 INSERT INTO num_exp_add VALUES (6,7,'-82934583.42236974');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 270:
 INSERT INTO num_exp_sub VALUES (6,7,'83122386.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 271:
 INSERT INTO num_exp_mul VALUES (6,7,'-7796505729750.37795610');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 272:
 INSERT INTO num_exp_div VALUES (6,7,'-.00113095617281538980');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 273:
 INSERT INTO num_exp_add VALUES (6,8,'168782.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 274:
 INSERT INTO num_exp_sub VALUES (6,8,'19020.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 275:
 INSERT INTO num_exp_mul VALUES (6,8,'7031444034.53149906');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 276:
 INSERT INTO num_exp_div VALUES (6,8,'1.25401073209839612184');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 277:
 INSERT INTO num_exp_add VALUES (6,9,'-24832902.467417160');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 278:
 INSERT INTO num_exp_sub VALUES (6,9,'25020705.622677680');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 279:
 INSERT INTO num_exp_mul VALUES (6,9,'-2340666225110.29929521292692920');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 280:
 INSERT INTO num_exp_div VALUES (6,9,'-.00376709254265256789');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 281:
 INSERT INTO num_exp_add VALUES (7,0,'-83028485');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 282:
 INSERT INTO num_exp_sub VALUES (7,0,'-83028485');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 283:
 INSERT INTO num_exp_mul VALUES (7,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 284:
 INSERT INTO num_exp_div VALUES (7,0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 285:
 INSERT INTO num_exp_add VALUES (7,1,'-83028485');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 286:
 INSERT INTO num_exp_sub VALUES (7,1,'-83028485');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 287:
 INSERT INTO num_exp_mul VALUES (7,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 288:
 INSERT INTO num_exp_div VALUES (7,1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 289:
 INSERT INTO num_exp_add VALUES (7,2,'-117366977.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 290:
 INSERT INTO num_exp_sub VALUES (7,2,'-48689992.784602953');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 291:
 INSERT INTO num_exp_mul VALUES (7,2,'2851072985828710.485883795');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 292:
 INSERT INTO num_exp_div VALUES (7,2,'2.41794207151503385700');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 293:
 INSERT INTO num_exp_add VALUES (7,3,'-83028480.69');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 294:
 INSERT INTO num_exp_sub VALUES (7,3,'-83028489.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 295:
 INSERT INTO num_exp_mul VALUES (7,3,'-357852770.35');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 296:
 INSERT INTO num_exp_div VALUES (7,3,'-19264149.65197215777262180974');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 297:
 INSERT INTO num_exp_add VALUES (7,4,'-75229023.5881');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 298:
 INSERT INTO num_exp_sub VALUES (7,4,'-90827946.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 299:
 INSERT INTO num_exp_mul VALUES (7,4,'-647577464846017.9715');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 300:
 INSERT INTO num_exp_div VALUES (7,4,'-10.64541262725136247686');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 301:
 INSERT INTO num_exp_add VALUES (7,5,'-83012087.961509');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 302:
 INSERT INTO num_exp_sub VALUES (7,5,'-83044882.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 303:
 INSERT INTO num_exp_mul VALUES (7,5,'-1361421264394.416135');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 304:
 INSERT INTO num_exp_div VALUES (7,5,'-5063.62688881730941836574');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 305:
 INSERT INTO num_exp_add VALUES (7,6,'-82934583.42236974');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 306:
 INSERT INTO num_exp_sub VALUES (7,6,'-83122386.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 307:
 INSERT INTO num_exp_mul VALUES (7,6,'-7796505729750.37795610');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 308:
 INSERT INTO num_exp_div VALUES (7,6,'-884.20756174009028770294');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 309:
 INSERT INTO num_exp_add VALUES (7,7,'-166056970');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 310:
 INSERT INTO num_exp_sub VALUES (7,7,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 311:
 INSERT INTO num_exp_mul VALUES (7,7,'6893729321395225');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 312:
 INSERT INTO num_exp_div VALUES (7,7,'1.00000000000000000000');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 313:
 INSERT INTO num_exp_add VALUES (7,8,'-82953604');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 314:
 INSERT INTO num_exp_sub VALUES (7,8,'-83103366');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 315:
 INSERT INTO num_exp_mul VALUES (7,8,'-6217255985285');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 316:
 INSERT INTO num_exp_div VALUES (7,8,'-1108.80577182462841041118');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 317:
 INSERT INTO num_exp_add VALUES (7,9,'-107955289.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 318:
 INSERT INTO num_exp_sub VALUES (7,9,'-58101680.954952580');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 319:
 INSERT INTO num_exp_mul VALUES (7,9,'2069634775752159.035758700');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 320:
 INSERT INTO num_exp_div VALUES (7,9,'3.33089171198810413382');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 321:
 INSERT INTO num_exp_add VALUES (8,0,'74881');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 322:
 INSERT INTO num_exp_sub VALUES (8,0,'74881');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 323:
 INSERT INTO num_exp_mul VALUES (8,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 324:
 INSERT INTO num_exp_div VALUES (8,0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 325:
 INSERT INTO num_exp_add VALUES (8,1,'74881');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 326:
 INSERT INTO num_exp_sub VALUES (8,1,'74881');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 327:
 INSERT INTO num_exp_mul VALUES (8,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 328:
 INSERT INTO num_exp_div VALUES (8,1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 329:
 INSERT INTO num_exp_add VALUES (8,2,'-34263611.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 330:
 INSERT INTO num_exp_sub VALUES (8,2,'34413373.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 331:
 INSERT INTO num_exp_mul VALUES (8,2,'-2571300635581.146276407');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 332:
 INSERT INTO num_exp_div VALUES (8,2,'-.00218067233500788615');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 333:
 INSERT INTO num_exp_add VALUES (8,3,'74885.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 334:
 INSERT INTO num_exp_sub VALUES (8,3,'74876.69');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 335:
 INSERT INTO num_exp_mul VALUES (8,3,'322737.11');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 336:
 INSERT INTO num_exp_div VALUES (8,3,'17373.78190255220417633410');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 337:
 INSERT INTO num_exp_add VALUES (8,4,'7874342.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 338:
 INSERT INTO num_exp_sub VALUES (8,4,'-7724580.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 339:
 INSERT INTO num_exp_mul VALUES (8,4,'584031469984.4839');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 340:
 INSERT INTO num_exp_div VALUES (8,4,'.00960079113741758956');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 341:
 INSERT INTO num_exp_add VALUES (8,5,'91278.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 342:
 INSERT INTO num_exp_sub VALUES (8,5,'58483.961509');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 343:
 INSERT INTO num_exp_mul VALUES (8,5,'1227826639.244571');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 344:
 INSERT INTO num_exp_div VALUES (8,5,'4.56673929509287019456');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 345:
 INSERT INTO num_exp_add VALUES (8,6,'168782.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 346:
 INSERT INTO num_exp_sub VALUES (8,6,'-19020.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 347:
 INSERT INTO num_exp_mul VALUES (8,6,'7031444034.53149906');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 348:
 INSERT INTO num_exp_div VALUES (8,6,'.79744134113322314424');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 349:
 INSERT INTO num_exp_add VALUES (8,7,'-82953604');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 350:
 INSERT INTO num_exp_sub VALUES (8,7,'83103366');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 351:
 INSERT INTO num_exp_mul VALUES (8,7,'-6217255985285');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 352:
 INSERT INTO num_exp_div VALUES (8,7,'-.00090187120721280172');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 353:
 INSERT INTO num_exp_add VALUES (8,8,'149762');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 354:
 INSERT INTO num_exp_sub VALUES (8,8,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 355:
 INSERT INTO num_exp_mul VALUES (8,8,'5607164161');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 356:
 INSERT INTO num_exp_div VALUES (8,8,'1.00000000000000000000');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 357:
 INSERT INTO num_exp_add VALUES (8,9,'-24851923.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 358:
 INSERT INTO num_exp_sub VALUES (8,9,'25001685.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 359:
 INSERT INTO num_exp_mul VALUES (8,9,'-1866544013697.195857020');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 360:
 INSERT INTO num_exp_div VALUES (8,9,'-.00300403532938582735');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 361:
 INSERT INTO num_exp_add VALUES (9,0,'-24926804.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 362:
 INSERT INTO num_exp_sub VALUES (9,0,'-24926804.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 363:
 INSERT INTO num_exp_mul VALUES (9,0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 364:
 INSERT INTO num_exp_div VALUES (9,0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 365:
 INSERT INTO num_exp_add VALUES (9,1,'-24926804.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 366:
 INSERT INTO num_exp_sub VALUES (9,1,'-24926804.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 367:
 INSERT INTO num_exp_mul VALUES (9,1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 368:
 INSERT INTO num_exp_div VALUES (9,1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 369:
 INSERT INTO num_exp_add VALUES (9,2,'-59265296.260444467');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 370:
 INSERT INTO num_exp_sub VALUES (9,2,'9411688.170349627');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 371:
 INSERT INTO num_exp_mul VALUES (9,2,'855948866655588.453741509242968740');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 372:
 INSERT INTO num_exp_div VALUES (9,2,'.72591434384152961526');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 373:
 INSERT INTO num_exp_add VALUES (9,3,'-24926799.735047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 374:
 INSERT INTO num_exp_sub VALUES (9,3,'-24926808.355047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 375:
 INSERT INTO num_exp_mul VALUES (9,3,'-107434525.43415438020');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 376:
 INSERT INTO num_exp_div VALUES (9,3,'-5783481.21694835730858468677');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 377:
 INSERT INTO num_exp_add VALUES (9,4,'-17127342.633147420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 378:
 INSERT INTO num_exp_sub VALUES (9,4,'-32726265.456947420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 379:
 INSERT INTO num_exp_mul VALUES (9,4,'-194415646271340.1815956522980');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 380:
 INSERT INTO num_exp_div VALUES (9,4,'-3.19596478892958416484');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 381:
 INSERT INTO num_exp_add VALUES (9,5,'-24910407.006556420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 382:
 INSERT INTO num_exp_sub VALUES (9,5,'-24943201.083538420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 383:
 INSERT INTO num_exp_mul VALUES (9,5,'-408725765384.257043660243220');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 384:
 INSERT INTO num_exp_div VALUES (9,5,'-1520.20159364322004505807');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 385:
 INSERT INTO num_exp_add VALUES (9,6,'-24832902.467417160');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 386:
 INSERT INTO num_exp_sub VALUES (9,6,'-25020705.622677680');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 387:
 INSERT INTO num_exp_mul VALUES (9,6,'-2340666225110.29929521292692920');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 388:
 INSERT INTO num_exp_div VALUES (9,6,'-265.45671195426965751280');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 389:
 INSERT INTO num_exp_add VALUES (9,7,'-107955289.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 390:
 INSERT INTO num_exp_sub VALUES (9,7,'58101680.954952580');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 391:
 INSERT INTO num_exp_mul VALUES (9,7,'2069634775752159.035758700');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 392:
 INSERT INTO num_exp_div VALUES (9,7,'.30021990699995814689');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 393:
 INSERT INTO num_exp_add VALUES (9,8,'-24851923.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 394:
 INSERT INTO num_exp_sub VALUES (9,8,'-25001685.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 395:
 INSERT INTO num_exp_mul VALUES (9,8,'-1866544013697.195857020');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 396:
 INSERT INTO num_exp_div VALUES (9,8,'-332.88556569820675471748');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 397:
 INSERT INTO num_exp_add VALUES (9,9,'-49853608.090094840');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 398:
 INSERT INTO num_exp_sub VALUES (9,9,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 399:
 INSERT INTO num_exp_mul VALUES (9,9,'621345559900192.420120630048656400');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 400:
 INSERT INTO num_exp_div VALUES (9,9,'1.00000000000000000000');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 COMMIT TRANSACTION;
 BEGIN TRANSACTION;
 --Testcase 401:
 INSERT INTO num_exp_sqrt VALUES (0,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 402:
 INSERT INTO num_exp_sqrt VALUES (1,'0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 403:
 INSERT INTO num_exp_sqrt VALUES (2,'5859.90547836712524903505');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 404:
 INSERT INTO num_exp_sqrt VALUES (3,'2.07605394920266944396');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 405:
 INSERT INTO num_exp_sqrt VALUES (4,'2792.75158435189147418923');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 406:
 INSERT INTO num_exp_sqrt VALUES (5,'128.05092147657509145473');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 407:
 INSERT INTO num_exp_sqrt VALUES (6,'306.43364311096782703406');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 408:
 INSERT INTO num_exp_sqrt VALUES (7,'9111.99676251039939975230');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 409:
 INSERT INTO num_exp_sqrt VALUES (8,'273.64392922189960397542');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 410:
 INSERT INTO num_exp_sqrt VALUES (9,'4992.67503899937593364766');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 COMMIT TRANSACTION;
 BEGIN TRANSACTION;
 --Testcase 411:
 INSERT INTO num_exp_ln VALUES (0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 412:
 INSERT INTO num_exp_ln VALUES (1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 413:
 INSERT INTO num_exp_ln VALUES (2,'17.35177750493897715514');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 414:
 INSERT INTO num_exp_ln VALUES (3,'1.46093790411565641971');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 415:
 INSERT INTO num_exp_ln VALUES (4,'15.86956523951936572464');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 416:
 INSERT INTO num_exp_ln VALUES (5,'9.70485601768871834038');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 417:
 INSERT INTO num_exp_ln VALUES (6,'11.45000246622944403127');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 418:
 INSERT INTO num_exp_ln VALUES (7,'18.23469429965478772991');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 419:
 INSERT INTO num_exp_ln VALUES (8,'11.22365546576315513668');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 420:
 INSERT INTO num_exp_ln VALUES (9,'17.03145425013166006962');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 COMMIT TRANSACTION;
 BEGIN TRANSACTION;
 --Testcase 421:
 INSERT INTO num_exp_log10 VALUES (0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 422:
 INSERT INTO num_exp_log10 VALUES (1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 423:
 INSERT INTO num_exp_log10 VALUES (2,'7.53578122160797276459');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 424:
 INSERT INTO num_exp_log10 VALUES (3,'.63447727016073160075');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 425:
 INSERT INTO num_exp_log10 VALUES (4,'6.89206461372691743345');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 426:
 INSERT INTO num_exp_log10 VALUES (5,'4.21476541614777768626');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 427:
 INSERT INTO num_exp_log10 VALUES (6,'4.97267288886207207671');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 428:
 INSERT INTO num_exp_log10 VALUES (7,'7.91922711353275546914');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 429:
 INSERT INTO num_exp_log10 VALUES (8,'4.87437163556421004138');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 430:
 INSERT INTO num_exp_log10 VALUES (9,'7.39666659961986567059');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 COMMIT TRANSACTION;
 BEGIN TRANSACTION;
 --Testcase 431:
 INSERT INTO num_exp_power_10_ln VALUES (0,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 432:
 INSERT INTO num_exp_power_10_ln VALUES (1,'NaN');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 433:
 INSERT INTO num_exp_power_10_ln VALUES (2,'224790267919917955.13261618583642653184');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 434:
 INSERT INTO num_exp_power_10_ln VALUES (3,'28.90266599445155957393');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 435:
 INSERT INTO num_exp_power_10_ln VALUES (4,'7405685069594999.07733999469386277636');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 436:
 INSERT INTO num_exp_power_10_ln VALUES (5,'5068226527.32127265408584640098');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 437:
 INSERT INTO num_exp_power_10_ln VALUES (6,'281839893606.99372343357047819067');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 438:
 INSERT INTO num_exp_power_10_ln VALUES (7,'1716699575118597095.42330819910640247627');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 439:
 INSERT INTO num_exp_power_10_ln VALUES (8,'167361463828.07491320069016125952');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 440:
 INSERT INTO num_exp_power_10_ln VALUES (9,'107511333880052007.04141124673540337457');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 COMMIT TRANSACTION;
 BEGIN TRANSACTION;
 --Testcase 441:
 INSERT INTO num_data VALUES (0, '0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 442:
 INSERT INTO num_data VALUES (1, '0');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 443:
 INSERT INTO num_data VALUES (2, '-34338492.215397047');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 444:
 INSERT INTO num_data VALUES (3, '4.31');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 445:
 INSERT INTO num_data VALUES (4, '7799461.4119');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 446:
 INSERT INTO num_data VALUES (5, '16397.038491');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 447:
 INSERT INTO num_data VALUES (6, '93901.57763026');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 448:
 INSERT INTO num_data VALUES (7, '-83028485');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 449:
 INSERT INTO num_data VALUES (8, '74881');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 450:
 INSERT INTO num_data VALUES (9, '-24926804.045047420');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 COMMIT TRANSACTION;
 -- ******************************
 -- * Create indices for faster checks
@@ -1209,8 +1659,10 @@ CREATE FOREIGN TABLE v (id int4 OPTIONS (key 'true'), x numeric, val float8) SER
 BEGIN;
 --Testcase 1452:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1453:
 INSERT INTO v(x) VALUES ('0'::float8),('1'),('-1'),('4.2'),('inf'),('-inf'),('nan');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1454:
 SELECT x1, x2,
   x1::numeric + x2::numeric AS sum,
@@ -1319,8 +1771,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1286:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1287:
 INSERT INTO v(x) VALUES ('inf':: float8);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1288:
 SELECT x::numeric / '0' FROM v;
 ERROR:  division by zero
@@ -1328,8 +1782,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1289:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1290:
 INSERT INTO v(x) VALUES ('-inf':: float8);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1291:
 SELECT x::numeric / '0' FROM v;
 ERROR:  division by zero
@@ -1337,8 +1793,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1292:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1293:
 INSERT INTO v(x) VALUES ('nan':: float8);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1294:
 SELECT x::numeric / '0' FROM v;
  ?column? 
@@ -1350,8 +1808,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1295:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1296:
 INSERT INTO v(x) VALUES ('0':: float8);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1297:
 SELECT x::numeric / '0' FROM v;
 ERROR:  division by zero
@@ -1359,8 +1819,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1298:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1299:
 INSERT INTO v(x) VALUES ('inf':: float8);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1300:
 SELECT x::numeric % '0' FROM v;
 ERROR:  division by zero
@@ -1368,8 +1830,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1301:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1302:
 INSERT INTO v(x) VALUES ('-inf':: float8);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1303:
 SELECT x::numeric % '0' FROM v;
 ERROR:  division by zero
@@ -1377,8 +1841,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1304:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1305:
 INSERT INTO v(x) VALUES ('nan':: float8);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1306:
 SELECT x::numeric % '0' FROM v;
  ?column? 
@@ -1390,8 +1856,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1307:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1308:
 INSERT INTO v(x) VALUES ('0':: float8);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1309:
 SELECT x::numeric % '0' FROM v;
 ERROR:  division by zero
@@ -1399,8 +1867,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1310:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1311:
 INSERT INTO v(x) VALUES ('inf':: float8);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1312:
 SELECT div(x::numeric, '0') FROM v;
 ERROR:  division by zero
@@ -1408,8 +1878,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1313:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1314:
 INSERT INTO v(x) VALUES ('-inf':: float8);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1315:
 SELECT div(x::numeric, '0') FROM v;
 ERROR:  division by zero
@@ -1417,8 +1889,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1316:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1317:
 INSERT INTO v(x) VALUES ('nan':: float8);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1318:
 SELECT div(x::numeric, '0') FROM v;
  div 
@@ -1430,8 +1904,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1319:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1320:
 INSERT INTO v(x) VALUES ('0':: float8);
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1321:
 SELECT div(x::numeric, '0') FROM v;
 ERROR:  division by zero
@@ -1439,8 +1915,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1456:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1457:
 INSERT INTO v(x) VALUES('0'::numeric),('1'),('-1'),('4.2'),('-7.777'),('inf'),('-inf'),('nan');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1458:
 SELECT x, -x as minusx, abs(x::numeric), floor(x::numeric), ceil(x::numeric), sign(x::numeric), numeric_inc(x::numeric) as inc
 FROM v;
@@ -1460,8 +1938,10 @@ ROLLBACK;
 BEGIN;
 --Testcase 1459:
 DELETE FROM v;
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1460:
 INSERT INTO v(x) VALUES('0'::numeric),('1'),('-1'),('4.2'),('-7.777'),('inf'),('-inf'),('nan');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1461:
 SELECT x, round(x::numeric), round(x::numeric,1) as round1, trunc(x::numeric), trunc(x::numeric,1) as trunc1
 FROM v;
@@ -1484,6 +1964,7 @@ BEGIN;
 INSERT INTO v(x) VALUES ('0'::numeric),('1'),('-1'),('4.2'),('-7.777'),
                         ('inf'),('-inf'),('nan'),
                         ('inf'),('-inf'),('nan');
+WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 1463:
 SELECT substring(x::text, 1, 32) FROM v ORDER BY x;
  substring 
