@@ -3,7 +3,7 @@ def MAIL_TO = '$DEFAULT_RECIPIENTS'
 def BRANCH_NAME = 'Branch [' + env.BRANCH_NAME + ']'
 def BUILD_INFO = 'Jenkins job: ' + env.BUILD_URL + '\n'
 
-def PGS_BRANCH = 'port14.0'
+def BRANCH_PGSPIDER = 'port15beta2'
 def make_check_test(String target, String version) {
     def prefix = ""
     script {
@@ -76,76 +76,76 @@ pipeline {
                     emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Start Containers FAILED ' + BRANCH_NAME, body: BUILD_INFO + '${BUILD_LOG, maxLines=200, escapeHtml=false}', to: "${MAIL_TO}", attachLog: false
                     updateGitlabCommitStatus name: 'Build', state: 'failed'
                 }
-                success { 
+                success {
                     updateGitlabCommitStatus name: 'Build', state: 'success'
                 }
             }
         }
-        stage('make_check_FDW_Test_With_Postgres_10_18') {
+        stage('make_check_FDW_Test_With_Postgres_11_16') {
             steps {
                 catchError() {
-                    make_check_test("postgresql", "10.18")
+                   make_check_test("postgresql","11.16")
                 }
             }
             post {
-                unstable { 
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v10.18 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                unstable {
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v11.16 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
-            }			
+            }
         }
-        stage('make_check_FDW_Test_With_Postgres_11_13') {
+        stage('make_check_FDW_Test_With_Postgres_12_11') {
             steps {
                 catchError() {
-                   make_check_test("postgresql","11.13")
+                   make_check_test("postgresql","12.11")
                 }
             }
             post {
-                unstable { 
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v11.13 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                unstable {
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v12.11 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
-            }			
+            }
         }
-        stage('make_check_FDW_Test_With_Postgres_12_8') {
+        stage('make_check_FDW_Test_With_Postgres_13_7') {
             steps {
                 catchError() {
-                   make_check_test("postgresql","12.8")
+                   make_check_test("postgresql","13.7")
                 }
             }
             post {
-                unstable { 
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v12.8 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                unstable {
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v13.7 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
-            }			
+            }
         }
-        stage('make_check_FDW_Test_With_Postgres_13_4') {
+        stage('make_check_FDW_Test_With_Postgres_14_4') {
             steps {
                 catchError() {
-                   make_check_test("postgresql","13.4")
+                   make_check_test("postgresql","14.4")
                 }
             }
             post {
-                unstable { 
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v13.4 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                unstable {
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v14.4 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
-            }			
+            }
         }
-        stage('make_check_FDW_Test_With_Postgres_14_0') {
+        stage('make_check_FDW_Test_With_Postgres_15beta2') {
             steps {
                 catchError() {
-                   make_check_test("postgresql","14.0")
+                    make_check_test("postgresql", "15beta2")
                 }
             }
             post {
-                unstable { 
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v14.0 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                unstable {
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v15beta2 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
-            }			
+            }
         }
         stage('Build_PGSpider_For_FDW_Test') {
             steps {
                 catchError() {
                     sh """
-                        docker exec postgresserver_multi_for_sqlite_existed_test /bin/bash -c 'su -c "/home/test/initialize_pgspider_existed_test.sh $PGS_BRANCH" postgres'
+                        docker exec postgresserver_multi_for_sqlite_existed_test /bin/bash -c 'su -c "/home/test/initialize_pgspider_existed_test.sh $BRANCH_PGSPIDER" postgres'
                     """
                 }
             }
@@ -166,10 +166,10 @@ pipeline {
                 }
             }
             post {
-                unstable { 
+                unstable {
                     emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on PGSpider FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
-            }			
+            }
         }
     }
     post {

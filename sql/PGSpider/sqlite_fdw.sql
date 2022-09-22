@@ -496,11 +496,11 @@ SELECT c FROM multiprimary WHERE COALESCE(a,b,c) = 99;
 CREATE FOREIGN TABLE multiprimary2(a int, b int, c int OPTIONS(column_name 'b')) SERVER sqlite_svr OPTIONS (table 'multiprimary');
 --Testcase 117:
 SELECT * FROM multiprimary2;
---Testcase 216:
+--Testcase 214:
 ALTER FOREIGN TABLE multiprimary2 ALTER COLUMN a OPTIONS(ADD column_name 'b');
 --Testcase 118:
 SELECT * FROM multiprimary2;
---Testcase 217:
+--Testcase 215:
 ALTER FOREIGN TABLE multiprimary2 ALTER COLUMN b OPTIONS (column_name 'nosuch column');
 --Testcase 119:
 SELECT * FROM multiprimary2;
@@ -554,26 +554,67 @@ ALTER TABLE fts_table ALTER COLUMN name TYPE int;
 SELECT * FROM fts_table; -- should fail
 
 -- INSERT/UPDATE whole row with generated column
---Testcase 218:
+--Testcase 216:
 CREATE FOREIGN TABLE grem1_1 (
   a int generated always as (0) stored)
   SERVER sqlite_svr OPTIONS(table 'grem1_1');
---Testcase 219:
+
+--Testcase 217:
 INSERT INTO grem1_1 DEFAULT VALUES;
---Testcase 220:
+--Testcase 218:
 SELECT * FROM grem1_1;
 
---Testcase 221:
+--Testcase 219:
 CREATE FOREIGN TABLE grem1_2 (
   a int generated always as (0) stored,
   b int generated always as (1) stored,
   c int generated always as (2) stored,
   d int generated always as (3) stored)
   SERVER sqlite_svr OPTIONS(table 'grem1_2');
---Testcase 222:
+--Testcase 220:
 INSERT INTO grem1_2 DEFAULT VALUES;
---Testcase 223:
+--Testcase 221:
 SELECT * FROM grem1_2;
+
+-- Executable test case for pushdown CASE expressions (results)
+--Testcase 224:
+CREATE FOREIGN TABLE case_exp(c1 int OPTIONS (key 'true'), c3 text, c6 varchar(10)) SERVER sqlite_svr;
+
+--Testcase 225:
+INSERT INTO case_exp
+  SELECT id,
+         to_char(id, 'FM00000'),
+         id % 10
+  FROM generate_series(1, 10) id;
+
+--Testcase 226:
+SELECT * FROM case_exp;
+
+-- CASE arg WHEN
+--Testcase 227:
+EXPLAIN (VERBOSE, COSTS OFF)
+SELECT * FROM case_exp WHERE c1 > (CASE mod(c1, 4) WHEN 0 THEN 1 WHEN 2 THEN 50 ELSE 100 END);
+--Testcase 228:
+SELECT * FROM case_exp WHERE c1 > (CASE mod(c1, 4) WHEN 0 THEN 1 WHEN 2 THEN 50 ELSE 100 END);
+
+-- these are shippable
+--Testcase 229:
+EXPLAIN (VERBOSE, COSTS OFF)
+SELECT * FROM case_exp WHERE CASE c6 WHEN 'foo' THEN true ELSE c3 < 'bar' END;
+--Testcase 230:
+SELECT * FROM case_exp WHERE CASE c6 WHEN 'foo' THEN true ELSE c3 < 'bar' END;
+--Testcase 231:
+EXPLAIN (VERBOSE, COSTS OFF)
+SELECT * FROM case_exp WHERE CASE c3 WHEN c6 THEN true ELSE c3 < 'bar' END;
+--Testcase 232:
+SELECT * FROM case_exp WHERE CASE c3 WHEN c6 THEN true ELSE c3 < 'bar' END;
+
+-- but this is not because of collation
+--Testcase 233:
+SELECT * FROM case_exp WHERE CASE c3 COLLATE "C" WHEN c6 THEN true ELSE c3 < 'bar' END;
+
+--Testcase 234:
+DELETE FROM case_exp;
 
 --Testcase 142:
 DROP FUNCTION test_param_WHERE();
@@ -595,10 +636,12 @@ DROP FOREIGN TABLE columntest;
 DROP FOREIGN TABLE noprimary;
 --Testcase 161:
 DROP FOREIGN TABLE fts_table;
---Testcase 224:
+--Testcase 222:
 DROP FOREIGN TABLE grem1_1;
---Testcase 225:
+--Testcase 223:
 DROP FOREIGN TABLE grem1_2;
+--Testcase 235:
+DROP FOREIGN TABLE case_exp;
 
 --Testcase 151:
 DROP SERVER sqlite_svr;
