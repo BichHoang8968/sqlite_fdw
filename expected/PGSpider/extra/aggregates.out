@@ -69,6 +69,196 @@ CREATE FOREIGN TABLE multi_arg_agg (a int OPTIONS (key 'true'), b int, c text) S
 CREATE FOREIGN TABLE VARCHAR_TBL(f1 varchar(4) OPTIONS (key 'true')) SERVER sqlite_svr;
 --Testcase 276:
 CREATE FOREIGN TABLE FLOAT8_TBL(f1 float8 OPTIONS (key 'true')) SERVER sqlite_svr;
+-- GROUP BY optimization by reorder columns
+--Testcase 678:
+CREATE FOREIGN TABLE btg(id int, p int, v text, c float, d float, e int) SERVER sqlite_svr;
+--Testcase 679:
+INSERT INTO btg
+SELECT
+	i,
+	i/2,
+	format('%60s', i%2),
+	i/4,
+	i/8,
+	(random() * (10000/8))::int --the same as d but no correlation with p
+FROM
+	generate_series(1, 10000) i;
+-- VACUUM btg;
+-- ANALYZE btg;
+-- GROUP BY optimization by reorder columns by frequency
+SET enable_hashagg=off;
+SET max_parallel_workers= 0;
+SET max_parallel_workers_per_gather = 0;
+--Testcase 680:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY p, v;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 681:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY v, p;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 682:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY v, p, c;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 683:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY v, p, c ORDER BY v, p, c;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 684:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY v, p, d, c;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 685:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY v, p, d, c ORDER BY v, p, d ,c;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 686:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY v, p, d, c ORDER BY p, v, d ,c;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 687:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY p, d, e;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 688:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY p, e, d;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 689:
+CREATE STATISTICS btg_dep ON d, e, p FROM btg;
+-- ANALYZE btg;
+--Testcase 690:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY p, d, e;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 691:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY p, e, d;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+-- GROUP BY optimization by reorder columns by index scan
+--Testcase 692:
+CREATE INDEX ON btg(p, v);
+ERROR:  cannot create index on relation "btg"
+DETAIL:  This operation is not supported for foreign tables.
+SET enable_seqscan=off;
+SET enable_bitmapscan=off;
+-- VACUUM btg;
+--Testcase 693:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY p, v;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 694:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY p, v ORDER BY p, v;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 695:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY v, p;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 696:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY v, p ORDER BY p, v;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 697:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY v, p, c;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 698:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY v, p, c ORDER BY p, v;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 699:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY v, c, p, d;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 700:
+EXPLAIN (COSTS off)
+SELECT count(*) FROM btg GROUP BY v, c, p, d ORDER BY p, v;
+  QUERY PLAN  
+--------------
+ Foreign Scan
+(1 row)
+
+--Testcase 701:
+DROP FOREIGN TABLE btg;
+RESET enable_hashagg;
+RESET max_parallel_workers;
+RESET max_parallel_workers_per_gather;
+RESET enable_seqscan;
+RESET enable_bitmapscan;
 -- avoid bit-exact output here because operations may not be bit-exact.
 --Testcase 588:
 SET extra_float_digits = 0;
@@ -1448,13 +1638,12 @@ select f1, (select min(unique1) from tenk1 where unique1 > f1) AS gt
 --Testcase 67:
 explain (costs off)
   select distinct max(unique2) from tenk1;
-            QUERY PLAN            
-----------------------------------
- Unique
-   ->  Sort
-         Sort Key: (max(unique2))
-         ->  Foreign Scan
-(4 rows)
+         QUERY PLAN          
+-----------------------------
+ HashAggregate
+   Group Key: (max(unique2))
+   ->  Foreign Scan
+(3 rows)
 
 --Testcase 68:
 select distinct max(unique2) from tenk1;
@@ -2451,7 +2640,7 @@ from generate_series(1,5) x,
      FLOAT8_TBL
 group by f1 order by f1;
 ERROR:  sum is not an ordered-set aggregate, so it cannot have WITHIN GROUP
-LINE 1: select f1, sum() within group (order by x::float8)  
+LINE 1: select f1, sum() within group (order by x::float8)  -- error
                    ^
 rollback;
 begin;
@@ -2467,7 +2656,7 @@ from generate_series(1,5) x,
      FLOAT8_TBL
 group by f1 order by f1;
 ERROR:  WITHIN GROUP is required for ordered-set aggregate percentile_cont
-LINE 1: select f1, percentile_cont(f1,f1)  
+LINE 1: select f1, percentile_cont(f1,f1)  -- error
                    ^
 rollback;
 --Testcase 179:

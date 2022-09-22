@@ -1,7 +1,7 @@
 # SQLite Foreign Data Wrapper for PostgreSQL
 This PostgreSQL extension is a Foreign Data Wrapper for [SQLite][1].
 
-The current version can work with PostgreSQL 10, 11, 12, 13 and 14.
+The current version can work with PostgreSQL 11, 12, 13, 14 and 15.
 
 ## Installation
 ### 1. Install SQLite library
@@ -84,6 +84,7 @@ SELECT * FROM t1;
 - Aggregate function are pushdowned
 - Order By is pushdowned
 - Joins (left/right/inner/cross) are pushdowned
+- CASE expressions are pushdowned.
 - Limit and Offset are pushdowned (*when all tables queried are fdw)
 - Transactions  
 - Support TRUNCATE by deparsing into DELETE statement without WHERE clause  
@@ -119,7 +120,7 @@ SELECT * FROM t1;
 Opening issues and pull requests on GitHub are welcome.
 
 ## License
-Copyright (c) 2017 - 2021, TOSHIBA Corporation  
+Copyright (c) 2018, TOSHIBA CORPORATION
 Copyright (c) 2011 - 2016, EnterpriseDB Corporation
 
 Permission to use, copy, modify, and distribute this software and its documentation for any purpose, without fee, and without a written agreement is hereby granted, provided that the above copyright notice and this paragraph and the following two paragraphs appear in all copies.
