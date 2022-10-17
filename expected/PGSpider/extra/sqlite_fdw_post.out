@@ -8825,7 +8825,6 @@ fetch from c;
 
 --Testcase 458:
 update bar set f2 = null where current of c;
-WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 ERROR:  WHERE CURRENT OF is not supported for this table type
 rollback;
 --Testcase 459:

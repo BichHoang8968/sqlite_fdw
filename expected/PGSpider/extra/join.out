@@ -6693,7 +6693,6 @@ begin;
 create table fkest (x integer, x10 integer, x10b integer, x100 integer);
 --Testcase 525:
 insert into fkest select x, x/10, x/10, x/100 from generate_series(1,1000) x;
-WARNING:  Modification query is executing in non-autocommit mode. PGSpider might get inconsistent data.
 --Testcase 526:
 create unique index on fkest(x, x10, x100);
 analyze fkest;
