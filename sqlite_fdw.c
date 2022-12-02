@@ -2738,7 +2738,7 @@ sqliteExecForeignTruncate(List *rels,
 	sqlite_deparse_truncate(&sql, rels);
 
 	/* Issue the DELETE statement without WHERE clause to remote server */
-	sqlite_do_sql_command(conn, sql.data, ERROR);
+	sqlite_do_sql_command(conn, sql.data, ERROR, NULL);
 
 	pfree(sql.data);
 }
