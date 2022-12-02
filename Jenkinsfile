@@ -3,7 +3,7 @@ def MAIL_TO = '$DEFAULT_RECIPIENTS'
 def BRANCH_NAME = 'Branch [' + env.BRANCH_NAME + ']'
 def BUILD_INFO = 'Jenkins job: ' + env.BUILD_URL + '\n'
 
-def BRANCH_PGSPIDER = 'Warning_when_modification_on_foreign_table'
+def BRANCH_PGSPIDER = 'support_modify_table'
 def make_check_test(String target, String version) {
     def prefix = ""
     script {
