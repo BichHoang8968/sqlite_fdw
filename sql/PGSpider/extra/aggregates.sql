@@ -78,129 +78,6 @@ CREATE FOREIGN TABLE VARCHAR_TBL(f1 varchar(4) OPTIONS (key 'true')) SERVER sqli
 --Testcase 276:
 CREATE FOREIGN TABLE FLOAT8_TBL(f1 float8 OPTIONS (key 'true')) SERVER sqlite_svr;
 
-
--- GROUP BY optimization by reorder columns
---Testcase 678:
-CREATE FOREIGN TABLE btg(id int, p int, v text, c float, d float, e int) SERVER sqlite_svr;
-
---Testcase 679:
-INSERT INTO btg
-SELECT
-	i,
-	i/2,
-	format('%60s', i%2),
-	i/4,
-	i/8,
-	(random() * (10000/8))::int --the same as d but no correlation with p
-FROM
-	generate_series(1, 10000) i;
-
--- VACUUM btg;
--- ANALYZE btg;
-
--- GROUP BY optimization by reorder columns by frequency
-
-SET enable_hashagg=off;
-SET max_parallel_workers= 0;
-SET max_parallel_workers_per_gather = 0;
-
---Testcase 680:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY p, v;
-
---Testcase 681:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY v, p;
-
---Testcase 682:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY v, p, c;
-
---Testcase 683:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY v, p, c ORDER BY v, p, c;
-
---Testcase 684:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY v, p, d, c;
-
---Testcase 685:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY v, p, d, c ORDER BY v, p, d ,c;
-
---Testcase 686:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY v, p, d, c ORDER BY p, v, d ,c;
-
---Testcase 687:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY p, d, e;
-
---Testcase 688:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY p, e, d;
-
---Testcase 689:
-CREATE STATISTICS btg_dep ON d, e, p FROM btg;
--- ANALYZE btg;
-
---Testcase 690:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY p, d, e;
-
---Testcase 691:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY p, e, d;
-
-
--- GROUP BY optimization by reorder columns by index scan
-
---Testcase 692:
-CREATE INDEX ON btg(p, v);
-SET enable_seqscan=off;
-SET enable_bitmapscan=off;
--- VACUUM btg;
-
---Testcase 693:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY p, v;
-
---Testcase 694:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY p, v ORDER BY p, v;
-
---Testcase 695:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY v, p;
-
---Testcase 696:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY v, p ORDER BY p, v;
-
---Testcase 697:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY v, p, c;
-
---Testcase 698:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY v, p, c ORDER BY p, v;
-
---Testcase 699:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY v, c, p, d;
-
---Testcase 700:
-EXPLAIN (COSTS off)
-SELECT count(*) FROM btg GROUP BY v, c, p, d ORDER BY p, v;
-
---Testcase 701:
-DROP FOREIGN TABLE btg;
-RESET enable_hashagg;
-RESET max_parallel_workers;
-RESET max_parallel_workers_per_gather;
-RESET enable_seqscan;
-RESET enable_bitmapscan;
-
 -- avoid bit-exact output here because operations may not be bit-exact.
 --Testcase 588:
 SET extra_float_digits = 0;
@@ -213,10 +90,12 @@ SELECT avg(a) AS avg_32 FROM aggtest WHERE a < 100;
 -- In 7.1, avg(float4) is computed using float8 arithmetic.
 --Testcase 3:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 678:
 SELECT avg(b)::numeric(10,3) AS avg_107_943 FROM aggtest;
 
 --Testcase 4:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 679:
 SELECT avg(gpa)::numeric(10,3) AS avg_3_4 FROM ONLY student;
 
 
@@ -226,9 +105,11 @@ SELECT sum(four) AS sum_1500 FROM onek;
 SELECT sum(a) AS sum_198 FROM aggtest;
 --Testcase 7:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 680:
 SELECT sum(b)::numeric(10,3) AS avg_431_773 FROM aggtest;
 --Testcase 8:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 681:
 SELECT sum(gpa)::numeric(10,3) AS avg_6_8 FROM ONLY student;
 
 --Testcase 9:
@@ -242,15 +123,19 @@ SELECT max(student.gpa) AS max_3_7 FROM student;
 
 --Testcase 13:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 682:
 SELECT stddev_pop(b)::numeric(20,10) FROM aggtest;
 --Testcase 14:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 683:
 SELECT stddev_samp(b)::numeric(20,10) FROM aggtest;
 --Testcase 15:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 684:
 SELECT var_pop(b)::numeric(20,10) FROM aggtest;
 --Testcase 16:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 685:
 SELECT var_samp(b)::numeric(20,10) FROM aggtest;
 
 --Testcase 17:
@@ -494,24 +379,31 @@ SELECT regr_count(b, a) FROM aggtest;
 SELECT regr_sxx(b, a) FROM aggtest;
 --Testcase 23:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 686:
 SELECT regr_syy(b, a)::numeric(20,10) FROM aggtest;
 --Testcase 24:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 687:
 SELECT regr_sxy(b, a)::numeric(20,10) FROM aggtest;
 --Testcase 25:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 688:
 SELECT regr_avgx(b, a), regr_avgy(b, a)::numeric(20,10) FROM aggtest;
 --Testcase 26:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 689:
 SELECT regr_r2(b, a)::numeric(20,10) FROM aggtest;
 --Testcase 27:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 690:
 SELECT regr_slope(b, a)::numeric(20,10), regr_intercept(b, a)::numeric(20,10) FROM aggtest;
 --Testcase 28:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 691:
 SELECT covar_pop(b, a)::numeric(20,10), covar_samp(b, a)::numeric(20,10) FROM aggtest;
 --Testcase 29:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 692:
 SELECT corr(b, a)::numeric(20,10) FROM aggtest;
 
 -- check single-tuple behavior
@@ -1501,12 +1393,15 @@ rollback;
 
 --Testcase 179:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 693:
 select (percentile_cont(0.5) within group (order by b))::numeric(20,10) from aggtest;
 --Testcase 180:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 694:
 select (percentile_cont(0.5) within group (order by b))::numeric(20,10), sum(b)::numeric(10,3) from aggtest;
 --Testcase 181:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 695:
 select percentile_cont(0.5) within group (order by thousand) from tenk1;
 --Testcase 182:
 select percentile_disc(0.5) within group (order by thousand) from tenk1;
@@ -1524,6 +1419,7 @@ select cume_dist(3) within group (order by f1) from INT4_TBL;
 insert into INT4_TBL values (5);
 --Testcase 458:
 -- Round the result to limited digits to avoid platform-specific results.
+--Testcase 696:
 select (percent_rank(3) within group (order by f1))::numeric(20,10) from INT4_TBL;
 --Testcase 459:
 delete from INT4_TBL where f1 = 5;
