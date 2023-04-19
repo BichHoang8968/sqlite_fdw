@@ -79,15 +79,8 @@ sqlite_convert_to_pg(Oid pgtyp, int pgtypmod, sqlite3_stmt * stmt, int stmt_coli
 
 				return Float8GetDatum((float8) value);
 			}
-		case BPCHAROID:
-		case VARCHAROID:
-		case TEXTOID:
-		case JSONOID:
-		case NAMEOID:
-		case TIMEOID:
 		case TIMESTAMPOID:
 		case TIMESTAMPTZOID:
-		case DATEOID:
 			{
 				/*
 				 * We add this conversion to allow add INTEGER/FLOAT SQLite
