@@ -307,6 +307,21 @@ SELECT * FROM type_JSON;
 
 --Testcase 57
 DELETE FROM type_JSON;
+-- drop column
+--Testcase 62:
+DROP FOREIGN TABLE "type_BOOLEAN";
+--Testcase 63:
+CREATE FOREIGN TABLE "type_BOOLEAN" (colx int, col boolean) SERVER sqlite_svr;
+--Testcase 64:
+ALTER FOREIGN TABLE "type_BOOLEAN" DROP COLUMN colx;
+--Testcase 65:
+SELECT * FROM "type_BOOLEAN"; -- OK
+ col 
+-----
+ t
+ f
+(2 rows)
+
 --Testcase 47:
 DROP EXTENSION sqlite_fdw CASCADE;
 NOTICE:  drop cascades to 40 other objects
@@ -324,7 +339,6 @@ drop cascades to foreign table grem1_1
 drop cascades to foreign table grem1_2
 drop cascades to foreign table case_exp
 drop cascades to foreign table "type_STRING"
-drop cascades to foreign table "type_BOOLEAN"
 drop cascades to foreign table "type_BYTE"
 drop cascades to foreign table "type_SINT"
 drop cascades to foreign table "type_BINT"
@@ -349,4 +363,5 @@ drop cascades to foreign table fts_table_content
 drop cascades to foreign table fts_table_docsize
 drop cascades to foreign table fts_table_config
 drop cascades to foreign table type_json
+drop cascades to foreign table "type_BOOLEAN"
 drop cascades to server sqlite2
