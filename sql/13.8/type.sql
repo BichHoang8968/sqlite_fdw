@@ -144,5 +144,15 @@ SELECT * FROM type_JSON;
 --Testcase 57
 DELETE FROM type_JSON;
 
+-- drop column
+--Testcase 62:
+DROP FOREIGN TABLE "type_BOOLEAN";
+--Testcase 63:
+CREATE FOREIGN TABLE "type_BOOLEAN" (colx int, col boolean) SERVER sqlite_svr;
+--Testcase 64:
+ALTER FOREIGN TABLE "type_BOOLEAN" DROP COLUMN colx;
+--Testcase 65:
+SELECT * FROM "type_BOOLEAN"; -- OK
+
 --Testcase 47:
 DROP EXTENSION sqlite_fdw CASCADE;
