@@ -1,7 +1,7 @@
 # SQLite Foreign Data Wrapper for PostgreSQL
 This PostgreSQL extension is a Foreign Data Wrapper for [SQLite][1].
 
-The current version can work with PostgreSQL 11, 12, 13, 14 and 15.
+The current version can work with PostgreSQL 12, 13, 14, 15 and 16.
 
 ## Installation
 ### 1. Install SQLite library

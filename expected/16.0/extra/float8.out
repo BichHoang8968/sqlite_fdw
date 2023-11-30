@@ -492,12 +492,8 @@ SET extra_float_digits = 0;
 BEGIN;
 --Testcase 53:
 DELETE FROM FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 54:
 INSERT INTO FLOAT8_TBL VALUES ('64'::float8);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 55:
 SELECT sqrt(f1) as eight FROM FLOAT8_TBL;
  eight 
@@ -923,12 +919,8 @@ SELECT exp(f1) FROM FLOAT8_TMP;
 BEGIN;
 --Testcase 68:
 DELETE FROM FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 69:
 INSERT INTO FLOAT8_TBL VALUES ('27'::float8);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 70:
 SELECT ||/f1 as three FROM FLOAT8_TBL;
  three 
@@ -972,12 +964,8 @@ ERROR:  value out of range: overflow
 BEGIN;
 --Testcase 76:
 DELETE FROM FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 77:
 INSERT INTO FLOAT8_TBL VALUES (0 ^ 0 + 0 ^ 1 + 0 ^ 0.0 + 0 ^ 0.5);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 78:
 SELECT * FROM FLOAT8_TBL;
  f1 
@@ -1446,13 +1434,9 @@ ERROR:  bigint out of range
 BEGIN;
 --Testcase 95:
 DELETE FROM FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 96:
 INSERT INTO FLOAT8_TBL VALUES (0), (30), (90), (150), (180),
       (210), (270), (330), (360);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 97:
 SELECT f1,
        sind(f1),
@@ -1473,13 +1457,9 @@ SELECT f1,
 
 --Testcase 98:
 DELETE FROM FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 99:
 INSERT INTO FLOAT8_TBL VALUES (0), (60), (90), (120), (180),
       (240), (270), (300), (360);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 100:
 SELECT f1,
        cosd(f1),
@@ -1500,13 +1480,9 @@ SELECT f1,
 
 --Testcase 101:
 DELETE FROM FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 102:
 INSERT INTO FLOAT8_TBL VALUES (0), (45), (90), (135), (180),
       (225), (270), (315), (360);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 103:
 SELECT f1,
        tand(f1),
@@ -1531,12 +1507,8 @@ SELECT f1,
 
 --Testcase 104:
 DELETE FROM FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 105:
 INSERT INTO FLOAT8_TBL VALUES (-1), (-0.5), (0), (0.5), (1);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 106:
 SELECT f1,
        asind(f1),
@@ -1555,13 +1527,9 @@ SELECT f1,
 
 --Testcase 107:
 DELETE FROM FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 108:
 INSERT INTO FLOAT8_TBL VALUES ('-Infinity'::float8), (-1), (0), (1),
       ('Infinity'::float8);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 109:
 SELECT f1,
        atand(f1),
@@ -1578,12 +1546,8 @@ SELECT f1,
 
 --Testcase 110:
 DELETE FROM FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 111:
 INSERT INTO FLOAT8_TBL SELECT * FROM generate_series(0, 360, 90);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 112:
 SELECT x, y,
        atan2d(y, x),
@@ -1648,8 +1612,6 @@ insert into testdata(bits) values
   -- borderline between subnormal and normal
   (x'000ffffffffffff0'), (x'000ffffffffffff1'),
   (x'000ffffffffffffe'), (x'000fffffffffffff');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 266:
 select float8send(flt) as ibits,
        flt
@@ -1819,8 +1781,6 @@ insert into testdata(bits) values
   (x'1330000000000000'),
   (x'133fffffffffffff'),
   (x'3a6fa7161a4d6e0c');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 268:
 select float8send(flt) as ibits,
        flt,

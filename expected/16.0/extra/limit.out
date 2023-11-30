@@ -771,14 +771,14 @@ select currval('testseq');
 explain (verbose, costs off)
 select unique1, unique2, generate_series(1,10)
   from tenk1 order by unique2 limit 7;
-                                                 QUERY PLAN                                                  
--------------------------------------------------------------------------------------------------------------
+                                                                         QUERY PLAN                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
  Limit
    Output: unique1, unique2, (generate_series(1, 10))
    ->  ProjectSet
          Output: unique1, unique2, generate_series(1, 10)
          ->  Foreign Scan on public.tenk1
-               Output: unique1, unique2
+               Output: unique1, unique2, two, four, ten, twenty, hundred, thousand, twothousand, fivethous, tenthous, odd, even, stringu1, stringu2, string4
                SQLite query: SELECT `unique1`, `unique2` FROM main."tenk1" ORDER BY `unique2` ASC NULLS LAST
 (7 rows)
 
@@ -800,14 +800,14 @@ select unique1, unique2, generate_series(1,10)
 explain (verbose, costs off)
 select unique1, unique2, generate_series(1,10)
   from tenk1 order by tenthous limit 7;
-                                                        QUERY PLAN                                                        
---------------------------------------------------------------------------------------------------------------------------
+                                                                         QUERY PLAN                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
  Limit
    Output: unique1, unique2, (generate_series(1, 10)), tenthous
    ->  ProjectSet
          Output: unique1, unique2, generate_series(1, 10), tenthous
          ->  Foreign Scan on public.tenk1
-               Output: unique1, unique2, tenthous
+               Output: unique1, unique2, two, four, ten, twenty, hundred, thousand, twothousand, fivethous, tenthous, odd, even, stringu1, stringu2, string4
                SQLite query: SELECT `unique1`, `unique2`, `tenthous` FROM main."tenk1" ORDER BY `tenthous` ASC NULLS LAST
 (7 rows)
 
