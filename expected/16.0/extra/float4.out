@@ -774,8 +774,6 @@ insert into testdata(bits) values
   (x'00424fe2'),
   -- borderline between subnormal and normal
   (x'007ffff0'), (x'007ffff1'), (x'007ffffe'), (x'007fffff');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 179:
 select float4send(flt) as ibits,
        flt
@@ -966,8 +964,6 @@ insert into testdata(bits) values
   (x'3f9e064b'),
   (x'3f9e0651'),
   (x'03d20cfe');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 181:
 select float4send(flt) as ibits,
        flt,

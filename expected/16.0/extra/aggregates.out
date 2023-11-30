@@ -1185,8 +1185,6 @@ INSERT INTO bool_test_tmp VALUES
   (FALSE, NULL),
   (NULL, TRUE),
   (NULL, FALSE);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 400:
 SELECT booland_statefunc(b1, b2) IS NULL as "t" FROM bool_test_tmp;
  t 
@@ -1204,8 +1202,6 @@ BEGIN;
 --Testcase 401:
 INSERT INTO bool_test_tmp VALUES
   (TRUE, TRUE);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 402:
 SELECT booland_statefunc(b1, b2) as "t" FROM bool_test_tmp;
  t 
@@ -1220,8 +1216,6 @@ INSERT INTO bool_test_tmp VALUES
   (TRUE, FALSE),
   (FALSE, TRUE),
   (FALSE, FALSE);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 404:
 SELECT NOT booland_statefunc(b1, b2) as "t" FROM bool_test_tmp;
  t 
@@ -1242,8 +1236,6 @@ INSERT INTO bool_test_tmp VALUES
   (FALSE, NULL),
   (NULL, TRUE),
   (NULL, FALSE);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 406:
 SELECT boolor_statefunc(b1, b2) IS NULL as "t" FROM bool_test_tmp;
  t 
@@ -1263,8 +1255,6 @@ INSERT INTO bool_test_tmp VALUES
   (TRUE, TRUE),
   (TRUE, FALSE),
   (FALSE, TRUE);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 408:
 SELECT boolor_statefunc(b1, b2) as "t" FROM bool_test_tmp;
  t 
@@ -1279,8 +1269,6 @@ BEGIN;
 --Testcase 409:
 INSERT INTO bool_test_tmp VALUES
   (FALSE, FALSE);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 410:
 SELECT NOT boolor_statefunc(b1, b2) as "t" FROM bool_test_tmp;
  t 
@@ -1960,12 +1948,8 @@ reset enable_presorted_aggregate;
 begin;
 --Testcase 93:
 delete from INT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 94:
 insert into INT8_TBL values (1,4),(2,3),(3,1),(4,2);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 95:
 select array_agg(q1 order by q2)
   from INT8_TBL;
@@ -2000,12 +1984,8 @@ select array_agg(q2 order by q1 desc)
 
 --Testcase 99:
 delete from INT4_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 100:
 insert into INT4_TBL values (1),(2),(1),(3),(null),(2);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 101:
 select array_agg(distinct f1)
   from INT4_TBL;
@@ -2063,8 +2043,6 @@ create aggregate aggfns(integer,integer,text) (
 begin;
 --Testcase 105:
 insert into multi_arg_agg values (1,3,'foo'),(0,null,null),(2,2,'bar'),(3,1,'baz');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 106:
 select aggfstr(a,b,c) from multi_arg_agg;
                 aggfstr                
@@ -2296,12 +2274,8 @@ LINE 1: select aggfns(distinct a,a,c order by a,b) from multi_arg_ag...
 begin;
 --Testcase 135:
 delete from varchar_tbl;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 136:
 insert into varchar_tbl values ('aaaa'),('bbbb'),('cccc');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 137:
 select string_agg(f1,',') from varchar_tbl;
    string_agg   
@@ -2311,12 +2285,8 @@ select string_agg(f1,',') from varchar_tbl;
 
 --Testcase 138:
 delete from varchar_tbl;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 139:
 insert into varchar_tbl values ('aaaa'),(null),('bbbb'),('cccc');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 140:
 select string_agg(f1,',') from varchar_tbl;
    string_agg   
@@ -2326,12 +2296,8 @@ select string_agg(f1,',') from varchar_tbl;
 
 --Testcase 141:
 delete from varchar_tbl;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 142:
 insert into varchar_tbl values (null),(null),('bbbb'),('cccc');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 143:
 select string_agg(f1,'AB') from varchar_tbl;
  string_agg 
@@ -2341,12 +2307,8 @@ select string_agg(f1,'AB') from varchar_tbl;
 
 --Testcase 144:
 delete from varchar_tbl;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 145:
 insert into varchar_tbl values (null),(null);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 146:
 select string_agg(f1,',') from varchar_tbl;
  string_agg 
@@ -2642,12 +2604,8 @@ select sum(unique1) FILTER (WHERE
 begin;
 --Testcase 164:
 delete from multi_arg_agg;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 165:
 insert into multi_arg_agg values (1,3,'foo'),(0,null,null),(2,2,'bar'),(3,1,'baz');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 166:
 select aggfns(distinct a,b,c order by a,c using ~<~,b) filter (where a > 1) from multi_arg_agg, generate_series(1,2) i;
           aggfns           
@@ -2696,12 +2654,8 @@ LINE 1: select (select max(unique1) filter (where bool_or(ten > 0)) ...
 begin;
 --Testcase 167:
 delete from FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 168:
 insert into FLOAT8_TBL values (0::float8),(0.1),(0.25),(0.4),(0.5),(0.6),(0.75),(0.9),(1);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 169:
 select f1, percentile_cont(f1) within group (order by x::float8)
 from generate_series(1,5) x,
@@ -2724,12 +2678,8 @@ rollback;
 begin;
 --Testcase 170:
 delete from FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 171:
 insert into FLOAT8_TBL values (0::float8),(0.1),(0.25),(0.4),(0.5),(0.6),(0.75),(0.9),(1);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 172:
 select f1, percentile_cont(f1 order by f1) within group (order by x)  -- error
 from generate_series(1,5) x,
@@ -2742,12 +2692,8 @@ rollback;
 begin;
 --Testcase 173:
 delete from FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 174:
 insert into FLOAT8_TBL values (0::float8),(0.1),(0.25),(0.4),(0.5),(0.6),(0.75),(0.9),(1);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 175:
 select f1, sum() within group (order by x::float8)  -- error
 from generate_series(1,5) x,
@@ -2760,12 +2706,8 @@ rollback;
 begin;
 --Testcase 176:
 delete from FLOAT8_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 177:
 insert into FLOAT8_TBL values (0::float8),(0.1),(0.25),(0.4),(0.5),(0.6),(0.75),(0.9),(1);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 178:
 select f1, percentile_cont(f1,f1)  -- error
 from generate_series(1,5) x,
@@ -2812,12 +2754,8 @@ select percentile_disc(0.5) within group (order by thousand) from tenk1;
 begin;
 --Testcase 183:
 delete from INT4_TBL;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 184:
 insert into INT4_TBL values (1),(1),(2),(2),(3),(3),(4);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 185:
 select rank(3) within group (order by f1) from INT4_TBL;
  rank 
@@ -2834,8 +2772,6 @@ select cume_dist(3) within group (order by f1) from INT4_TBL;
 
 --Testcase 187:
 insert into INT4_TBL values (5);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 458:
 -- Round the result to limited digits to avoid platform-specific results.
 --Testcase 696:
@@ -2847,8 +2783,6 @@ select (percent_rank(3) within group (order by f1))::numeric(20,10) from INT4_TB
 
 --Testcase 459:
 delete from INT4_TBL where f1 = 5;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 188:
 select dense_rank(3) within group (order by f1) from INT4_TBL;
  dense_rank 
@@ -2886,8 +2820,6 @@ create foreign table agg_t21 (x int) server sqlite_svr;
 begin;
 --Testcase 248:
 insert into agg_t21 select * from generate_series(1,6);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 249:
 select percentile_cont(array[0,1,0.25,0.75,0.5,1,0.3,0.32,0.35,0.38,0.4]) within group (order by x)
 from agg_t21;
@@ -2918,8 +2850,6 @@ create foreign table agg_t20 (x text) server sqlite_svr;
 begin;
 --Testcase 462:
 insert into agg_t20 values (unnest('{fred,jim,fred,jack,jill,fred,jill,jim,jim,sheila,jim,sheila}'::text[]));
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 463:
 select percentile_disc(array[0.25,0.5,0.75]) within group (order by x) from agg_t20;
  percentile_disc 
@@ -2932,8 +2862,6 @@ rollback;
 begin;
 --Testcase 464:
 insert into agg_t20 values ('fred'), ('jim');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 465:
 select pg_collation_for(percentile_disc(1) within group (order by x collate "POSIX")) from agg_t20;
  pg_collation_for 
@@ -2969,8 +2897,6 @@ alter aggregate my_rank(VARIADIC "any" ORDER BY VARIADIC "any")
 begin;
 --Testcase 468:
 insert into agg_t21 values (1),(1),(2),(2),(3),(3),(4);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 469:
 select test_rank(3) within group (order by x) from agg_t21;
  test_rank 
@@ -2991,8 +2917,6 @@ select test_percentile_disc(0.5) within group (order by thousand) from tenk1;
 begin;
 --Testcase 470:
 insert into agg_t21 select * from generate_series(1,5);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 471:
 select rank(x) within group (order by x) from agg_t21;
 ERROR:  column "agg_t21.x" must appear in the GROUP BY clause or be used in an aggregate function
@@ -3004,8 +2928,6 @@ rollback;
 begin;
 --Testcase 472:
 insert into agg_t21 select * from generate_series(1,5);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 473:
 select array(select percentile_disc(a) within group (order by x)
                from (values (0.3),(0.7)) v(a) group by a)
@@ -3018,8 +2940,6 @@ rollback;
 begin;
 --Testcase 474:
 insert into agg_t21 select * from generate_series(1,5);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 475:
 select rank(sum(x)) within group (order by x) from agg_t21;
 ERROR:  aggregate function calls cannot be nested
@@ -3030,8 +2950,6 @@ rollback;
 begin;
 --Testcase 264:
 insert into agg_t20 values ('fred'), ('jim');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 265:
 select rank(3) within group (order by x) from agg_t20;
 ERROR:  WITHIN GROUP types text and integer cannot be matched
@@ -3047,8 +2965,6 @@ HINT:  To use the hypothetical-set aggregate rank, the number of hypothetical di
 begin;
 --Testcase 476:
 insert into agg_t21 select * from generate_series(1,5);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 477:
 select rank('fred') within group (order by x) from agg_t21;
 ERROR:  invalid input syntax for type integer: "fred"
@@ -3058,8 +2974,6 @@ rollback;
 begin;
 --Testcase 478:
 insert into agg_t20 values ('fred'), ('jim');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 479:
 select rank('adam'::text collate "C") within group (order by x collate "POSIX")
   from agg_t20;
@@ -3071,8 +2985,6 @@ rollback;
 begin;
 --Testcase 480:
 insert into agg_t20 values ('fred'), ('jim');
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 481:
 select rank('adam'::varchar) within group (order by x) from agg_t20;
  rank 
@@ -3084,8 +2996,6 @@ rollback;
 begin;
 --Testcase 482:
 insert into agg_t21 select * from generate_series(1,5);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 483:
 select rank('3') within group (order by x) from agg_t21;
  rank 
@@ -3098,8 +3008,6 @@ rollback;
 begin;
 --Testcase 484:
 insert into agg_t21 select * from generate_series(1,0);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 485:
 select percent_rank(0) within group (order by x) from agg_t21;
  percent_rank 
@@ -3277,12 +3185,8 @@ create aggregate my_sum(int4)
 -- aggregate state should be shared as aggs are the same.
 --Testcase 505:
 delete from agg_t10;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 506:
 insert into agg_t10 values (1), (3);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 507:
 select my_avg(one),my_avg(one) from agg_t10;
 NOTICE:  avg_transfn called with 1
@@ -3305,12 +3209,8 @@ NOTICE:  avg_transfn called with 3
 -- same as previous one, but with DISTINCT, which requires sorting the input.
 --Testcase 509:
 delete from agg_t10;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 510:
 insert into agg_t10 values (1), (3), (1);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 511:
 select my_avg(distinct one),my_sum(distinct one) from agg_t10;
 NOTICE:  avg_transfn called with 1
@@ -3323,12 +3223,8 @@ NOTICE:  avg_transfn called with 3
 -- shouldn't share states due to the distinctness not matching.
 --Testcase 512:
 delete from agg_t10;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 513:
 insert into agg_t10 values (1), (3);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 514:
 select my_avg(distinct one),my_sum(one) from agg_t10;
 NOTICE:  avg_transfn called with 1
@@ -3354,12 +3250,8 @@ NOTICE:  avg_transfn called with 3
 -- this should not share the state due to different input columns.
 --Testcase 516:
 delete from agg_t11;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 517:
 insert into agg_t11 values (1,2),(3,4);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 518:
 select my_avg(one),my_sum(two) from agg_t11;
 NOTICE:  avg_transfn called with 1
@@ -3374,12 +3266,8 @@ NOTICE:  avg_transfn called with 4
 -- exercise cases where OSAs share state
 --Testcase 519:
 delete from agg_t12;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 520:
 insert into agg_t12 values (1), (3), (5), (7);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 521:
 select
   percentile_cont(0.5) within group (order by a),
@@ -3439,12 +3327,8 @@ create aggregate my_avg_init2(int4)
 -- state should be shared if INITCONDs are matching
 --Testcase 527:
 delete from agg_t10;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 528:
 insert into agg_t10 values (1), (3);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 529:
 select my_sum_init(one),my_avg_init(one) from agg_t10;
 NOTICE:  avg_transfn called with 1
@@ -3517,12 +3401,8 @@ create aggregate my_half_sum(int4)
 -- Agg state should be shared even though my_sum has no finalfn
 --Testcase 535:
 delete from agg_t10;
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 536:
 insert into agg_t10 values (1), (2), (3), (4);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 537:
 select my_sum(one),my_half_sum(one) from agg_t10;
 NOTICE:  sum_transfn called with 1
@@ -3631,8 +3511,6 @@ END;
 $$;
 CREATE FOREIGN TABLE float_tb(f real) SERVER sqlite_svr;
 INSERT INTO float_tb(f)  VALUES (1.0);
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 SELECT eatarray(rwagg(ARRAY[f::real])), eatarray(rwagg(ARRAY[f::real])) FROM float_tb;
  eatarray  | eatarray  
 -----------+-----------
@@ -3775,8 +3653,6 @@ SELECT min(x ORDER BY y) FROM agg_t14;
 begin;
 --Testcase 554:
 insert into agg_t20 values (unnest(array['a','b']));
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 555:
 select x||'a', case x||'a' when 'aa' then 1 else 0 end, count(*)
   from agg_t20 group by x||'a' order by 1;
@@ -3790,8 +3666,6 @@ rollback;
 begin;
 --Testcase 556:
 insert into agg_t20 values (unnest(array['a','b']));
-WARNING:  Modification query is executing in non-autocommit mode.
-Multitenant table can not read un-commited data.
 --Testcase 557:
 select x||'a', case when x||'a' = 'aa' then 1 else 0 end, count(*)
   from agg_t20 group by x||'a' order by 1;

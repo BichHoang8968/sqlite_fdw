@@ -3,7 +3,7 @@ def MAIL_TO = '$DEFAULT_RECIPIENTS'
 def BRANCH_NAME = 'Branch [' + env.BRANCH_NAME + ']'
 def BUILD_INFO = 'Jenkins job: ' + env.BUILD_URL + '\n'
 
-def BRANCH_PGSPIDER = 'master'
+def BRANCH_PGSPIDER = 'port16.0'
 def make_check_test(String target, String version) {
     def prefix = ""
     script {
@@ -45,7 +45,7 @@ pipeline {
     options {
         gitLabConnection('GitLabConnection')
     }
-    triggers { 
+    triggers {
         gitlab(
             triggerOnPush: true,
             triggerOnMergeRequest: false,
@@ -81,63 +81,63 @@ pipeline {
                 }
             }
         }
-        stage('make_check_FDW_Test_With_Postgres_11_17') {
+        stage('make_check_FDW_Test_With_Postgres_12_16') {
             steps {
                 catchError() {
-                   make_check_test("postgresql","11.17")
+                   make_check_test("postgresql","12.16")
                 }
             }
             post {
                 unstable {
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v11.17 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v12.16 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
             }
         }
-        stage('make_check_FDW_Test_With_Postgres_12_12') {
+        stage('make_check_FDW_Test_With_Postgres_13_12') {
             steps {
                 catchError() {
-                   make_check_test("postgresql","12.12")
+                   make_check_test("postgresql","13.12")
                 }
             }
             post {
                 unstable {
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v12.12 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v13.12 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
             }
         }
-        stage('make_check_FDW_Test_With_Postgres_13_8') {
+        stage('make_check_FDW_Test_With_Postgres_14_9') {
             steps {
                 catchError() {
-                   make_check_test("postgresql","13.8")
+                   make_check_test("postgresql","14.9")
                 }
             }
             post {
                 unstable {
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v13.8 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v14.9 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
             }
         }
-        stage('make_check_FDW_Test_With_Postgres_14_5') {
+        stage('make_check_FDW_Test_With_Postgres_15_4') {
             steps {
                 catchError() {
-                   make_check_test("postgresql","14.5")
+                    make_check_test("postgresql", "15.4")
                 }
             }
             post {
                 unstable {
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v14.5 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v15.4 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
             }
         }
-        stage('make_check_FDW_Test_With_Postgres_15.0') {
+        stage('make_check_FDW_Test_With_Postgres_16_0') {
             steps {
                 catchError() {
-                    make_check_test("postgresql", "15.0")
+                    make_check_test("postgresql", "16.0")
                 }
             }
             post {
                 unstable {
-                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v15.0 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
+                    emailext subject: '[CI SQLITE_FDW] EXISTED_TEST: Result make check on v16.0 FAILED ' + BRANCH_NAME, body: BUILD_INFO  + '${FILE,path="make_check_existed_test.out"}', to: "${MAIL_TO}", attachLog: false
                 }
             }
         }

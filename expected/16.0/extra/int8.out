@@ -880,8 +880,7 @@ DELETE FROM INT8_TMP;
 INSERT INTO INT8_TMP VALUES ('-9223372036854775808'::int8);
 --Testcase 171:
 SELECT abs(q1) FROM INT8_TMP;
-ERROR:  failed to execute remote SQL: rc=1 integer overflow 
-   sql=SELECT abs(`q1`) FROM main."int8_tmp"
+ERROR:  bigint out of range
 --Testcase 95:
 DELETE FROM INT8_TMP;
 --Testcase 172:
