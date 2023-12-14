@@ -43,6 +43,8 @@
 
 #define CR_NO_ERROR 0
 
+#define SQLITE_FDW_BIT_DATATYPE_BUF_SIZE sizeof(sqlite3_int64) * CHAR_BIT + 1
+
 #if (PG_VERSION_NUM < 120000)
 #define table_close(rel, lock)	heap_close(rel, lock)
 #define table_open(rel, lock)	heap_open(rel, lock)
@@ -50,7 +52,7 @@
 #endif
 
 /* Code version is updated at new release. */
-#define CODE_VERSION   20300
+#define CODE_VERSION   20400
 
 #if (PG_VERSION_NUM < 100000)
 /*
@@ -76,6 +78,18 @@
 
 #if PG_VERSION_NUM < 130000
 #define list_concat(X, Y)  list_concat(X, list_copy(Y))
+#endif
+
+#if PG_VERSION_NUM < 120000
+/* NullableDatum is introduced from PG12, we define it here in case of PG11 or earlier. */
+typedef struct NullableDatum
+{
+#define FIELDNO_NULLABLE_DATUM_DATUM 0
+    Datum        value;
+#define FIELDNO_NULLABLE_DATUM_ISNULL 1
+    bool        isnull;
+    /* due to alignment padding this could be used for flags for free */
+} NullableDatum;
 #endif
 
 /*
@@ -361,8 +375,14 @@ void		sqlite_rel_connection(sqlite3 * conn);
 void		sqlitefdw_report_error(int elevel, sqlite3_stmt * stmt, sqlite3 * conn, const char *sql, int rc);
 void		sqlite_cache_stmt(ForeignServer *server, sqlite3_stmt * *stmt);
 
-Datum		sqlite_convert_to_pg(Oid pgtyp, int pgtypmod, sqlite3_stmt * stmt, int stmt_colid, AttInMetadata *attinmeta, AttrNumber attnum);
+NullableDatum sqlite_convert_to_pg(Form_pg_attribute att, sqlite3_stmt * stmt, int stmt_colid, AttInMetadata *attinmeta, AttrNumber attnum, int sqlite_value_affinity, int AffinityBehaviourFlags);
 
-void		sqlite_bind_sql_var(Oid type, int attnum, Datum value, sqlite3_stmt * stmt, bool *isnull);
+void		sqlite_bind_sql_var(Form_pg_attribute att, int attnum, Datum value, sqlite3_stmt * stmt, bool *isnull, Oid relid);
 extern void sqlite_do_sql_command(sqlite3 * conn, const char *sql, int level, List **busy_connection);
+
+int sqlite_fdw_data_norm_functs_init(sqlite3* db);
+
+/* sqlite_query.c haders */
+sqlite3_int64 binstr2int64(const char *s);
+
 #endif							/* SQLITE_FDW_H */
