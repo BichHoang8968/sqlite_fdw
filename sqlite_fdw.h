@@ -107,7 +107,6 @@ typedef struct sqlite_opt
 									 * connecting to the SQLite server. */
 	unsigned long max_blob_size;	/* Max blob size to read without
 									 * truncation */
-	bool		use_remote_estimate;	/* use remote estimate for rows */
 }			sqlite_opt;
 
 /* Struct for extra information passed to sqlite_estimate_path_cost_size() */
@@ -198,10 +197,8 @@ typedef struct SqliteFdwRelationInfo
 	Cost		rel_total_cost;
 
 	/* Options extracted from catalogs. */
-	bool		use_remote_estimate;
 	Cost		fdw_startup_cost;
 	Cost		fdw_tuple_cost;
-	List	   *shippable_extensions;	/* OIDs of whitelisted extensions */
 
 	/* Bitmap of attr numbers we need to fetch from the remote server. */
 	Bitmapset  *attrs_used;
@@ -228,7 +225,6 @@ typedef struct SqliteFdwRelationInfo
 	/* Cached catalog information. */
 	ForeignTable *table;
 	ForeignServer *server;
-	UserMapping *user;			/* only set in use_remote_estimate mode */
 
 	int			fetch_size;		/* fetch size for this remote table */
 

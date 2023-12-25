@@ -14,11 +14,11 @@ DO $d$
     END;
 $d$;
 
+-- SQLite FDW does not need User and User Mapping.
 --Testcase 484:
-CREATE USER MAPPING FOR CURRENT_USER SERVER sqlite_svr;
+--CREATE USER MAPPING FOR CURRENT_USER SERVER sqlite_svr;
 --Testcase 485:
-CREATE USER MAPPING FOR CURRENT_USER SERVER sqlite_svr2;
-
+--CREATE USER MAPPING FOR CURRENT_USER SERVER sqlite_svr2;
 -- ===================================================================
 -- create objects used through FDW sqlite server
 -- ===================================================================
@@ -663,10 +663,19 @@ RESET enable_hashjoin;
 --DROP TABLE local_tbl;
 
 -- check join pushdown in situations where multiple userids are involved
+-- Although SQLite FDW does not need User and User mapping to connect to
+-- the database file, however, JOIN pushdown is decided by the core code.
+-- If outer and inner relation are foreign tables (or joins) belonging to
+-- the same server and assigned to the same user, join will be pushed down.
+-- Otherwise, join cannot be pushed down.
+-- In addition to an exact match of userid, we allow the case where one side
+-- has zero userid (implying current user) and the other side has explicit
+-- userid that happens to equal the current user; but in that case, pushdown of
+-- the join is only valid for the current user.
 --Testcase 508:
 CREATE ROLE regress_view_owner SUPERUSER;
 --Testcase 509:
-CREATE USER MAPPING FOR regress_view_owner SERVER sqlite_svr;
+-- CREATE USER MAPPING FOR regress_view_owner SERVER sqlite_svr;
 GRANT SELECT ON ft4 TO regress_view_owner;
 GRANT SELECT ON ft5 TO regress_view_owner;
 
@@ -3257,9 +3266,9 @@ ROLLBACK;
 
 -- Clean-up
 --Testcase 733:
-DROP USER MAPPING FOR CURRENT_USER SERVER sqlite_svr;
+--DROP USER MAPPING FOR CURRENT_USER SERVER sqlite_svr;
 --Testcase 734:
-DROP USER MAPPING FOR CURRENT_USER SERVER sqlite_svr2;
+--DROP USER MAPPING FOR CURRENT_USER SERVER sqlite_svr2;
 --Testcase 735:
 DROP SERVER sqlite_svr CASCADE;
 --Testcase 736:

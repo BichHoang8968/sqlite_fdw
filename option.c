@@ -22,7 +22,6 @@
 #include "access/reloptions.h"
 #include "catalog/pg_foreign_server.h"
 #include "catalog/pg_foreign_table.h"
-#include "catalog/pg_user_mapping.h"
 #include "catalog/pg_type.h"
 #include "commands/defrem.h"
 #include "commands/explain.h"
@@ -86,7 +85,7 @@ bool
 
 /*
  * Validate the generic options given to a FOREIGN DATA WRAPPER, SERVER,
- * USER MAPPING or FOREIGN TABLE that uses file_fdw.
+ * or FOREIGN TABLE that supported by sqlite_fdw.
  *
  * Raise an ERROR if the option or its value is considered invalid.
  */
@@ -244,8 +243,6 @@ sqlite_get_options(Oid foreignoid)
 	if (f_table)
 		options = list_concat(options, f_table->options);
 	options = list_concat(options, f_server->options);
-
-	opt->use_remote_estimate = false;
 
 	/* Loop through the options, and get the server/port */
 	foreach(lc, options)
