@@ -41,6 +41,7 @@ Features
 - `WHERE` clauses are pushdowned
 - Aggregate function are pushdowned
 - `ORDER BY` is pushdowned
+- `ORDER BY` ... `USING` operator is not pushdowned
 - Joins (left/right/inner/cross) are pushdowned
 - `CASE` expressions are pushdowned.
 - `LIMIT` and `OFFSET` are pushdowned (*when all tables queried are fdw)
