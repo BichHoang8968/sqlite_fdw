@@ -1,0 +1,108 @@
+FROM rockylinux:8.8
+
+ARG ACCESS_TOKEN
+
+ARG PGSPIDER_PROJECT_ID
+ARG PGSPIDER_RPM_ID
+ARG proxy
+ARG no_proxy
+
+ARG dnf_proxy="proxy=${proxy}"
+
+ENV http_proxy ${proxy}
+ENV https_proxy ${proxy}
+
+ENV no_proxy ${no_proxy}
+
+ARG RPM_DISTRIBUTION_TYPE
+ARG PGSPIDER_BASE_POSTGRESQL_VERSION
+ARG PGSPIDER_RELEASE_VERSION
+ARG SQLITE_FDW_RELEASE_VERSION
+ARG PG_INS=/usr/pgsql-16
+
+ARG PGSPIDER_RPM_URL=https://tccloud2.toshiba.co.jp/swc/gitlab/api/v4/projects/${PGSPIDER_PROJECT_ID}/packages/generic/rpm_${RPM_DISTRIBUTION_TYPE}/${PGSPIDER_BASE_POSTGRESQL_VERSION}
+
+# dnf config
+RUN echo $dnf_proxy >> /etc/dnf/dnf.conf
+RUN export http_proxy=${proxy} && export https_proxy=${proxy}
+
+# Add postgres repository for pgdg-srpm-macros
+RUN dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+RUN dnf install -y bzip2 rpm-build wget pgdg-srpm-macros sudo
+RUN dnf --enablerepo=powertools install -y perl-IPC-Run
+
+# Install PGSpider
+RUN if [[ -z ${ACCESS_TOKEN} ]]; then \
+        wget ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-libs-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64${PGSPIDER_RPM_ID}.rpm --no-check-certificate ; \
+    else \
+        curl --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" \
+        ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-libs-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64${PGSPIDER_RPM_ID}.rpm \
+        -o /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-libs-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
+        --insecure ; \
+    fi
+RUN if [[ -z ${ACCESS_TOKEN} ]]; then \ 
+        wget ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64${PGSPIDER_RPM_ID}.rpm --no-check-certificate ; \
+    else \
+        curl --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" \
+        ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64${PGSPIDER_RPM_ID}.rpm \
+        -o /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
+        --insecure ; \
+    fi
+
+RUN if [[ -z ${ACCESS_TOKEN} ]]; then \ 
+        wget ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-devel-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64${PGSPIDER_RPM_ID}.rpm --no-check-certificate ; \
+    else \
+        curl --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" \
+        ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-devel-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64${PGSPIDER_RPM_ID}.rpm \
+        -o /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-devel-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
+        --insecure ; \
+    fi
+
+RUN if [[ -z ${ACCESS_TOKEN} ]]; then \ 
+        wget ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-server-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64${PGSPIDER_RPM_ID}.rpm --no-check-certificate ; \
+    else \
+        curl --header "PRIVATE-TOKEN: ${ACCESS_TOKEN}" \
+        ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-server-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64${PGSPIDER_RPM_ID}.rpm \
+        -o /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-server-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
+        --insecure ; \
+    fi
+
+RUN dnf -y localinstall \
+    --setopt=skip_missing_names_on_install=False \
+    /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-libs-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
+    /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
+    /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-devel-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
+    /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-server-${PGSPIDER_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm
+
+# Create non-super user and put ROM files.
+# User on host will mapped to this user.
+RUN useradd -m user1
+RUN echo "user1:user1" | chpasswd
+RUN echo "user1 ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+RUN dnf -y install sqlite-devel
+
+# Transfer files
+WORKDIR /home/user1
+RUN mkdir -p /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}
+COPY ./ /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}
+RUN cp /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}/sqlite_fdw.spec .
+RUN rm -rf /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}/.git \
+           /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}/create_rpm_binary.sh
+
+# Change permission
+RUN chown user1:user1 -R /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}
+
+# Build sqlite fdw
+USER user1
+WORKDIR /home/user1
+
+RUN tar cvjf sqlite_fdw.tar.bz2 sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}
+RUN rpmbuild -ba -D "_sourcedir $(pwd)" -D "release_version ${SQLITE_FDW_RELEASE_VERSION}" -D "dist ${RPM_DISTRIBUTION_TYPE}" -D "pgmajorversion ${PGSPIDER_BASE_POSTGRESQL_VERSION}" -D "pginstdir ${PG_INS}" sqlite_fdw.spec
+
+# unset proxy
+ENV http_proxy=
+ENV https_proxy=
+ENV no_proxy=
+RUN sudo sed -i "s/.*proxy=.*/proxy=/g" /etc/dnf/dnf.conf
