@@ -30,7 +30,7 @@ project_build:
     IMAGE_TAG: "fdw_build"
     DOCKERFILE: "Dockerfile_rpm"
   before_script:
-    - export http_proxy=http://proxy.toshiba.co.jp:8080 && export https_proxy=http://proxy.toshiba.co.jp:8080
+    - export http_proxy=$PROXY && export https_proxy=$PROXY
     - export no_proxy=127.0.0.1,localhost,docker
     # handle if the previous pipeline error
     - docker rm $(docker stop test) || true
@@ -69,7 +69,7 @@ project_build:
 project_publish:
   stage: publish
   before_script:
-    - export http_proxy=http://proxy.toshiba.co.jp:8080 && export https_proxy=http://proxy.toshiba.co.jp:8080
+    - export http_proxy=$PROXY && export https_proxy=$PROXY
     - export no_proxy=127.0.0.1,localhost,docker
     - apt-get update -qq && apt-get install -y -qq curl
   variables:

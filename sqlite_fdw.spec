@@ -21,7 +21,7 @@ License:	TOSHIBA CORPORATION
 URL:		https://github.com/pgspider/%{sname}
 Source0:	sqlite_fdw.tar.bz2
 BuildRequires:	pgspider%{pgmajorversion}-devel pgdg-srpm-macros
-BuildRequires:	pgspider%{pgmajorversion}-server sqlite-devel
+BuildRequires:	pgspider%{pgmajorversion}-server
 Requires:	pgspider%{pgmajorversion}-server
 %if 0%{?fedora} >= 27
 Requires:	sqlite-libs

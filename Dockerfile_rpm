@@ -22,6 +22,8 @@ ARG PG_INS=/usr/pgsql-16
 
 ARG PGSPIDER_RPM_URL=https://tccloud2.toshiba.co.jp/swc/gitlab/api/v4/projects/${PGSPIDER_PROJECT_ID}/packages/generic/rpm_${RPM_DISTRIBUTION_TYPE}/${PGSPIDER_BASE_POSTGRESQL_VERSION}
 
+ARG SQLITE_VERSION="3420000"
+
 # dnf config
 RUN echo $dnf_proxy >> /etc/dnf/dnf.conf
 RUN export http_proxy=${proxy} && export https_proxy=${proxy}
@@ -81,7 +83,14 @@ RUN useradd -m user1
 RUN echo "user1:user1" | chpasswd
 RUN echo "user1 ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-RUN dnf -y install sqlite-devel
+WORKDIR /home/user1
+RUN wget "https://www.sqlite.org/2023/sqlite-src-$SQLITE_VERSION.zip" --no-check-certificate
+RUN dnf install -y unzip
+RUN unzip sqlite-src-$SQLITE_VERSION.zip
+WORKDIR /home/user1/sqlite-src-$SQLITE_VERSION
+RUN ./configure --enable-fts5
+RUN make
+RUN sudo make install
 
 # Transfer files
 WORKDIR /home/user1
