@@ -17,7 +17,7 @@ variables:
   PGSPIDER_BASE_POSTGRESQL_VERSION: "16"
   RPM_DISTRIBUTION_TYPE: "rhel8"
   SQLITE_FDW_RELEASE_VERSION: "2.4.0"
-  PGSPIDER_RPM_ID: "11816"
+  PGSPIDER_RPM_ID: "11835"
   SQLITE_VERSION: "3420000"
   SQLITE_RELEASE_VERSION: "3.42.0"
 
@@ -76,7 +76,7 @@ project_publish:
   stage: publish
   before_script:
     - export http_proxy=$PROXY && export https_proxy=$PROXY
-    - export no_proxy=127.0.0.1,localhost,docker
+    - export no_proxy=$NO_PROXY
     - apt-get update -qq && apt-get install -y -qq curl
   variables:
     curl_command: "curl --header \"PRIVATE-TOKEN: $ACCESS_TOKEN\" --insecure --upload-file"
