@@ -1,11 +1,11 @@
 #!/bin/bash
 
-source env_rpmbuild.conf
+source docker/env_rpmbuild.conf
 set -eE
 
 # clone sqlite
-if [[ ! -f "deps/sqlite-autoconf-${SQLITE_VERSION}.tar.gz" ]]; then
-	cd deps
+if [[ ! -f "docker/deps/sqlite-autoconf-${SQLITE_VERSION}.tar.gz" ]]; then
+	cd docker/deps
 	chmod -R 777 ./
 	wget https://www.sqlite.org/2023/sqlite-autoconf-${SQLITE_VERSION}.tar.gz
 	cd ..
@@ -30,7 +30,7 @@ then
                  --build-arg SQLITE_FDW_RELEASE_VERSION=${SQLITE_FDW_RELEASE_VERSION} \
                  --build-arg SQLITE_VERSION=$SQLITE_VERSION \
                  --build-arg SQLITE_RELEASE_VERSION=$SQLITE_RELEASE_VERSION \
-                 -f $DOCKERFILE .
+                 -f docker/$DOCKERFILE .
 else
     docker build -t $IMAGE_TAG \
                  --build-arg proxy=${proxy} \
@@ -43,7 +43,7 @@ else
                  --build-arg SQLITE_FDW_RELEASE_VERSION=${SQLITE_FDW_RELEASE_VERSION} \
                  --build-arg SQLITE_VERSION=${SQLITE_VERSION} \
                  --build-arg SQLITE_RELEASE_VERSION=${SQLITE_RELEASE_VERSION} \
-                 -f $DOCKERFILE .
+                 -f docker/$DOCKERFILE .
 fi
 
 # copy binary to outside
