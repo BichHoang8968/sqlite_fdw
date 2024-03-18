@@ -3,7 +3,7 @@ def MAIL_TO = '$DEFAULT_RECIPIENTS'
 def BRANCH_NAME = 'Branch [' + env.BRANCH_NAME + ']'
 def BUILD_INFO = 'Jenkins job: ' + env.BUILD_URL + '\n'
 
-def BRANCH_PGSPIDER = 'port16.0'
+def BRANCH_PGSPIDER = 'master'
 def make_check_test(String target, String version) {
     def prefix = ""
     script {
