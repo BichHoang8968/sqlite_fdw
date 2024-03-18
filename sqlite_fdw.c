@@ -14,16 +14,23 @@
 #include "sqlite_fdw.h"
 
 #include <sqlite3.h>
-#include <stdio.h>
 
-#include "access/reloptions.h"
-#include "access/htup_details.h"
-#include "access/sysattr.h"
+#include "catalog/pg_collation.h"
+#include "catalog/pg_type.h"
+#include "commands/defrem.h"
+#include "commands/explain.h"
 #include "foreign/fdwapi.h"
-#include "foreign/foreign.h"
+#include "funcapi.h"
+#include "mb/pg_wchar.h"
+#include "miscadmin.h"
+#include "nodes/makefuncs.h"
+#include "nodes/nodeFuncs.h"
+#if (PG_VERSION_NUM < 140000)
+	#include "optimizer/clauses.h"
+#endif
 #include "optimizer/pathnode.h"
 #if PG_VERSION_NUM >= 120000
-#include "optimizer/appendinfo.h"
+	#include "optimizer/appendinfo.h"
 #endif
 #include "optimizer/planmain.h"
 #include "optimizer/planner.h"
@@ -31,44 +38,24 @@
 #if (PG_VERSION_NUM >= 130010 && PG_VERSION_NUM < 140000) || \
 	(PG_VERSION_NUM >= 140007 && PG_VERSION_NUM < 150000) || \
 	(PG_VERSION_NUM >= 150002)
-#include "optimizer/inherit.h"
+	#include "optimizer/inherit.h"
 #endif
-#include "optimizer/clauses.h"
-#include "optimizer/restrictinfo.h"
 #include "optimizer/paths.h"
 #include "optimizer/prep.h"
 #include "optimizer/restrictinfo.h"
 #include "optimizer/tlist.h"
-#include "funcapi.h"
+#include "parser/parsetree.h"
+#include "parser/parse_type.h"
+#include "storage/ipc.h"
 #include "utils/builtins.h"
 #include "utils/formatting.h"
-#include "utils/rel.h"
-#include "utils/lsyscache.h"
-#include "utils/array.h"
-#include "utils/date.h"
-#include "utils/hsearch.h"
-#include "utils/timestamp.h"
 #include "utils/guc.h"
-#include "utils/memutils.h"
-#include "catalog/pg_collation.h"
-#include "catalog/pg_foreign_server.h"
-#include "catalog/pg_foreign_table.h"
-#include "catalog/pg_aggregate.h"
-#include "catalog/pg_type.h"
-#include "commands/defrem.h"
-#include "commands/explain.h"
-#include "commands/vacuum.h"
-#include "storage/ipc.h"
-#include "miscadmin.h"
-#include "nodes/makefuncs.h"
-#include "nodes/nodeFuncs.h"
-#include "parser/parsetree.h"
-#include "utils/typcache.h"
+#include "utils/lsyscache.h"
 #include "utils/selfuncs.h"
+
 
 extern PGDLLEXPORT void _PG_init(void);
 
-bool		sqlite_load_library(void);
 static void sqlite_fdw_exit(int code, Datum arg);
 
 PG_MODULE_MAGIC;
@@ -365,6 +352,12 @@ static void sqlite_add_foreign_final_paths(PlannerInfo *root,
 #endif
 );
 
+static void sqlite_get_remote_estimate(const char *sql,
+									   sqlite3 * conn,
+									   double *rows,
+									   int *width,
+									   Cost *startup_cost,
+									   Cost *total_cost);
 static void sqlite_estimate_path_cost_size(PlannerInfo *root,
 										   RelOptInfo *foreignrel,
 										   List *param_join_conds,
@@ -382,6 +375,9 @@ static void sqlite_adjust_foreign_grouping_path_cost(PlannerInfo *root,
 													 double limit_tuples,
 													 Cost *p_startup_cost,
 													 Cost *p_run_cost);
+static bool sqlite_ec_member_matches_foreign(PlannerInfo *root, RelOptInfo *rel,
+											 EquivalenceClass *ec, EquivalenceMember *em,
+											 void *arg);
 static bool sqlite_all_baserels_are_foreign(PlannerInfo *root);
 
 static void sqlite_add_paths_with_pathkeys_for_rel(PlannerInfo *root, RelOptInfo *rel, List *fdw_private, Path *epq_path);
@@ -390,6 +386,28 @@ static List *sqlite_get_useful_pathkeys_for_relation(PlannerInfo *root,
 #if PG_VERSION_NUM >= 140000
 static int	sqlite_get_batch_size_option(Relation rel);
 #endif
+static void conversion_error_callback(void *arg);
+static int32 sqlite_affinity_eqv_to_pgtype(Oid type);
+const char* sqlite_datatype(int t);
+
+/* Callback argument for sqlite_ec_member_matches_foreign */
+typedef struct
+{
+	Expr	   *current;		/* current expr, or NULL if not yet found */
+	List	   *already_used;	/* expressions already dealt with */
+} ec_member_foreign_arg;
+
+/*
+ * Identify the attribute where data conversion fails.
+ */
+typedef struct ConversionLocation
+{
+	AttrNumber	cur_attno;		/* attribute number being processed, or 0 */
+	Relation	rel;			/* foreign table being processed, or NULL */
+	ForeignScanState *fsstate;	/* plan node being processed, or NULL */
+	Form_pg_attribute att;		/* PostgreSQL relation attribute */
+	sqlite3_value *val;			/* abstract SQLite value to get affinity, length and text value */
+} ConversionLocation;
 
 /*
  * Library load-time initialization, sets on_proc_exit() callback for
@@ -525,10 +543,32 @@ sqliteGetForeignRelSize(PlannerInfo *root, RelOptInfo *baserel, Oid foreigntable
 	fpinfo->server = GetForeignServer(fpinfo->table->serverid);
 
 	/*
-	 * Extract user-settable option values.
+	 * Extract user-settable option values.  Note that per-table setting of
+	 * use_remote_estimate overrides per-server setting.
 	 */
+	fpinfo->use_remote_estimate = false;
 	fpinfo->fdw_startup_cost = DEFAULT_FDW_STARTUP_COST;
 	fpinfo->fdw_tuple_cost = DEFAULT_FDW_TUPLE_COST;
+
+	/*
+	 * If the table or the server is configured to use remote estimates,
+	 * identify which user to do remote access as during planning.
+	 * This should match what ExecCheckPermissions() does (ExecCheckRTEPerms() for older version).
+	 * If we fail due to lack of permissions, the query would have failed at runtime anyway.
+	 */
+	if (fpinfo->use_remote_estimate)
+	{
+#if (PG_VERSION_NUM < 160000)
+		Oid			userid = rte->checkAsUser ? rte->checkAsUser : GetUserId();
+#else
+		Oid			userid;
+		userid = OidIsValid(baserel->userid) ? baserel->userid : GetUserId();
+#endif
+
+		fpinfo->user = GetUserMapping(userid, fpinfo->server->serverid);
+	}
+	else
+		fpinfo->user = NULL;
 
 	/*
 	 * Identify which baserestrictinfo clauses can be sent to the remote
@@ -579,35 +619,60 @@ sqliteGetForeignRelSize(PlannerInfo *root, RelOptInfo *baserel, Oid foreigntable
 	fpinfo->rel_total_cost = -1;
 
 	/*
-	 * If the foreign table has never been ANALYZEd, it will have relpages
-	 * and reltuples equal to zero, which most likely has nothing to do
-	 * with reality.  We can't do a whole lot about that if we're not
-	 * allowed to consult the remote server, but we can use a hack similar
-	 * to plancat.c's treatment of empty relations: use a minimum size
-	 * estimate of 10 pages, and divide by the column-datatype-based width
-	 * estimate to get the corresponding number of tuples.
+	 * If the table or the server is configured to use remote estimates,
+	 * connect to the foreign server and execute EXPLAIN to estimate the
+	 * number of rows selected by the restriction clauses, as well as the
+	 * average row width.  Otherwise, estimate using whatever statistics we
+	 * have locally, in a way similar to ordinary tables.
 	 */
-#if (PG_VERSION_NUM >= 140000)
-	if (baserel->tuples < 0)
-#else
-	if (baserel->pages == 0 && baserel->tuples == 0)
-#endif
+	if (fpinfo->use_remote_estimate)
 	{
-		baserel->pages = 10;
-		baserel->tuples =
-			(10 * BLCKSZ) / (baserel->reltarget->width +
-							 MAXALIGN(SizeofHeapTupleHeader));
+		/*
+		 * Get cost/size estimates with help of remote server.  Save the
+		 * values in fpinfo so we don't need to do it again to generate the
+		 * basic foreign path.
+		 */
+		sqlite_estimate_path_cost_size(root, baserel, NIL, NIL, NULL,
+									   &fpinfo->rows, &fpinfo->width,
+									   &fpinfo->startup_cost, &fpinfo->total_cost);
+
+		/* Report estimated baserel size to planner. */
+		baserel->rows = fpinfo->rows;
+		baserel->reltarget->width = fpinfo->width;
 	}
+	else
+	{
+		/*
+		 * If the foreign table has never been ANALYZEd, it will have relpages
+		 * and reltuples equal to zero, which most likely has nothing to do
+		 * with reality.  We can't do a whole lot about that if we're not
+		 * allowed to consult the remote server, but we can use a hack similar
+		 * to plancat.c's treatment of empty relations: use a minimum size
+		 * estimate of 10 pages, and divide by the column-datatype-based width
+		 * estimate to get the corresponding number of tuples.
+		 */
+#if (PG_VERSION_NUM >= 140000)
+		if (baserel->tuples < 0)
+#else
+		if (baserel->pages == 0 && baserel->tuples == 0)
+#endif
+		{
+			baserel->pages = 10;
+			baserel->tuples =
+				(10 * BLCKSZ) / (baserel->reltarget->width +
+								 MAXALIGN(SizeofHeapTupleHeader));
+		}
 
-	/*
-	 * Estimate baserel size as best we can with local statistics.
-	 */
-	set_baserel_size_estimates(root, baserel);
+		/*
+		 * Estimate baserel size as best we can with local statistics.
+		 */
+		set_baserel_size_estimates(root, baserel);
 
-	/* Fill in basically-bogus cost estimates for use later. */
-	sqlite_estimate_path_cost_size(root, baserel, NIL, NIL, NULL,
-								   &fpinfo->rows, &fpinfo->width,
-								   &fpinfo->startup_cost, &fpinfo->total_cost);
+		/* Fill in basically-bogus cost estimates for use later. */
+		sqlite_estimate_path_cost_size(root, baserel, NIL, NIL, NULL,
+									   &fpinfo->rows, &fpinfo->width,
+									   &fpinfo->startup_cost, &fpinfo->total_cost);
+	}
 
 	/*
 	 * Set the name of relation in fpinfo, while we are constructing it here.
@@ -848,6 +913,10 @@ sqlite_all_baserels_are_foreign(PlannerInfo *root)
 static void
 sqliteGetForeignPaths(PlannerInfo *root, RelOptInfo *baserel, Oid foreigntableid)
 {
+	SqliteFdwRelationInfo *fpinfo = (SqliteFdwRelationInfo *) baserel->fdw_private;
+	ForeignPath *path;
+	List	   *ppi_list;
+	ListCell   *lc;
 	Cost		startup_cost = 10;
 	Cost		total_cost = baserel->rows + startup_cost;
 	List	   *fdw_private = NIL;
@@ -892,6 +961,187 @@ sqliteGetForeignPaths(PlannerInfo *root, RelOptInfo *baserel, Oid foreigntableid
 
 	/* Add paths with pathkeys */
 	sqlite_add_paths_with_pathkeys_for_rel(root, baserel, fdw_private, NULL);
+
+	/*
+	 * If we're not using remote estimates, stop here.  We have no way to
+	 * estimate whether any join clauses would be worth sending across, so
+	 * don't bother building parameterized paths.
+	 */
+	if (!fpinfo->use_remote_estimate)
+		return;
+
+	/*
+	 * Thumb through all join clauses for the rel to identify which outer
+	 * relations could supply one or more safe-to-send-to-remote join clauses.
+	 * We'll build a parameterized path for each such outer relation.
+	 *
+	 * It's convenient to manage this by representing each candidate outer
+	 * relation by the ParamPathInfo node for it.  We can then use the
+	 * ppi_clauses list in the ParamPathInfo node directly as a list of the
+	 * interesting join clauses for that rel.  This takes care of the
+	 * possibility that there are multiple safe join clauses for such a rel,
+	 * and also ensures that we account for unsafe join clauses that we'll
+	 * still have to enforce locally (since the parameterized-path machinery
+	 * insists that we handle all movable clauses).
+	 */
+	ppi_list = NIL;
+	foreach(lc, baserel->joininfo)
+	{
+		RestrictInfo *rinfo = (RestrictInfo *) lfirst(lc);
+		Relids		required_outer;
+		ParamPathInfo *param_info;
+
+		/* Check if clause can be moved to this rel */
+		if (!join_clause_is_movable_to(rinfo, baserel))
+			continue;
+
+		/* See if it is safe to send to remote */
+		if (!sqlite_is_foreign_expr(root, baserel, rinfo->clause))
+			continue;
+
+		/* Calculate required outer rels for the resulting path */
+		required_outer = bms_union(rinfo->clause_relids,
+								   baserel->lateral_relids);
+
+		/*
+		 * We do not want the foreign rel itself listed in required_outer
+		 */
+		required_outer = bms_del_member(required_outer, baserel->relid);
+
+		/*
+		 * required_outer probably can't be empty here, but if it were, we
+		 * couldn't make a parameterized path.
+		 */
+		if (bms_is_empty(required_outer))
+			continue;
+
+		/* Get the ParamPathInfo */
+		param_info = get_baserel_parampathinfo(root, baserel,
+											   required_outer);
+		Assert(param_info != NULL);
+
+		/*
+		 * Add it to list unless we already have it.  Testing pointer equality
+		 * is OK since get_baserel_parampathinfo won't make duplicates.
+		 */
+		ppi_list = list_append_unique_ptr(ppi_list, param_info);
+	}
+
+	/*
+	 * The above scan examined only "generic" join clauses, not those that
+	 * were absorbed into EquivalenceClauses.  See if we can make anything out
+	 * of EquivalenceClauses.
+	 */
+	if (baserel->has_eclass_joins)
+	{
+		/*
+		 * We repeatedly scan the eclass list looking for column references
+		 * (or expressions) belonging to the foreign rel. Each time we find
+		 * one, we generate a list of equivalence joinclauses for it, and then
+		 * see if any are safe to send to the remote.  Repeat till there are
+		 * no more candidate EC members.
+		 */
+		ec_member_foreign_arg arg;
+
+		arg.already_used = NIL;
+		for (;;)
+		{
+			List	   *clauses;
+
+			/*
+			 * Make clauses, skipping any that join to lateral_referencers
+			 */
+			arg.current = NULL;
+			clauses = generate_implied_equalities_for_column(root,
+															 baserel,
+															 sqlite_ec_member_matches_foreign,
+															 (void *) &arg,
+															 baserel->lateral_referencers);
+
+			/*
+			 * Done if there are no more expressions in the foreign rel
+			 */
+			if (arg.current == NULL)
+			{
+				Assert(clauses == NIL);
+				break;
+			}
+
+			/* Scan the extracted join clauses */
+			foreach(lc, clauses)
+			{
+				RestrictInfo *rinfo = (RestrictInfo *) lfirst(lc);
+				Relids		required_outer;
+				ParamPathInfo *param_info;
+
+				/* Check if clause can be moved to this rel */
+				if (!join_clause_is_movable_to(rinfo, baserel))
+					continue;
+
+				/* See if it is safe to send to remote */
+				if (!sqlite_is_foreign_expr(root, baserel, rinfo->clause))
+					continue;
+
+				/*
+				 * Calculate required outer rels for the resulting path
+				 */
+				required_outer = bms_union(rinfo->clause_relids,
+										   baserel->lateral_relids);
+				required_outer = bms_del_member(required_outer, baserel->relid);
+				if (bms_is_empty(required_outer))
+					continue;
+
+				/* Get the ParamPathInfo */
+				param_info = get_baserel_parampathinfo(root, baserel,
+													   required_outer);
+				Assert(param_info != NULL);
+
+				/* Add it to list unless we already have it */
+				ppi_list = list_append_unique_ptr(ppi_list, param_info);
+			}
+
+			/*
+			 * Try again, now ignoring the expression we found this time
+			 */
+			arg.already_used = lappend(arg.already_used, arg.current);
+		}
+	}
+
+	/*
+	 * Now build a path for each useful outer relation.
+	 */
+	foreach(lc, ppi_list)
+	{
+		ParamPathInfo *param_info = (ParamPathInfo *) lfirst(lc);
+		double		rows;
+		int			width;
+		Cost		param_startup_cost;
+		Cost		param_total_cost;
+
+		/* Get a cost estimate from the remote */
+		sqlite_estimate_path_cost_size(root, baserel,
+									   param_info->ppi_clauses, NIL, NULL,
+									   &rows, &width,
+									   &param_startup_cost, &param_total_cost);
+
+		/*
+		 * ppi_rows currently won't get looked at by anything, but still we
+		 * may as well ensure that it matches our idea of the rowcount.
+		 */
+		param_info->ppi_rows = rows;
+
+		/* Make the path */
+		path = create_foreignscan_path(root, baserel,
+									   NULL,	/* default pathtarget */
+									   rows,
+									   param_startup_cost,
+									   param_total_cost,
+									   NIL, /* no pathkeys */
+									   param_info->ppi_req_outer,
+									   NULL,
+									   NIL);	/* no fdw_private list */
+		add_path(baserel, (Path *) path);
+	}
 }
 
 /*
@@ -930,7 +1180,7 @@ sqliteGetForeignPlan(PlannerInfo *root, RelOptInfo *baserel, Oid foreigntableid,
 #if PG_VERSION_NUM >= 150000
 		has_final_sort = boolVal(list_nth(best_path->fdw_private, FdwPathPrivateHasFinalSort));
 		has_limit = boolVal(list_nth(best_path->fdw_private, FdwPathPrivateHasLimit));
-		
+
 #else
 		has_final_sort = intVal(list_nth(best_path->fdw_private, FdwPathPrivateHasFinalSort));
 		has_limit = intVal(list_nth(best_path->fdw_private, FdwPathPrivateHasLimit));
@@ -1220,8 +1470,6 @@ sqliteBeginForeignScan(ForeignScanState *node, int eflags)
 	EState			   *estate = node->ss.ps.state;
 	ForeignScan 	   *fsplan = (ForeignScan *) node->ss.ps.plan;
 	int					numParams;
-	ForeignTable	   *table;
-	ForeignServer	   *server;
 	RangeTblEntry	   *rte;
 	int					rtindex;
 
@@ -1240,7 +1488,13 @@ sqliteBeginForeignScan(ForeignScanState *node, int eflags)
 	node->fdw_state = (void *) festate;
 	festate->rowidx = 0;
 
-	/* Get info about foreign table. */
+	/*
+	 * Identify which user to do the remote access as.  This should match what
+	 * ExecCheckRTEPerms() does (ExecCheckRTEPerms() for older version).
+	 * From PostgreSQL 16, in case of a join or aggregate, use the
+	 * lowest-numbered member RTE as a representative; we would get the same
+	 * result from any.
+	 */
 	if (fsplan->scan.scanrelid > 0)
 		rtindex = fsplan->scan.scanrelid;
 	else
@@ -1259,15 +1513,16 @@ sqliteBeginForeignScan(ForeignScanState *node, int eflags)
 	}
 	rte = exec_rt_fetch(rtindex, estate);
 
+	/* Get info about foreign table. */
 	festate->rel = node->ss.ss_currentRelation;
-	table = GetForeignTable(rte->relid);
-	server = GetForeignServer(table->serverid);
+	festate->table = GetForeignTable(rte->relid);
+	festate->server = GetForeignServer(festate->table->serverid);
 
 	/*
 	 * Get the already connected connection, otherwise connect and get the
 	 * connection handle.
 	 */
-	conn = sqlite_get_connection(server, false);
+	conn = sqlite_get_connection(festate->server, false);
 
 	/* Stash away the state info we have already */
 	festate->query = strVal(list_nth(fsplan->fdw_private, FdwScanPrivateSelectSql));
@@ -1301,7 +1556,7 @@ sqliteBeginForeignScan(ForeignScanState *node, int eflags)
 	festate->stmt = NULL;
 
 	/* Prepare Sqlite statement */
-	sqlite_prepare_wrapper(server, festate->conn, festate->query, &festate->stmt, NULL, true);
+	sqlite_prepare_wrapper(festate->server, festate->conn, festate->query, &festate->stmt, NULL, true);
 
 	/* Prepare for output conversion of parameters used in remote query. */
 	numParams = list_length(fsplan->fdw_exprs);
@@ -1322,8 +1577,11 @@ make_tuple_from_result_row(sqlite3_stmt * stmt,
 						   List *retrieved_attrs,
 						   Datum *row,
 						   bool *is_null,
-						   SqliteFdwExecState * festate)
+						   SqliteFdwExecState * festate,
+						   ForeignScanState *node)
 {
+	ConversionLocation errpos;
+	ErrorContextCallback errcallback;
 	ListCell	   *lc = NULL;
 	int				stmt_colid = 0;
 	NullableDatum   sqlite_coverted;
@@ -1331,24 +1589,41 @@ make_tuple_from_result_row(sqlite3_stmt * stmt,
 	memset(row, 0, sizeof(Datum) * tupleDescriptor->natts);
 	memset(is_null, true, sizeof(bool) * tupleDescriptor->natts);
 
+	/*
+	 * Set up and install callback to report where conversion error occurs.
+	 */
+	errpos.cur_attno = 0;
+	errpos.att = NULL;
+	errpos.rel = festate->rel;
+	errpos.fsstate = node;
+	errpos.val = NULL;
+	errcallback.callback = conversion_error_callback;
+	errcallback.arg = (void *) &errpos;
+	errcallback.previous = error_context_stack;
+	error_context_stack = &errcallback;
+
 	foreach(lc, retrieved_attrs)
 	{
-		int			attnum = lfirst_int(lc) - 1;
-		Form_pg_attribute att = TupleDescAttr(tupleDescriptor, attnum);
-		int			sqlite_value_affinity = sqlite3_column_type(stmt, stmt_colid);
+		int					attnum = lfirst_int(lc) - 1;
+		Form_pg_attribute   att = TupleDescAttr(tupleDescriptor, attnum);
+		sqlite3_value	   *val = sqlite3_column_value(stmt, stmt_colid);
+		int					sqlite_value_affinity = sqlite3_value_type(val);
 
+		errpos.cur_attno = attnum;
+		errpos.att = att;
+		errpos.val = val;
 		if ( sqlite_value_affinity != SQLITE_NULL)
 		{
-			/* TODO: Processing of column options about special convert behaviour 
+			/* TODO: Processing of column options about special convert behaviour
 			 * options = GetForeignColumnOptions(rel, attnum_base); ... foreach(lc_attr, options)
 			 */
-			
+
 			int AffinityBehaviourFlags = 0;
 			/* TODO
 			 * Flags about special convert behaviour from options on database, table or column level
 			 */
 
-			sqlite_coverted = sqlite_convert_to_pg(att, stmt, stmt_colid, 
+			sqlite_coverted = sqlite_convert_to_pg(att, val,
 												   festate->attinmeta,
 												   attnum, sqlite_value_affinity,
 												   AffinityBehaviourFlags);
@@ -1361,6 +1636,8 @@ make_tuple_from_result_row(sqlite3_stmt * stmt,
 		}
 		stmt_colid++;
 	}
+	/* Uninstall error context callback. */
+	error_context_stack = errcallback.previous;
 }
 
 /*
@@ -1428,7 +1705,8 @@ sqliteIterateForeignScan(ForeignScanState *node)
 										   tupleDescriptor, festate->retrieved_attrs,
 										   festate->rows[festate->row_nums],
 										   festate->rows_isnull[festate->row_nums],
-										   festate);
+										   festate,
+										   node);
 
 				festate->row_nums++;
 
@@ -1462,8 +1740,12 @@ sqliteIterateForeignScan(ForeignScanState *node)
 		if (SQLITE_ROW == rc)
 		{
 			make_tuple_from_result_row(festate->stmt,
-									   tupleDescriptor, festate->retrieved_attrs,
-									   tupleSlot->tts_values, tupleSlot->tts_isnull, festate);
+									   tupleDescriptor,
+									   festate->retrieved_attrs,
+									   tupleSlot->tts_values,
+									   tupleSlot->tts_isnull,
+									   festate,
+									   node);
 			ExecStoreVirtualTuple(tupleSlot);
 		}
 		else if (SQLITE_DONE == rc)
@@ -1754,8 +2036,6 @@ sqliteBeginForeignModify(ModifyTableState *mtstate,
 	bool		isvarlena = false;
 	ListCell   *lc = NULL;
 	Oid			foreignTableId = InvalidOid;
-	ForeignTable *table;
-	ForeignServer *server;
 	Plan	   *subplan;
 	int			i;
 
@@ -1768,9 +2048,6 @@ sqliteBeginForeignModify(ModifyTableState *mtstate,
 	subplan = mtstate->mt_plans[subplan_index]->plan;
 #endif
 
-	table = GetForeignTable(foreignTableId);
-	server = GetForeignServer(table->serverid);
-
 	/*
 	 * Do nothing in EXPLAIN (no ANALYZE) case. resultRelInfon->ri_FdwState
 	 * stays NULL.
@@ -1780,8 +2057,10 @@ sqliteBeginForeignModify(ModifyTableState *mtstate,
 
 	fmstate = (SqliteFdwExecState *) palloc0(sizeof(SqliteFdwExecState));
 	fmstate->rel = rel;
+	fmstate->table = GetForeignTable(foreignTableId);
+	fmstate->server = GetForeignServer(fmstate->table->serverid);
 
-	fmstate->conn = sqlite_get_connection(server, false);
+	fmstate->conn = sqlite_get_connection(fmstate->server, false);
 	fmstate->query = strVal(list_nth(fdw_private, FdwModifyPrivateUpdateSql));
 	fmstate->target_attrs = (List *) list_nth(fdw_private, FdwModifyPrivateTargetAttnums);
 	fmstate->retrieved_attrs = (List *) list_nth(fdw_private, FdwModifyPrivateTargetAttnums);
@@ -1830,7 +2109,7 @@ sqliteBeginForeignModify(ModifyTableState *mtstate,
 
 	fmstate->num_slots = 1;
 	/* Prepare sqlite statment */
-	sqlite_prepare_wrapper(server, fmstate->conn, fmstate->query, &fmstate->stmt, NULL, true);
+	sqlite_prepare_wrapper(fmstate->server, fmstate->conn, fmstate->query, &fmstate->stmt, NULL, true);
 
 	resultRelInfo->ri_FdwState = fmstate;
 
@@ -2316,8 +2595,6 @@ sqliteBeginDirectModify(ForeignScanState *node, int eflags)
 	EState			   *estate = node->ss.ps.state;
 	SqliteFdwDirectModifyState *dmstate;
 	Index				rtindex;
-	ForeignTable	   *table;
-	ForeignServer	   *server;
 	int					numParams;
 
 	elog(DEBUG1, "sqlite_fdw : %s", __func__);
@@ -2334,13 +2611,17 @@ sqliteBeginDirectModify(ForeignScanState *node, int eflags)
 	dmstate = (SqliteFdwDirectModifyState *) palloc0(sizeof(SqliteFdwDirectModifyState));
 	node->fdw_state = (void *) dmstate;
 
-	/* Get info about foreign table. */
+	/*
+	 * Identify which user to do the remote access as.  This should match what
+	 * ExecCheckRTEPerms() does.
+	 */
 #if (PG_VERSION_NUM >= 140000)
 	rtindex = node->resultRelInfo->ri_RangeTableIndex;
 #else
 	rtindex = estate->es_result_relation_info->ri_RangeTableIndex;
 #endif
 
+	/* Get info about foreign table. */
 #if PG_VERSION_NUM >= 160000
 	rtindex = node->resultRelInfo->ri_RangeTableIndex;
 #endif
@@ -2348,14 +2629,14 @@ sqliteBeginDirectModify(ForeignScanState *node, int eflags)
 		dmstate->rel = ExecOpenScanRelation(estate, rtindex, eflags);
 	else
 		dmstate->rel = node->ss.ss_currentRelation;
-	table = GetForeignTable(RelationGetRelid(dmstate->rel));
-	server = GetForeignServer(table->serverid);
+	dmstate->table = GetForeignTable(RelationGetRelid(dmstate->rel));
+	dmstate->server = GetForeignServer(dmstate->table->serverid);
 
 	/*
 	 * Get connection to the foreign server.  Connection manager will
 	 * establish new connection if necessary.
 	 */
-	dmstate->conn = sqlite_get_connection(server, false);
+	dmstate->conn = sqlite_get_connection(dmstate->server, false);
 
 	/* Update the foreign-join-related fields. */
 	if (fsplan->scan.scanrelid == 0)
@@ -2397,11 +2678,11 @@ sqliteBeginDirectModify(ForeignScanState *node, int eflags)
 											  "sqlite_fdw temporary data",
 											  ALLOCSET_SMALL_SIZES);
 
-	/* Initialize the Sqlite statement */
+	/* Initialize the SQLite statement */
 	dmstate->stmt = NULL;
 
-	/* Prepare Sqlite statement */
-	sqlite_prepare_wrapper(server, dmstate->conn, dmstate->query, &dmstate->stmt, NULL, true);
+	/* Prepare SQLite statement */
+	sqlite_prepare_wrapper(dmstate->server, dmstate->conn, dmstate->query, &dmstate->stmt, NULL, true);
 
 	/*
 	 * Prepare for processing of parameters used in remote query, if any.
@@ -2658,7 +2939,7 @@ sqliteExecForeignUpdate(EState *estate,
 		int			attnum = lfirst_int(lc);
 		bool		is_null;
 		Datum		value = 0;
-		Form_pg_attribute bind_att = NULL;		
+		Form_pg_attribute bind_att = NULL;
 #if PG_VERSION_NUM >= 140000
 		TupleDesc	tupdesc = RelationGetDescr(fmstate->rel);
 		Form_pg_attribute attr = TupleDescAttr(tupdesc, attnum - 1);
@@ -2885,7 +3166,7 @@ sqliteImportForeignSchema(ImportForeignSchemaStmt *stmt,
 				bool		not_null;
 				char	   *default_val;
 				int			primary_key;
-				
+
 				rc = sqlite3_step(pragma_stmt);
 				if (rc == SQLITE_DONE)
 					break;
@@ -2950,6 +3231,22 @@ sqliteImportForeignSchema(ImportForeignSchemaStmt *stmt,
 		sqlite3_finalize(pragma_stmt);
 
 	return commands;
+}
+
+/*
+ * Estimate costs of executing a SQL statement remotely. The given "sql" must
+ * be an EXPLAIN command.
+ */
+static void
+sqlite_get_remote_estimate(const char *sql, sqlite3 * conn,
+						   double *rows, int *width,
+						   Cost *startup_cost, Cost *total_cost)
+{
+	/*
+	 * Disable this funtionality because Sqlite FDW does not use estimate from
+	 * remote for planning
+	 */
+	elog(ERROR, "Not supported to estimate from remote for planning");
 }
 
 /*
@@ -3146,6 +3443,17 @@ sqlite_foreign_join_ok(PlannerInfo *root, RelOptInfo *joinrel, JoinType jointype
 	/* Mark that this join can be pushed down safely */
 	fpinfo->pushdown_safe = true;
 
+	/* Get user mapping */
+	if (fpinfo->use_remote_estimate)
+	{
+		if (fpinfo_o->use_remote_estimate)
+			fpinfo->user = fpinfo_o->user;
+		else
+			fpinfo->user = fpinfo_i->user;
+	}
+	else
+		fpinfo->user = NULL;
+
 	/*
 	 * Set # of retrieved rows and cached relation costs to some negative
 	 * value, so that we can detect when they are set to some sensible values,
@@ -3236,6 +3544,37 @@ sqlite_adjust_foreign_grouping_path_cost(PlannerInfo *root,
 		*p_startup_cost *= sort_multiplier;
 		*p_run_cost *= sort_multiplier;
 	}
+}
+
+/*
+ * Detect whether we want to process an EquivalenceClass member.
+ *
+ * This is a callback for use by generate_implied_equalities_for_column.
+ */
+static bool
+sqlite_ec_member_matches_foreign(PlannerInfo *root, RelOptInfo *rel,
+								 EquivalenceClass *ec, EquivalenceMember *em,
+								 void *arg)
+{
+	ec_member_foreign_arg *state = (ec_member_foreign_arg *) arg;
+	Expr	   *expr = em->em_expr;
+
+	/*
+	 * If we've identified what we're processing in the current scan, we only
+	 * want to match that expression.
+	 */
+	if (state->current != NULL)
+		return equal(expr, state->current);
+
+	/*
+	 * Otherwise, ignore anything we've already processed.
+	 */
+	if (list_member(state->already_used, expr))
+		return false;
+
+	/* This is the new target to process. */
+	state->current = expr;
+	return true;
 }
 
 /*
@@ -3338,9 +3677,10 @@ sqliteGetForeignJoinPaths(PlannerInfo *root,
 	 * If we are going to estimate costs locally, estimate the join clause
 	 * selectivity here while we have special join info.
 	 */
-	fpinfo->joinclause_sel = clauselist_selectivity(root, fpinfo->joinclauses,
-													0, fpinfo->jointype,
-													extra->sjinfo);
+	if (!fpinfo->use_remote_estimate)
+		fpinfo->joinclause_sel = clauselist_selectivity(root, fpinfo->joinclauses,
+														0, fpinfo->jointype,
+														extra->sjinfo);
 
 	/* Estimate costs for bare join relation */
 	sqlite_estimate_path_cost_size(root, joinrel, NIL, NIL, NULL,
@@ -3377,6 +3717,8 @@ sqliteGetForeignJoinPaths(PlannerInfo *root,
 
 	/* Consider pathkeys for the join relation */
 	sqlite_add_paths_with_pathkeys_for_rel(root, joinrel, NULL, epq_path);
+
+	/* XXX Consider parameterized paths for the join relation */
 }
 
 static void
@@ -3398,11 +3740,24 @@ sqlite_merge_fdw_options(SqliteFdwRelationInfo * fpinfo,
 	 */
 	fpinfo->fdw_startup_cost = fpinfo_o->fdw_startup_cost;
 	fpinfo->fdw_tuple_cost = fpinfo_o->fdw_tuple_cost;
+	fpinfo->shippable_extensions = fpinfo_o->shippable_extensions;
+	fpinfo->use_remote_estimate = fpinfo_o->use_remote_estimate;
 	fpinfo->fetch_size = fpinfo_o->fetch_size;
 
 	/* Merge the table level options from either side of the join. */
 	if (fpinfo_i)
 	{
+		/*
+		 * We'll prefer to use remote estimates for this join if any table
+		 * from either side of the join is using remote estimates.  This is
+		 * most likely going to be preferred since they're already willing to
+		 * pay the price of a round trip to get the remote EXPLAIN.  In any
+		 * case it's not entirely clear how we might otherwise handle this
+		 * best.
+		 */
+		fpinfo->use_remote_estimate = fpinfo_o->use_remote_estimate ||
+			fpinfo_i->use_remote_estimate;
+
 		/*
 		 * Set fetch size to maximum of the joining sides, since we are
 		 * expecting the rows returned by the join to be proportional to the
@@ -3424,7 +3779,6 @@ sqlite_foreign_grouping_ok(PlannerInfo *root, RelOptInfo *grouped_rel)
 	PathTarget *grouping_target;
 	SqliteFdwRelationInfo *fpinfo = (SqliteFdwRelationInfo *) grouped_rel->fdw_private;
 	SqliteFdwRelationInfo *ofpinfo;
-	List	   *aggvars = NIL;
 	ListCell   *lc;
 	int			i;
 	List	   *tlist = NIL;
@@ -3518,6 +3872,7 @@ sqlite_foreign_grouping_ok(PlannerInfo *root, RelOptInfo *grouped_rel)
 			}
 			else
 			{
+				List	   *aggvars = NIL;
 				/* Not matched exactly, pull the var with aggregates then */
 				aggvars = pull_var_clause((Node *) expr,
 										  PVC_INCLUDE_AGGREGATES);
@@ -3600,6 +3955,7 @@ sqlite_foreign_grouping_ok(PlannerInfo *root, RelOptInfo *grouped_rel)
 	 */
 	if (fpinfo->local_conds)
 	{
+		List	   *aggvars = NIL;
 		foreach(lc, fpinfo->local_conds)
 		{
 			RestrictInfo *rinfo = lfirst_node(RestrictInfo, lc);
@@ -3636,6 +3992,14 @@ sqlite_foreign_grouping_ok(PlannerInfo *root, RelOptInfo *grouped_rel)
 	/* Safe to pushdown */
 	fpinfo->pushdown_safe = true;
 
+	/*
+	 * If user is willing to estimate cost for a scan using EXPLAIN, he
+	 * intends to estimate scans on that relation more accurately. Then, it
+	 * makes sense to estimate the cost of the grouping on that relation more
+	 * accurately using EXPLAIN.
+	 */
+	fpinfo->use_remote_estimate = ofpinfo->use_remote_estimate;
+
 	/* Copy startup and tuple cost as is from underneath input rel's fpinfo */
 	fpinfo->fdw_startup_cost = ofpinfo->fdw_startup_cost;
 	fpinfo->fdw_tuple_cost = ofpinfo->fdw_tuple_cost;
@@ -3647,6 +4011,7 @@ sqlite_foreign_grouping_ok(PlannerInfo *root, RelOptInfo *grouped_rel)
 	 */
 	fpinfo->rel_startup_cost = -1;
 	fpinfo->rel_total_cost = -1;
+
 
 	/*
 	 * Set the string describing this grouped relation to be used in EXPLAIN
@@ -3760,11 +4125,13 @@ sqlite_add_foreign_grouping_paths(PlannerInfo *root, RelOptInfo *input_rel,
 	fpinfo->outerrel = input_rel;
 
 	/*
-	 * Copy foreign table, foreign server,
+	 * Copy foreign table, foreign server, user mapping, shippable extensions
 	 * etc. details from the input relation's fpinfo.
 	 */
 	fpinfo->table = ifpinfo->table;
 	fpinfo->server = ifpinfo->server;
+
+	fpinfo->shippable_extensions = ifpinfo->shippable_extensions;
 
 	/* Assess if it is safe to push down aggregation and grouping. */
 	if (!sqlite_foreign_grouping_ok(root, grouped_rel))
@@ -3849,11 +4216,14 @@ sqlite_add_foreign_ordered_paths(PlannerInfo *root, RelOptInfo *input_rel,
 	fpinfo->outerrel = input_rel;
 
 	/*
-	 * Copy foreign table, foreign server, FDW options etc.
+	 * Copy foreign table, foreign server, user mapping, FDW options etc.
 	 * details from the input relation's fpinfo.
 	 */
 	fpinfo->table = ifpinfo->table;
 	fpinfo->server = ifpinfo->server;
+
+	fpinfo->shippable_extensions = ifpinfo->shippable_extensions;
+
 
 	/*
 	 * If the input_rel is a base or join relation, we would already have
@@ -3929,7 +4299,7 @@ sqlite_add_foreign_ordered_paths(PlannerInfo *root, RelOptInfo *input_rel,
 	 */
 #if (PG_VERSION_NUM >= 150000)
 	fdw_private = list_make2(makeBoolean(true), makeBoolean(false));
-#else		
+#else
 	fdw_private = list_make2(makeInteger(true), makeInteger(false));
 #endif
 
@@ -4039,11 +4409,13 @@ sqlite_add_foreign_final_paths(PlannerInfo *root, RelOptInfo *input_rel,
 	fpinfo->outerrel = input_rel;
 
 	/*
-	 * Copy foreign table, foreign server, FDW options etc.
+	 * Copy foreign table, foreign server, user mapping, FDW options etc.
 	 * details from the input relation's fpinfo.
 	 */
 	fpinfo->table = ifpinfo->table;
 	fpinfo->server = ifpinfo->server;
+
+	fpinfo->shippable_extensions = ifpinfo->shippable_extensions;
 
 #if (PG_VERSION_NUM >= 120000)
 	Assert(extra->limit_needed);
@@ -4190,374 +4562,477 @@ sqlite_estimate_path_cost_size(PlannerInfo *root,
 	int			width;
 	Cost		startup_cost;
 	Cost		total_cost;
-	Cost		run_cost = 0;
 
 	/* Make sure the core code has set up the relation's reltarget */
 	Assert(foreignrel->reltarget);
 
 	/*
-	 * We don't support join conditions in this mode (hence, no
-	 * parameterized paths can be made).
+	 * If the table or the server is configured to use remote estimates,
+	 * connect to the foreign server and execute EXPLAIN to estimate the
+	 * number of rows selected by the restriction+join clauses. Otherwise,
+	 * estimate rows using whatever statistics we have locally, in a way
+	 * similar to ordinary tables.
 	 */
-	Assert(param_join_conds == NIL);
-
-	/*
-	 * We will come here again and again with different set of pathkeys or
-	 * additional post-scan/join-processing steps that caller wants to
-	 * cost.  We don't need to calculate the cost/size estimates for the
-	 * underlying scan, join, or grouping each time.  Instead, use those
-	 * estimates if we have cached them already.
-	 */
-	if (fpinfo->rel_startup_cost >= 0 && fpinfo->rel_total_cost >= 0)
+	if (fpinfo->use_remote_estimate)
 	{
-		Assert(fpinfo->retrieved_rows >= 1);
+		List	   *remote_param_join_conds;
+		List	   *local_param_join_conds;
+		StringInfoData sql;
+		sqlite3	   *conn;
+		Selectivity local_sel;
+		QualCost	local_cost;
+		List	   *fdw_scan_tlist = NIL;
+		List	   *remote_conds;
 
-		rows = fpinfo->rows;
-		retrieved_rows = fpinfo->retrieved_rows;
-		width = fpinfo->width;
-		startup_cost = fpinfo->rel_startup_cost;
-		run_cost = fpinfo->rel_total_cost - fpinfo->rel_startup_cost;
-
-		/*
-		 * If we estimate the costs of a foreign scan or a foreign join
-		 * with additional post-scan/join-processing steps, the scan or
-		 * join costs obtained from the cache wouldn't yet contain the
-		 * eval costs for the final scan/join target, which would've been
-		 * updated by apply_scanjoin_target_to_paths(); add the eval costs
-		 * now.
-		 */
-		if (fpextra && !IS_UPPER_REL(foreignrel))
-		{
-			/* Shouldn't get here unless we have LIMIT */
-			Assert(fpextra->has_limit);
-			Assert(foreignrel->reloptkind == RELOPT_BASEREL ||
-				   foreignrel->reloptkind == RELOPT_JOINREL);
-			startup_cost += foreignrel->reltarget->cost.startup;
-			run_cost += foreignrel->reltarget->cost.per_tuple * rows;
-		}
-	}
-	else if (IS_JOIN_REL(foreignrel))
-	{
-		SqliteFdwRelationInfo *fpinfo_i;
-		SqliteFdwRelationInfo *fpinfo_o;
-		QualCost join_cost;
-		QualCost remote_conds_cost;
-		double nrows;
-
-		/* Use rows/width estimates made by the core code. */
-		rows = foreignrel->rows;
-		width = foreignrel->reltarget->width;
-
-		/* For join we expect inner and outer relations set */
-		Assert(fpinfo->innerrel && fpinfo->outerrel);
-
-		fpinfo_i = (SqliteFdwRelationInfo *)fpinfo->innerrel->fdw_private;
-		fpinfo_o = (SqliteFdwRelationInfo *)fpinfo->outerrel->fdw_private;
-
-		/* Estimate of number of rows in cross product */
-		nrows = fpinfo_i->rows * fpinfo_o->rows;
+		/* Required only to be passed to deparseSelectStmtForRel */
+		List	   *retrieved_attrs;
 
 		/*
-		 * Back into an estimate of the number of retrieved rows.  Just in
-		 * case this is nuts, clamp to at most nrows.
+		 * param_join_conds might contain both clauses that are safe to send
+		 * across, and clauses that aren't.
 		 */
-		retrieved_rows = clamp_row_est(rows / fpinfo->local_conds_sel);
-		retrieved_rows = Min(retrieved_rows, nrows);
+		sqlite_classify_conditions(root, foreignrel, param_join_conds,
+								   &remote_param_join_conds, &local_param_join_conds);
 
 		/*
-		 * The cost of foreign join is estimated as cost of generating
-		 * rows for the joining relations + cost for applying quals on the
-		 * rows.
+		 * Build the list of columns to be fetched from the foreign server.
 		 */
-
-		/*
-		 * Calculate the cost of clauses pushed down to the foreign server
-		 */
-		cost_qual_eval(&remote_conds_cost, fpinfo->remote_conds, root);
-		/* Calculate the cost of applying join clauses */
-		cost_qual_eval(&join_cost, fpinfo->joinclauses, root);
-
-		/*
-		 * Startup cost includes startup cost of joining relations and the
-		 * startup cost for join and other clauses. We do not include the
-		 * startup cost specific to join strategy (e.g. setting up hash
-		 * tables) since we do not know what strategy the foreign server
-		 * is going to use.
-		 */
-		startup_cost = fpinfo_i->rel_startup_cost + fpinfo_o->rel_startup_cost;
-		startup_cost += join_cost.startup;
-		startup_cost += remote_conds_cost.startup;
-		startup_cost += fpinfo->local_conds_cost.startup;
-
-		/*
-		 * Run time cost includes:
-		 *
-		 * 1. Run time cost (total_cost - startup_cost) of relations being
-		 * joined
-		 *
-		 * 2. Run time cost of applying join clauses on the cross product
-		 * of the joining relations.
-		 *
-		 * 3. Run time cost of applying pushed down other clauses on the
-		 * result of join
-		 *
-		 * 4. Run time cost of applying nonpushable other clauses locally
-		 * on the result fetched from the foreign server.
-		 */
-		run_cost = fpinfo_i->rel_total_cost - fpinfo_i->rel_startup_cost;
-		run_cost += fpinfo_o->rel_total_cost - fpinfo_o->rel_startup_cost;
-		run_cost += nrows * join_cost.per_tuple;
-		nrows = clamp_row_est(nrows * fpinfo->joinclause_sel);
-		run_cost += nrows * remote_conds_cost.per_tuple;
-		run_cost += fpinfo->local_conds_cost.per_tuple * retrieved_rows;
-
-		/* Add in tlist eval cost for each output row */
-		startup_cost += foreignrel->reltarget->cost.startup;
-		run_cost += foreignrel->reltarget->cost.per_tuple * rows;
-	}
-	else if (IS_UPPER_REL(foreignrel))
-	{
-		RelOptInfo *outerrel = fpinfo->outerrel;
-		SqliteFdwRelationInfo *ofpinfo;
-		AggClauseCosts aggcosts;
-		double input_rows;
-		int numGroupCols;
-		double numGroups = 1;
-
-		/*
-		 * The upper relation should have its outer relation set
-		 */
-		Assert(outerrel);
-
-		/*
-		 * and that outer relation should have its reltarget set
-		 */
-		Assert(outerrel->reltarget);
-
-		/*
-		 * This cost model is mixture of costing done for sorted and
-		 * hashed aggregates in cost_agg().  We are not sure which
-		 * strategy will be considered at remote side, thus for
-		 * simplicity, we put all startup related costs in startup_cost
-		 * and all finalization and run cost are added in total_cost.
-		 */
-
-		ofpinfo = (SqliteFdwRelationInfo *)outerrel->fdw_private;
-
-		/* Get rows from input rel */
-		input_rows = ofpinfo->rows;
-
-		/*
-		 * Collect statistics about aggregates for estimating costs.
-		 */
-		MemSet(&aggcosts, 0, sizeof(AggClauseCosts));
-		if (root->parse->hasAggs)
-		{
-#if PG_VERSION_NUM >= 140000
-			get_agg_clause_costs(root, AGGSPLIT_SIMPLE, &aggcosts);
-#else
-			get_agg_clause_costs(root, (Node *)fpinfo->grouped_tlist,
-								 AGGSPLIT_SIMPLE, &aggcosts);
-
-			/*
-			 * The cost of aggregates in the HAVING qual will be the same
-			 * for each child as it is for the parent, so there's no need
-			 * to use a translated version of havingQual.
-			 */
-			get_agg_clause_costs(root, (Node *)root->parse->havingQual,
-								 AGGSPLIT_SIMPLE, &aggcosts);
-#endif
-		}
-
-		/*
-		 * Get number of grouping columns and possible number of groups
-		 */
-#if PG_VERSION_NUM >= 160000
-		numGroupCols = list_length(root->processed_groupClause);
-		numGroups = estimate_num_groups(root,
-										get_sortgrouplist_exprs(root->processed_groupClause,
-																fpinfo->grouped_tlist),
-#else
-		numGroupCols = list_length(root->parse->groupClause);
-		numGroups = estimate_num_groups(root,
-										get_sortgrouplist_exprs(root->parse->groupClause,
-																fpinfo->grouped_tlist),
-#endif
-										input_rows, NULL
-#if PG_VERSION_NUM >= 140000
-										,
-										NULL
-#endif
-		);
-
-		/*
-		 * Get the retrieved_rows and rows estimates.  If there are HAVING
-		 * quals, account for their selectivity.
-		 */
-#if PG_VERSION_NUM >= 160000
-		if (root->hasHavingQual)
-#else
-		if (root->parse->havingQual)
-#endif
-		{
-			/*
-			 * Factor in the selectivity of the remotely-checked quals
-			 */
-			retrieved_rows =
-				clamp_row_est(numGroups *
-							  clauselist_selectivity(root,
-													 fpinfo->remote_conds,
-													 0,
-													 JOIN_INNER,
-													 NULL));
-
-			/*
-			 * Factor in the selectivity of the locally-checked quals
-			 */
-			rows = clamp_row_est(retrieved_rows * fpinfo->local_conds_sel);
-		}
+		if (IS_JOIN_REL(foreignrel) || IS_UPPER_REL(foreignrel))
+			fdw_scan_tlist = sqlite_build_tlist_to_deparse(foreignrel);
 		else
-		{
-			rows = retrieved_rows = numGroups;
-		}
+			fdw_scan_tlist = NIL;
 
-		/* Use width estimate made by the core code. */
-		width = foreignrel->reltarget->width;
-
-		/*-----
-		 * Startup cost includes:
-		 *	  1. Startup cost for underneath input relation, adjusted for
-		 *	     tlist replacement by apply_scanjoin_target_to_paths()
-		 *	  2. Cost of performing aggregation, per cost_agg()
-		 *-----
+		/*
+		 * The complete list of remote conditions includes everything from
+		 * baserestrictinfo plus any extra join_conds relevant to this
+		 * particular path.
 		 */
-		startup_cost = ofpinfo->rel_startup_cost;
-		startup_cost += outerrel->reltarget->cost.startup;
-		startup_cost += aggcosts.transCost.startup;
-		startup_cost += aggcosts.transCost.per_tuple * input_rows;
-#if PG_VERSION_NUM >= 120000
-		startup_cost += aggcosts.finalCost.startup;
-#else
-		startup_cost += aggcosts.finalCost;
-#endif
-		startup_cost += (cpu_operator_cost * numGroupCols) * input_rows;
+		remote_conds = list_concat(list_copy(remote_param_join_conds),
+								   fpinfo->remote_conds);
 
-		/*-----
-		 * Run time cost includes:
-		 *	  1. Run time cost of underneath input relation, adjusted for
-		 *	     tlist replacement by apply_scanjoin_target_to_paths()
-		 *	  2. Run time cost of performing aggregation, per cost_agg()
-		 *-----
+		/*
+		 * Construct EXPLAIN query including the desired SELECT, FROM, and
+		 * WHERE clauses. Params and other-relation Vars are replaced by dummy
+		 * values, so don't request params_list.
 		 */
-		run_cost = ofpinfo->rel_total_cost - ofpinfo->rel_startup_cost;
-		run_cost += outerrel->reltarget->cost.per_tuple * input_rows;
-#if PG_VERSION_NUM >= 120000
-		run_cost += aggcosts.finalCost.per_tuple * numGroups;
-#else
-		run_cost += aggcosts.finalCost * numGroups;
-#endif
-		run_cost += cpu_tuple_cost * numGroups;
+		initStringInfo(&sql);
+		appendStringInfoString(&sql, "EXPLAIN ");
+		sqlite_deparse_select_stmt_for_rel(&sql, root, foreignrel, fdw_scan_tlist,
+										   remote_conds, pathkeys,
+										   fpextra ? fpextra->has_final_sort : false,
+										   fpextra ? fpextra->has_limit : false,
+										   false, &retrieved_attrs, NULL);
 
-		/* Account for the eval cost of HAVING quals, if any */
-#if PG_VERSION_NUM >= 160000
-		if (root->hasHavingQual)
-#else
-		if (root->parse->havingQual)
-#endif
-		{
-			QualCost remote_cost;
+		/* Get the remote estimate */
+		conn = sqlite_get_connection(fpinfo->server, false);
 
-			/*
-			 * Add in the eval cost of the remotely-checked quals
-			 */
-			cost_qual_eval(&remote_cost, fpinfo->remote_conds, root);
-			startup_cost += remote_cost.startup;
-			run_cost += remote_cost.per_tuple * numGroups;
+		sqlite_get_remote_estimate(sql.data, conn, &rows, &width,
+								   &startup_cost, &total_cost);
 
-			/*
-			 * Add in the eval cost of the locally-checked quals
-			 */
-			startup_cost += fpinfo->local_conds_cost.startup;
-			run_cost += fpinfo->local_conds_cost.per_tuple * retrieved_rows;
-		}
+		retrieved_rows = rows;
 
-		/* Add in tlist eval cost for each output row */
+		/* Factor in the selectivity of the locally-checked quals */
+		local_sel = clauselist_selectivity(root,
+										   local_param_join_conds,
+										   foreignrel->relid,
+										   JOIN_INNER,
+										   NULL);
+		local_sel *= fpinfo->local_conds_sel;
+
+		rows = clamp_row_est(rows * local_sel);
+
+		/* Add in the eval cost of the locally-checked quals */
+		startup_cost += fpinfo->local_conds_cost.startup;
+		total_cost += fpinfo->local_conds_cost.per_tuple * retrieved_rows;
+		cost_qual_eval(&local_cost, local_param_join_conds, root);
+		startup_cost += local_cost.startup;
+		total_cost += local_cost.per_tuple * retrieved_rows;
+
+		/*
+		 * Add in tlist eval cost for each output row.  In case of an
+		 * aggregate, some of the tlist expressions such as grouping
+		 * expressions will be evaluated remotely, so adjust the costs.
+		 */
 		startup_cost += foreignrel->reltarget->cost.startup;
-		run_cost += foreignrel->reltarget->cost.per_tuple * rows;
+		total_cost += foreignrel->reltarget->cost.startup;
+		total_cost += foreignrel->reltarget->cost.per_tuple * rows;
+		if (IS_UPPER_REL(foreignrel))
+		{
+			QualCost	tlist_cost;
+
+			cost_qual_eval(&tlist_cost, fdw_scan_tlist, root);
+			startup_cost -= tlist_cost.startup;
+			total_cost -= tlist_cost.startup;
+			total_cost -= tlist_cost.per_tuple * rows;
+		}
 	}
 	else
 	{
-		Cost cpu_per_tuple;
+		Cost		run_cost = 0;
 
 		/*
-		 * Use rows/width estimates made by set_baserel_size_estimates.
+		 * We don't support join conditions in this mode (hence, no
+		 * parameterized paths can be made).
 		 */
-		rows = foreignrel->rows;
-		width = foreignrel->reltarget->width;
+		Assert(param_join_conds == NIL);
 
 		/*
-		 * Back into an estimate of the number of retrieved rows.  Just in
-		 * case this is nuts, clamp to at most foreignrel->tuples.
+		 * We will come here again and again with different set of pathkeys or
+		 * additional post-scan/join-processing steps that caller wants to
+		 * cost.  We don't need to calculate the cost/size estimates for the
+		 * underlying scan, join, or grouping each time.  Instead, use those
+		 * estimates if we have cached them already.
 		 */
-		retrieved_rows = clamp_row_est(rows / fpinfo->local_conds_sel);
-		retrieved_rows = Min(retrieved_rows, foreignrel->tuples);
-
-		/*
-		 * Cost as though this were a seqscan, which is pessimistic.  We
-		 * effectively imagine the local_conds are being evaluated
-		 * remotely, too.
-		 */
-		startup_cost = 0;
-		run_cost = 0;
-		run_cost += seq_page_cost * foreignrel->pages;
-
-		startup_cost += foreignrel->baserestrictcost.startup;
-		cpu_per_tuple = cpu_tuple_cost + foreignrel->baserestrictcost.per_tuple;
-		run_cost += cpu_per_tuple * foreignrel->tuples;
-
-		/* Add in tlist eval cost for each output row */
-		startup_cost += foreignrel->reltarget->cost.startup;
-		run_cost += foreignrel->reltarget->cost.per_tuple * rows;
-	}
-
-	/*
-	 * Without remote estimates, we have no real way to estimate the cost
-	 * of generating sorted output.  It could be free if the query plan
-	 * the remote side would have chosen generates properly-sorted output
-	 * anyway, but in most cases it will cost something.  Estimate a value
-	 * high enough that we won't pick the sorted path when the ordering
-	 * isn't locally useful, but low enough that we'll err on the side of
-	 * pushing down the ORDER BY clause when it's useful to do so.
-	 */
-	if (pathkeys != NIL)
-	{
-		if (IS_UPPER_REL(foreignrel))
+		if (fpinfo->rel_startup_cost >= 0 && fpinfo->rel_total_cost >= 0)
 		{
-			Assert(foreignrel->reloptkind == RELOPT_UPPER_REL &&
-				   fpinfo->stage == UPPERREL_GROUP_AGG);
-			sqlite_adjust_foreign_grouping_path_cost(root, pathkeys,
-													 retrieved_rows, width,
-													 fpextra->limit_tuples,
-													 &startup_cost, &run_cost);
+			Assert(fpinfo->retrieved_rows >= 1);
+
+			rows = fpinfo->rows;
+			retrieved_rows = fpinfo->retrieved_rows;
+			width = fpinfo->width;
+			startup_cost = fpinfo->rel_startup_cost;
+			run_cost = fpinfo->rel_total_cost - fpinfo->rel_startup_cost;
+
+			/*
+			 * If we estimate the costs of a foreign scan or a foreign join
+			 * with additional post-scan/join-processing steps, the scan or
+			 * join costs obtained from the cache wouldn't yet contain the
+			 * eval costs for the final scan/join target, which would've been
+			 * updated by apply_scanjoin_target_to_paths(); add the eval costs
+			 * now.
+			 */
+			if (fpextra && !IS_UPPER_REL(foreignrel))
+			{
+				/* Shouldn't get here unless we have LIMIT */
+				Assert(fpextra->has_limit);
+				Assert(foreignrel->reloptkind == RELOPT_BASEREL ||
+					   foreignrel->reloptkind == RELOPT_JOINREL);
+				startup_cost += foreignrel->reltarget->cost.startup;
+				run_cost += foreignrel->reltarget->cost.per_tuple * rows;
+			}
+		}
+		else if (IS_JOIN_REL(foreignrel))
+		{
+			SqliteFdwRelationInfo *fpinfo_i;
+			SqliteFdwRelationInfo *fpinfo_o;
+			QualCost	join_cost;
+			QualCost	remote_conds_cost;
+			double		nrows;
+
+			/* Use rows/width estimates made by the core code. */
+			rows = foreignrel->rows;
+			width = foreignrel->reltarget->width;
+
+			/* For join we expect inner and outer relations set */
+			Assert(fpinfo->innerrel && fpinfo->outerrel);
+
+			fpinfo_i = (SqliteFdwRelationInfo *) fpinfo->innerrel->fdw_private;
+			fpinfo_o = (SqliteFdwRelationInfo *) fpinfo->outerrel->fdw_private;
+
+			/* Estimate of number of rows in cross product */
+			nrows = fpinfo_i->rows * fpinfo_o->rows;
+
+			/*
+			 * Back into an estimate of the number of retrieved rows.  Just in
+			 * case this is nuts, clamp to at most nrows.
+			 */
+			retrieved_rows = clamp_row_est(rows / fpinfo->local_conds_sel);
+			retrieved_rows = Min(retrieved_rows, nrows);
+
+			/*
+			 * The cost of foreign join is estimated as cost of generating
+			 * rows for the joining relations + cost for applying quals on the
+			 * rows.
+			 */
+
+			/*
+			 * Calculate the cost of clauses pushed down to the foreign server
+			 */
+			cost_qual_eval(&remote_conds_cost, fpinfo->remote_conds, root);
+			/* Calculate the cost of applying join clauses */
+			cost_qual_eval(&join_cost, fpinfo->joinclauses, root);
+
+			/*
+			 * Startup cost includes startup cost of joining relations and the
+			 * startup cost for join and other clauses. We do not include the
+			 * startup cost specific to join strategy (e.g. setting up hash
+			 * tables) since we do not know what strategy the foreign server
+			 * is going to use.
+			 */
+			startup_cost = fpinfo_i->rel_startup_cost + fpinfo_o->rel_startup_cost;
+			startup_cost += join_cost.startup;
+			startup_cost += remote_conds_cost.startup;
+			startup_cost += fpinfo->local_conds_cost.startup;
+
+			/*
+			 * Run time cost includes:
+			 *
+			 * 1. Run time cost (total_cost - startup_cost) of relations being
+			 * joined
+			 *
+			 * 2. Run time cost of applying join clauses on the cross product
+			 * of the joining relations.
+			 *
+			 * 3. Run time cost of applying pushed down other clauses on the
+			 * result of join
+			 *
+			 * 4. Run time cost of applying nonpushable other clauses locally
+			 * on the result fetched from the foreign server.
+			 */
+			run_cost = fpinfo_i->rel_total_cost - fpinfo_i->rel_startup_cost;
+			run_cost += fpinfo_o->rel_total_cost - fpinfo_o->rel_startup_cost;
+			run_cost += nrows * join_cost.per_tuple;
+			nrows = clamp_row_est(nrows * fpinfo->joinclause_sel);
+			run_cost += nrows * remote_conds_cost.per_tuple;
+			run_cost += fpinfo->local_conds_cost.per_tuple * retrieved_rows;
+
+			/* Add in tlist eval cost for each output row */
+			startup_cost += foreignrel->reltarget->cost.startup;
+			run_cost += foreignrel->reltarget->cost.per_tuple * rows;
+		}
+		else if (IS_UPPER_REL(foreignrel))
+		{
+			RelOptInfo *outerrel = fpinfo->outerrel;
+			SqliteFdwRelationInfo *ofpinfo;
+			AggClauseCosts aggcosts;
+			double		input_rows;
+			int			numGroupCols;
+			double		numGroups = 1;
+
+			/*
+			 * The upper relation should have its outer relation set
+			 */
+			Assert(outerrel);
+
+			/*
+			 * and that outer relation should have its reltarget set
+			 */
+			Assert(outerrel->reltarget);
+
+			/*
+			 * This cost model is mixture of costing done for sorted and
+			 * hashed aggregates in cost_agg().  We are not sure which
+			 * strategy will be considered at remote side, thus for
+			 * simplicity, we put all startup related costs in startup_cost
+			 * and all finalization and run cost are added in total_cost.
+			 */
+
+			ofpinfo = (SqliteFdwRelationInfo *) outerrel->fdw_private;
+
+			/* Get rows from input rel */
+			input_rows = ofpinfo->rows;
+
+			/*
+			 * Collect statistics about aggregates for estimating costs.
+			 */
+			MemSet(&aggcosts, 0, sizeof(AggClauseCosts));
+			if (root->parse->hasAggs)
+			{
+#if PG_VERSION_NUM >= 140000
+				get_agg_clause_costs(root, AGGSPLIT_SIMPLE, &aggcosts);
+#else
+				get_agg_clause_costs(root, (Node *) fpinfo->grouped_tlist,
+									 AGGSPLIT_SIMPLE, &aggcosts);
+
+				/*
+				 * The cost of aggregates in the HAVING qual will be the same
+				 * for each child as it is for the parent, so there's no need
+				 * to use a translated version of havingQual.
+				 */
+				get_agg_clause_costs(root, (Node *) root->parse->havingQual,
+									 AGGSPLIT_SIMPLE, &aggcosts);
+#endif
+			}
+
+			/*
+			 * Get number of grouping columns and possible number of groups
+			 */
+#if PG_VERSION_NUM >= 160000
+			numGroupCols = list_length(root->processed_groupClause);
+			numGroups = estimate_num_groups(root,
+											get_sortgrouplist_exprs(root->processed_groupClause,
+																	fpinfo->grouped_tlist),
+#else
+			numGroupCols = list_length(root->parse->groupClause);
+			numGroups = estimate_num_groups(root,
+											get_sortgrouplist_exprs(root->parse->groupClause,
+																	fpinfo->grouped_tlist),
+#endif
+											input_rows, NULL
+#if PG_VERSION_NUM >= 140000
+											,NULL
+#endif
+						);
+
+			/*
+			 * Get the retrieved_rows and rows estimates.  If there are HAVING
+			 * quals, account for their selectivity.
+			 */
+#if PG_VERSION_NUM >= 160000
+			if (root->hasHavingQual)
+#else
+			if (root->parse->havingQual)
+#endif
+			{
+				/*
+				 * Factor in the selectivity of the remotely-checked quals
+				 */
+				retrieved_rows =
+					clamp_row_est(numGroups *
+								  clauselist_selectivity(root,
+														 fpinfo->remote_conds,
+														 0,
+														 JOIN_INNER,
+														 NULL));
+
+				/*
+				 * Factor in the selectivity of the locally-checked quals
+				 */
+				rows = clamp_row_est(retrieved_rows * fpinfo->local_conds_sel);
+			}
+			else
+			{
+				rows = retrieved_rows = numGroups;
+			}
+
+			/* Use width estimate made by the core code. */
+			width = foreignrel->reltarget->width;
+
+			/*-----
+			 * Startup cost includes:
+			 *	  1. Startup cost for underneath input relation, adjusted for
+			 *		 tlist replacement by apply_scanjoin_target_to_paths()
+			 *	  2. Cost of performing aggregation, per cost_agg()
+			 *-----
+			 */
+			startup_cost = ofpinfo->rel_startup_cost;
+			startup_cost += outerrel->reltarget->cost.startup;
+			startup_cost += aggcosts.transCost.startup;
+			startup_cost += aggcosts.transCost.per_tuple * input_rows;
+#if PG_VERSION_NUM >= 120000
+			startup_cost += aggcosts.finalCost.startup;
+#else
+			startup_cost += aggcosts.finalCost;
+#endif
+			startup_cost += (cpu_operator_cost * numGroupCols) * input_rows;
+
+			/*-----
+			 * Run time cost includes:
+			 *	  1. Run time cost of underneath input relation, adjusted for
+			 *		 tlist replacement by apply_scanjoin_target_to_paths()
+			 *	  2. Run time cost of performing aggregation, per cost_agg()
+			 *-----
+			 */
+			run_cost = ofpinfo->rel_total_cost - ofpinfo->rel_startup_cost;
+			run_cost += outerrel->reltarget->cost.per_tuple * input_rows;
+#if PG_VERSION_NUM >= 120000
+			run_cost += aggcosts.finalCost.per_tuple * numGroups;
+#else
+			run_cost += aggcosts.finalCost * numGroups;
+#endif
+			run_cost += cpu_tuple_cost * numGroups;
+
+			/* Account for the eval cost of HAVING quals, if any */
+#if PG_VERSION_NUM >= 160000
+			if (root->hasHavingQual)
+#else
+			if (root->parse->havingQual)
+#endif
+			{
+				QualCost	remote_cost;
+
+				/*
+				 * Add in the eval cost of the remotely-checked quals
+				 */
+				cost_qual_eval(&remote_cost, fpinfo->remote_conds, root);
+				startup_cost += remote_cost.startup;
+				run_cost += remote_cost.per_tuple * numGroups;
+
+				/*
+				 * Add in the eval cost of the locally-checked quals
+				 */
+				startup_cost += fpinfo->local_conds_cost.startup;
+				run_cost += fpinfo->local_conds_cost.per_tuple * retrieved_rows;
+			}
+
+			/* Add in tlist eval cost for each output row */
+			startup_cost += foreignrel->reltarget->cost.startup;
+			run_cost += foreignrel->reltarget->cost.per_tuple * rows;
 		}
 		else
 		{
-			startup_cost *= DEFAULT_FDW_SORT_MULTIPLIER;
-			run_cost *= DEFAULT_FDW_SORT_MULTIPLIER;
-		}
-	}
+			Cost		cpu_per_tuple;
 
-	total_cost = startup_cost + run_cost;
+			/*
+			 * Use rows/width estimates made by set_baserel_size_estimates.
+			 */
+			rows = foreignrel->rows;
+			width = foreignrel->reltarget->width;
+
+			/*
+			 * Back into an estimate of the number of retrieved rows.  Just in
+			 * case this is nuts, clamp to at most foreignrel->tuples.
+			 */
+			retrieved_rows = clamp_row_est(rows / fpinfo->local_conds_sel);
+			retrieved_rows = Min(retrieved_rows, foreignrel->tuples);
+
+			/*
+			 * Cost as though this were a seqscan, which is pessimistic.  We
+			 * effectively imagine the local_conds are being evaluated
+			 * remotely, too.
+			 */
+			startup_cost = 0;
+			run_cost = 0;
+			run_cost += seq_page_cost * foreignrel->pages;
+
+			startup_cost += foreignrel->baserestrictcost.startup;
+			cpu_per_tuple = cpu_tuple_cost + foreignrel->baserestrictcost.per_tuple;
+			run_cost += cpu_per_tuple * foreignrel->tuples;
+
+			/* Add in tlist eval cost for each output row */
+			startup_cost += foreignrel->reltarget->cost.startup;
+			run_cost += foreignrel->reltarget->cost.per_tuple * rows;
+		}
+
+		/*
+		 * Without remote estimates, we have no real way to estimate the cost
+		 * of generating sorted output.  It could be free if the query plan
+		 * the remote side would have chosen generates properly-sorted output
+		 * anyway, but in most cases it will cost something.  Estimate a value
+		 * high enough that we won't pick the sorted path when the ordering
+		 * isn't locally useful, but low enough that we'll err on the side of
+		 * pushing down the ORDER BY clause when it's useful to do so.
+		 */
+		if (pathkeys != NIL)
+		{
+			if (IS_UPPER_REL(foreignrel))
+			{
+				Assert(foreignrel->reloptkind == RELOPT_UPPER_REL &&
+					   fpinfo->stage == UPPERREL_GROUP_AGG);
+				sqlite_adjust_foreign_grouping_path_cost(root, pathkeys,
+														 retrieved_rows, width,
+														 fpextra->limit_tuples,
+														 &startup_cost, &run_cost);
+			}
+			else
+			{
+				startup_cost *= DEFAULT_FDW_SORT_MULTIPLIER;
+				run_cost *= DEFAULT_FDW_SORT_MULTIPLIER;
+			}
+		}
+
+		total_cost = startup_cost + run_cost;
 
 #if PG_VERSION_NUM >= 120000
-	/* Adjust the cost estimates if we have LIMIT */
-	if (fpextra && fpextra->has_limit)
-	{
-		adjust_limit_rows_costs(&rows, &startup_cost, &total_cost,
-								fpextra->offset_est, fpextra->count_est);
-		retrieved_rows = rows;
-	}
+		/* Adjust the cost estimates if we have LIMIT */
+		if (fpextra && fpextra->has_limit)
+		{
+			adjust_limit_rows_costs(&rows, &startup_cost, &total_cost,
+									fpextra->offset_est, fpextra->count_est);
+			retrieved_rows = rows;
+		}
 #endif
+	}
 
 	/*
 	 * If this includes the final sort step, the given target, which will be
@@ -4620,7 +5095,8 @@ sqlite_estimate_path_cost_size(PlannerInfo *root,
 	 * the remote restriction to ensure we'll prefer it if LIMIT is a useful
 	 * one.
 	 */
-	if (fpextra && fpextra->has_limit &&
+	if (!fpinfo->use_remote_estimate &&
+		fpextra && fpextra->has_limit &&
 		fpextra->limit_tuples > 0 &&
 		fpextra->limit_tuples < fpinfo->rows)
 	{
@@ -4783,13 +5259,13 @@ sqlite_execute_insert(EState *estate,
 	int			nestlevel;
 	int			bindnum = 0;
 	int			i;
-		
+
 #if PG_VERSION_NUM >= 140000
 	Relation	rel = resultRelInfo->ri_RelationDesc;
 	TupleDesc	tupdesc = RelationGetDescr(rel);
 	Oid			foreignTableId = RelationGetRelid(rel);
 	elog(DEBUG1, "sqlite_fdw : %s for RelId %u", __func__, foreignTableId);
-#else	
+#else
 	elog(DEBUG1, "sqlite_fdw : %s", __func__);
 #endif
 
@@ -4803,11 +5279,9 @@ sqlite_execute_insert(EState *estate,
 	if (fmstate->num_slots != *numSlots)
 	{
 		StringInfoData sql;
-		ForeignTable *table;
-		ForeignServer *server;
 
-		table = GetForeignTable(RelationGetRelid(fmstate->rel));
-		server = GetForeignServer(table->serverid);
+		fmstate->table = GetForeignTable(RelationGetRelid(fmstate->rel));
+		fmstate->server = GetForeignServer(fmstate->table->serverid);
 		fmstate->stmt = NULL;
 
 		initStringInfo(&sql);
@@ -4817,7 +5291,7 @@ sqlite_execute_insert(EState *estate,
 		fmstate->query = sql.data;
 		fmstate->num_slots = *numSlots;
 
-		sqlite_prepare_wrapper(server, fmstate->conn, fmstate->query, &fmstate->stmt, NULL, true);
+		sqlite_prepare_wrapper(fmstate->server, fmstate->conn, fmstate->query, &fmstate->stmt, NULL, true);
 	}
 #endif
 
@@ -4841,7 +5315,7 @@ sqlite_execute_insert(EState *estate,
 			sqlite_bind_sql_var(att, bindnum, value, fmstate->stmt, &isnull, foreignTableId);
 #else
 			sqlite_bind_sql_var(att, bindnum, value, fmstate->stmt, &isnull, InvalidOid);
-#endif			
+#endif
 			bindnum++;
 		}
 	}
@@ -4935,7 +5409,7 @@ sqlite_process_query_params(ExprContext *econtext,
 		ExprState  *expr_state = (ExprState *) lfirst(lc);
 		Datum		expr_value;
 		bool		isNull;
-		/* fake structure, bind function usually works with attribute, but just typid in our case */		
+		/* fake structure, bind function usually works with attribute, but just typid in our case */
 		Form_pg_attribute att = NULL;
 
 		/* Evaluate the parameter expression */
@@ -4945,11 +5419,11 @@ sqlite_process_query_params(ExprContext *econtext,
 		expr_value = ExecEvalExpr(expr_state, econtext, &isNull, NULL);
 #endif
 		/* Bind parameters */
-		att = malloc(sizeof(FormData_pg_attribute));
+		att = palloc(sizeof(FormData_pg_attribute));
 		att->atttypid = param_types[i];
 		att->atttypmod = -1;
 		sqlite_bind_sql_var(att, i, expr_value, *stmt, &isNull, foreignTableId);
-		free(att);
+		pfree(att);
 		/*
 		 * Get string sentation of each parameter value by invoking
 		 * type-specific output function, unless the value is null.
@@ -5227,11 +5701,282 @@ sqliteIsForeignRelUpdatable(Relation rel)
 
 		if (strcmp(def->defname, "updatable") == 0)
 			updatable = defGetBoolean(def);
-	}	
+	}
 
 	/*
 	 * Currently "updatable" means support for INSERT, UPDATE and DELETE.
 	 */
 	return updatable ?
 		(1 << CMD_INSERT) | (1 << CMD_UPDATE) | (1 << CMD_DELETE) : 0;
+}
+
+/*
+ * sqlite_affinity_eqv_to_pgtype:
+ * Give nearest SQLite data affinity for PostgreSQL data type
+ */
+static int32
+sqlite_affinity_eqv_to_pgtype(Oid type)
+{
+	switch (type)
+	{
+		case INT2OID:
+		case INT4OID:
+		case INT8OID:
+		case BOOLOID:
+		case BITOID:
+		case VARBITOID:
+			return SQLITE_INTEGER;
+		case FLOAT4OID:
+		case FLOAT8OID:
+		case NUMERICOID:
+			return SQLITE_FLOAT;
+		case BYTEAOID:
+		case UUIDOID:
+			return SQLITE_BLOB;
+		default:
+			return SQLITE3_TEXT;
+	}
+}
+
+/*
+ * sqlite_datatype
+ * Give equivalent string for SQLite data affinity by int from enum
+ * SQLITE_INTEGER etc.
+ */
+const char*
+sqlite_datatype(int t)
+{
+	static const char *azType[] = { "?", "integer", "real", "text", "blob", "null" };
+	switch (t)
+	{
+		case SQLITE_INTEGER:
+			return azType[1];
+		case SQLITE_FLOAT:
+			return azType[2];
+		case SQLITE3_TEXT:
+			return azType[3];
+		case SQLITE_BLOB:
+			return azType[4];
+		case SQLITE_NULL:
+			return azType[5];
+		default:
+			return azType[0];
+	}
+}
+
+/*
+ * Callback function which is called when error occurs during column value
+ * conversion.  Print names of column and relation, SQLite value details.
+ *
+ * Note that this function mustn't do any catalog lookups, since we are in
+ * an already-failed transaction.  Fortunately, we can get the needed info
+ * from the relation or the query's rangetable instead.
+ */
+static void
+conversion_error_callback(void *arg)
+{
+	ConversionLocation *errpos = (ConversionLocation *) arg;
+	Relation	rel = errpos->rel;
+	ForeignScanState *fsstate = errpos->fsstate;
+	const char *attname = NULL;
+	const char *relname = NULL;
+	bool		is_wholerow = false;
+	Form_pg_attribute att = errpos->att;
+	Oid			pgtyp = att->atttypid;
+	int32	 	pgtypmod = att->atttypmod;
+	NameData	pgColND = att->attname;
+	const char *pg_dataTypeName = NULL;
+	const char *sqlite_affinity = NULL;
+	const char *pg_good_affinity = NULL;
+	const int	max_logged_byte_length = NAMEDATALEN * 2;
+	int 		value_byte_size_blob_or_utf8 = sqlite3_value_bytes (errpos->val);
+	int			value_aff = sqlite3_value_type(errpos->val);
+	int			affinity_for_pg_column = sqlite_affinity_eqv_to_pgtype(pgtyp);
+
+	pg_dataTypeName = TypeNameToString(makeTypeNameFromOid(pgtyp, pgtypmod));
+	sqlite_affinity = sqlite_datatype(value_aff);
+	pg_good_affinity = sqlite_datatype(affinity_for_pg_column);
+
+	/*
+	 * If we're in a scan node, always use aliases from the rangetable, for
+	 * consistency between the simple-relation and remote-join cases.  Look at
+	 * the relation's tupdesc only if we're not in a scan node.
+	 */
+	if (fsstate)
+	{
+		/* ForeignScan case */
+		ForeignScan *fsplan = castNode(ForeignScan, fsstate->ss.ps.plan);
+		int			varno = 0;
+		AttrNumber	colno = 0;
+
+		if (fsplan->scan.scanrelid > 0)
+		{
+			/* error occurred in a scan against a foreign table */
+			varno = fsplan->scan.scanrelid;
+			colno = errpos->cur_attno;
+		}
+		else
+		{
+			/* error occurred in a scan against a foreign join */
+			TargetEntry *tle;
+
+			tle = list_nth_node(TargetEntry, fsplan->fdw_scan_tlist,
+								errpos->cur_attno - 1);
+
+			/*
+			 * Target list can have Vars and expressions.  For Vars, we can
+			 * get some information, however for expressions we can't.  Thus
+			 * for expressions, just show generic context message.
+			 */
+			if (IsA(tle->expr, Var))
+			{
+				Var		   *var = (Var *) tle->expr;
+
+				varno = var->varno;
+				colno = var->varattno;
+			}
+		}
+
+		if (varno > 0)
+		{
+			EState	   *estate = fsstate->ss.ps.state;
+			RangeTblEntry *rte = exec_rt_fetch(varno, estate);
+
+			relname = rte->eref->aliasname;
+
+			if (colno == 0)
+				is_wholerow = true;
+			else if (colno > 0 && colno <= list_length(rte->eref->colnames))
+				attname = strVal(list_nth(rte->eref->colnames, colno - 1));
+			else if (colno == SelfItemPointerAttributeNumber)
+				attname = "ctid";
+		}
+	}
+	else if (rel)
+	{
+		/* Non-ForeignScan case (we should always have a rel here) */
+		TupleDesc	tupdesc = RelationGetDescr(rel);
+
+		relname = RelationGetRelationName(rel);
+		if (errpos->cur_attno > 0 && errpos->cur_attno <= tupdesc->natts)
+		{
+			Form_pg_attribute attr = TupleDescAttr(tupdesc,
+												   errpos->cur_attno - 1);
+
+			attname = NameStr(attr->attname);
+		}
+		else if (errpos->cur_attno == SelfItemPointerAttributeNumber)
+			attname = "ctid";
+	}
+
+	{
+		/*
+		 * Error HINT block
+		 */
+		char	   *err_hint_mess0 = palloc(max_logged_byte_length * 2 + 1024); /* The longest hint message */
+		char 	   *err_hint_mess;
+		char	   *value_text = NULL;
+		bool		sqlite_value_as_hex_code = value_byte_size_blob_or_utf8 < max_logged_byte_length && ((GetDatabaseEncoding() != PG_UTF8 && value_aff == SQLITE3_TEXT) || (value_aff == SQLITE_BLOB));
+
+		/* Print problem SQLite value only for
+		 * - integer,
+		 * - float,
+		 * - short BLOBs,
+		 * - short text if database encoding is UTF-8
+		 *   incorrect output otherwise possible: UTF-8 in SQLite, but not supported charcters in PostgreSQL
+		 */
+		if ((value_byte_size_blob_or_utf8 < max_logged_byte_length && GetDatabaseEncoding() == PG_UTF8 && value_aff == SQLITE3_TEXT)
+			|| value_aff == SQLITE_INTEGER
+			|| value_aff == SQLITE_FLOAT)
+			value_text = (char *)sqlite3_value_text(errpos->val);
+
+		if (sqlite_value_as_hex_code)
+		{
+			const unsigned char *vt = sqlite3_value_text(errpos->val);
+			value_text = palloc (max_logged_byte_length * 2 + 1);
+			for (size_t i = 0; i < value_byte_size_blob_or_utf8; ++i)
+				sprintf(value_text + i * 2, "%02x", vt[i]);
+	    }
+
+		err_hint_mess = err_hint_mess0;
+		err_hint_mess += sprintf(
+			err_hint_mess,
+			"SQLite value with \"%s\" affinity ",
+			sqlite_affinity
+			);
+		if (value_aff == SQLITE3_TEXT || value_aff == SQLITE_BLOB )
+			err_hint_mess += sprintf(
+					err_hint_mess,
+					"(%d bytes) ",
+					value_byte_size_blob_or_utf8 );
+		if (value_text != NULL)
+		{
+			if (sqlite_value_as_hex_code)
+				err_hint_mess += sprintf(
+						err_hint_mess,
+						"in hex : %s",
+						value_text );
+			else if (value_aff != SQLITE_INTEGER && value_aff != SQLITE_FLOAT)
+				err_hint_mess += sprintf(
+						err_hint_mess,
+						": '%s'",
+						value_text );
+			else
+				err_hint_mess += sprintf(
+						err_hint_mess,
+						": %s",
+						value_text );
+		}
+
+		err_hint_mess[1] = '\0';
+		errhint("%s", err_hint_mess0);
+		pfree(err_hint_mess0);
+		if (sqlite_value_as_hex_code)
+			pfree((char *)value_text);
+	}
+
+	{
+		/*
+		 * Error CONTEXT block
+		 */
+		char	   *err_cont_mess0 = palloc(4 * NAMEDATALEN + 64); /* The longest context message */
+		char 	   *err_cont_mess;
+
+		err_cont_mess = err_cont_mess0;
+		err_cont_mess = err_cont_mess + sprintf(
+			err_cont_mess,
+			"foreign table \"%s\" foreign column \"%.*s\" have data type \"%s\" (usual affinity \"%s\"), ",
+			relname,
+			(int)sizeof(pgColND.data),
+			pgColND.data,
+			pg_dataTypeName,
+			pg_good_affinity
+			);
+		if (relname && is_wholerow)
+		{
+			err_cont_mess = err_cont_mess + sprintf(
+					err_cont_mess,
+					"in query there is whole-row reference to foreign table"
+					);
+		}
+		else if (relname && attname)
+		{
+			err_cont_mess = err_cont_mess + sprintf(
+					err_cont_mess,
+					"in query there is reference to foreign column"
+					);
+		}
+		else
+		{
+			err_cont_mess = err_cont_mess + sprintf(
+					err_cont_mess,
+					"processing expression at position %d in select list",
+					errpos->cur_attno
+					);
+		}
+
+		err_cont_mess[1] = '\0';
+		errcontext("%s", err_cont_mess0);
+		pfree(err_cont_mess0);
+	}
 }

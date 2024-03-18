@@ -107,6 +107,7 @@ typedef struct sqlite_opt
 									 * connecting to the SQLite server. */
 	unsigned long max_blob_size;	/* Max blob size to read without
 									 * truncation */
+	bool		use_remote_estimate;	/* use remote estimate for rows */
 }			sqlite_opt;
 
 /* Struct for extra information passed to sqlite_estimate_path_cost_size() */
@@ -127,6 +128,8 @@ typedef struct SqliteFdwPathExtraData
  */
 typedef struct SQLiteFdwExecState
 {
+	ForeignServer *server;		/* Foreign server handle */
+	ForeignTable  *table;		/* Foreign scan deal with this foreign table */
 	sqlite3    *conn;			/* SQLite connection handle */
 	sqlite3_stmt *stmt;			/* SQLite prepared stament handle */
 	char	   *query;			/* Query string */
@@ -167,8 +170,8 @@ typedef struct SQLiteFdwExecState
 	/* working memory context */
 	MemoryContext temp_cxt;		/* context for per-tuple temporary data */
 	AttrNumber *junk_idx;
-}			SqliteFdwExecState;
 
+}			SqliteFdwExecState;
 
 typedef struct SqliteFdwRelationInfo
 {
@@ -197,8 +200,10 @@ typedef struct SqliteFdwRelationInfo
 	Cost		rel_total_cost;
 
 	/* Options extracted from catalogs. */
+	bool		use_remote_estimate;
 	Cost		fdw_startup_cost;
 	Cost		fdw_tuple_cost;
+	List	   *shippable_extensions;	/* OIDs of whitelisted extensions */
 
 	/* Bitmap of attr numbers we need to fetch from the remote server. */
 	Bitmapset  *attrs_used;
@@ -225,6 +230,7 @@ typedef struct SqliteFdwRelationInfo
 	/* Cached catalog information. */
 	ForeignTable *table;
 	ForeignServer *server;
+	UserMapping *user;			/* only set in use_remote_estimate mode */
 
 	int			fetch_size;		/* fetch size for this remote table */
 
@@ -261,6 +267,9 @@ typedef struct SqliteFdwRelationInfo
  */
 typedef struct SqliteFdwDirectModifyState
 {
+	ForeignServer *server;		/* Foreign server handle */
+	ForeignTable  *table;		/* Foreign scan deal with this foreign table */
+
 	Relation	rel;			/* relcache entry for the foreign table */
 	AttInMetadata *attinmeta;	/* attribute datatype conversion metadata */
 
@@ -371,14 +380,15 @@ void		sqlite_rel_connection(sqlite3 * conn);
 void		sqlitefdw_report_error(int elevel, sqlite3_stmt * stmt, sqlite3 * conn, const char *sql, int rc);
 void		sqlite_cache_stmt(ForeignServer *server, sqlite3_stmt * *stmt);
 
-NullableDatum sqlite_convert_to_pg(Form_pg_attribute att, sqlite3_stmt * stmt, int stmt_colid, AttInMetadata *attinmeta, AttrNumber attnum, int sqlite_value_affinity, int AffinityBehaviourFlags);
+NullableDatum sqlite_convert_to_pg(Form_pg_attribute att, sqlite3_value * val, AttInMetadata *attinmeta, AttrNumber attnum, int sqlite_value_affinity, int AffinityBehaviourFlags);
 
 void		sqlite_bind_sql_var(Form_pg_attribute att, int attnum, Datum value, sqlite3_stmt * stmt, bool *isnull, Oid relid);
 extern void sqlite_do_sql_command(sqlite3 * conn, const char *sql, int level, List **busy_connection);
 
-int sqlite_fdw_data_norm_functs_init(sqlite3* db);
+void sqlite_fdw_data_norm_functs_init(sqlite3* db);
 
 /* sqlite_query.c haders */
-sqlite3_int64 binstr2int64(const char *s);
+sqlite3_int64
+			binstr2int64(const char *s);
 
 #endif							/* SQLITE_FDW_H */

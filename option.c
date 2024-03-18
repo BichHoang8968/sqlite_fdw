@@ -11,12 +11,7 @@
  */
 
 #include "postgres.h"
-
 #include "sqlite_fdw.h"
-
-#include <stdio.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #include "funcapi.h"
 #include "access/reloptions.h"
@@ -24,24 +19,12 @@
 #include "catalog/pg_foreign_table.h"
 #include "catalog/pg_type.h"
 #include "commands/defrem.h"
-#include "commands/explain.h"
-#include "foreign/fdwapi.h"
-#include "foreign/foreign.h"
-#include "miscadmin.h"
-#include "mb/pg_wchar.h"
-#include "storage/fd.h"
-#include "utils/array.h"
-#include "utils/builtins.h"
 #include "utils/guc.h"
-#include "utils/rel.h"
 #include "utils/lsyscache.h"
 #if PG_VERSION_NUM >= 160000
-#include "utils/varlena.h"
+	#include "utils/varlena.h"
 #endif
-#include "optimizer/cost.h"
-#include "optimizer/pathnode.h"
-#include "optimizer/restrictinfo.h"
-#include "optimizer/planmain.h"
+
 /*
  * Describes the valid options for objects that use this wrapper.
  */
@@ -85,7 +68,7 @@ bool
 
 /*
  * Validate the generic options given to a FOREIGN DATA WRAPPER, SERVER,
- * or FOREIGN TABLE that supported by sqlite_fdw.
+ * USER MAPPING or FOREIGN TABLE that uses file_fdw.
  *
  * Raise an ERROR if the option or its value is considered invalid.
  */
@@ -243,6 +226,8 @@ sqlite_get_options(Oid foreignoid)
 	if (f_table)
 		options = list_concat(options, f_table->options);
 	options = list_concat(options, f_server->options);
+
+	opt->use_remote_estimate = false;
 
 	/* Loop through the options, and get the server/port */
 	foreach(lc, options)

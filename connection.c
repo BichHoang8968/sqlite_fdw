@@ -11,23 +11,18 @@
  */
 
 #include "postgres.h"
-
 #include "sqlite_fdw.h"
 
 #include "access/xact.h"
-#include "mb/pg_wchar.h"
-#include "funcapi.h"
-#include "miscadmin.h"
-#include "utils/hsearch.h"
-#include "utils/inval.h"
-#include "utils/memutils.h"
-#include "utils/resowner.h"
-#include "utils/syscache.h"
-#include "utils/builtins.h"
 #include "commands/defrem.h"
+#if (PG_VERSION_NUM >= 140000 && PG_VERSION_NUM < 150000)
+	#include "miscadmin.h"
+#endif
+#include "optimizer/cost.h"
+#include "utils/builtins.h"
+#include "utils/inval.h"
+#include "utils/syscache.h"
 
-/* Length of host */
-#define HOST_LEN 256
 
 /*
  * Connection cache hash table entry
@@ -50,6 +45,7 @@ typedef struct ConnCacheEntry
 	Oid			serverid;		/* foreign server OID used to get server name */
 	List	   *stmtList;		/* list stmt associated with conn */
 	uint32		server_hashvalue;	/* hash value of foreign server OID */
+	uint32		mapping_hashvalue;	/* hash value of user mapping OID */
 } ConnCacheEntry;
 
 /*
@@ -219,17 +215,7 @@ sqlite_open_db(const char *dbpath)
 	/* add included inner SQLite functions from separate c file
 	 * for using in data unifying during deparsing
 	 */
-	rc = sqlite_fdw_data_norm_functs_init(conn);
-	if (rc != SQLITE_OK)
-	{
-		char	   *perr = pstrdup(err);
-
-		sqlite3_free(err);
-		sqlite3_close(conn);
-		ereport(ERROR,
-				(errcode(ERRCODE_FDW_UNABLE_TO_ESTABLISH_CONNECTION),
-				 errmsg("failed to create UUID support function for SQLite DB. rc=%d err=%s", rc, perr)));
-	}
+	sqlite_fdw_data_norm_functs_init(conn);
 	return conn;
 }
 

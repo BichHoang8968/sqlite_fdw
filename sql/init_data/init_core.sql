@@ -4,6 +4,10 @@ DROP TABLE IF EXISTS FLOAT4_TBL;
 DROP TABLE IF EXISTS FLOAT4_TMP;
 DROP TABLE IF EXISTS FLOAT8_TBL;
 DROP TABLE IF EXISTS FLOAT8_TMP;
+DROP TABLE IF EXISTS "type_FLOAT_INF";
+DROP VIEW  IF EXISTS "type_FLOAT_INF+";
+DROP TABLE IF EXISTS INT2_TBL;
+DROP TABLE IF EXISTS INT2_TMP;
 DROP TABLE IF EXISTS INT4_TBL;
 DROP TABLE IF EXISTS INT4_TMP;
 DROP TABLE IF EXISTS INT8_TBL;
@@ -19,8 +23,10 @@ CREATE TABLE FLOAT4_TBL (f1  REAL);
 CREATE TABLE FLOAT4_TMP (f1  REAL, id integer primary key autoincrement);
 CREATE TABLE FLOAT8_TBL(f1 DOUBLE PRECISION);
 CREATE TABLE FLOAT8_TMP (f1 DOUBLE PRECISION, f2 DOUBLE PRECISION, id integer primary key autoincrement);
+CREATE TABLE INT2_TBL(f1 int2);
+CREATE TABLE INT2_TMP (f1 int2, f2 smallint, id integer primary key autoincrement);
 CREATE TABLE INT4_TBL(f1 int4);
-CREATE TABLE INT4_TMP (f1 int4, f2 int,  id integer primary key autoincrement);
+CREATE TABLE INT4_TMP (f1 int4, f2 int, id integer primary key autoincrement);
 CREATE TABLE INT8_TBL(
 	q1 int8,
 	q2 int8,
@@ -35,7 +41,6 @@ CREATE TABLE INT8_TMP(
 	id integer primary key autoincrement
 );
 
-CREATE TABLE INT2_TBL(f1 int2);
 --Testcase 1:
 INSERT INTO INT2_TBL(f1) VALUES ('0   ');
 --Testcase 2:
@@ -161,14 +166,14 @@ CREATE TABLE dates (
 CREATE TABLE btg(id int primary key, p int, v text, c float, d float, e int);
 
 .separator "\t"
-.import /tmp/onek.data onek
-.import /tmp/onek.data onek2
-.import /tmp/tenk.data tenk1
-.import /tmp/agg.data aggtest
-.import /tmp/student.data student
-.import /tmp/person.data person
-.import /tmp/streets.data road
-.import /tmp/datetimes.data dates
+.import /tmp/sqlite_fdw_test/onek.data onek
+.import /tmp/sqlite_fdw_test/onek.data onek2
+.import /tmp/sqlite_fdw_test/tenk.data tenk1
+.import /tmp/sqlite_fdw_test/agg.data aggtest
+.import /tmp/sqlite_fdw_test/student.data student
+.import /tmp/sqlite_fdw_test/person.data person
+.import /tmp/sqlite_fdw_test/streets.data road
+.import /tmp/sqlite_fdw_test/datetimes.data dates
 
 --Testcase 7:
 INSERT INTO tenk2 SELECT * FROM tenk1;
@@ -429,3 +434,7 @@ create table upsert_test (a int primary key, b text);
 
 create table t (a int unique);
 
+CREATE TABLE "type_FLOAT_INF" (i int primary key, f float);
+CREATE VIEW  "type_FLOAT_INF+" AS SELECT *, typeof("f") t, length("f") l FROM "type_FLOAT_INF";
+-- In PostgreSQL some of this valus causes error but is infinity representation in SQLite
+INSERT INTO  "type_FLOAT_INF" VALUES (1, -1e999),(2, 1e999),(3, -9e999),(4, 9e999),(5,-1e308),(6, 0),(7, 1e308);
