@@ -8,7 +8,7 @@ if [[ ! -f "docker/deps/sqlite-autoconf-${SQLITE_VERSION}.tar.gz" ]]; then
 	cd docker/deps
 	chmod -R 777 ./
 	wget https://www.sqlite.org/2023/sqlite-autoconf-${SQLITE_VERSION}.tar.gz
-	cd ..
+	cd ../../
 fi
 
 if [[ ${PGSPIDER_RPM_ID} ]]; then
@@ -26,7 +26,7 @@ then
                  --build-arg PGSPIDER_BASE_POSTGRESQL_VERSION=${PGSPIDER_BASE_POSTGRESQL_VERSION} \
                  --build-arg PGSPIDER_RELEASE_VERSION=${PGSPIDER_RELEASE_VERSION} \
                  --build-arg PGSPIDER_RPM_ID=${PGSPIDER_RPM_ID_POSTFIX} \
-                 --build-arg PGSPIDER_PROJECT_ID=$PGSPIDER_PROJECT_ID \
+                 --build-arg PGSPIDER_RPM_URL="$API_V4_URL/projects/${PGSPIDER_PROJECT_ID}/packages/generic/rpm_${RPM_DISTRIBUTION_TYPE}/${PGSPIDER_BASE_POSTGRESQL_VERSION}" \
                  --build-arg SQLITE_FDW_RELEASE_VERSION=${SQLITE_FDW_RELEASE_VERSION} \
                  --build-arg SQLITE_VERSION=$SQLITE_VERSION \
                  --build-arg SQLITE_RELEASE_VERSION=$SQLITE_RELEASE_VERSION \
@@ -38,8 +38,7 @@ else
                  --build-arg DISTRIBUTION_TYPE=${RPM_DISTRIBUTION_TYPE} \
                  --build-arg PGSPIDER_BASE_POSTGRESQL_VERSION=${PGSPIDER_BASE_POSTGRESQL_VERSION} \
                  --build-arg PGSPIDER_RELEASE_VERSION=${PGSPIDER_RELEASE_VERSION} \
-                 --build-arg PGSPIDER_RPM_ID=${PGSPIDER_RPM_ID_POSTFIX} \
-                 --build-arg PGSPIDER_PROJECT_ID=$PGSPIDER_PROJECT_ID \
+                 --build-arg PGSPIDER_RPM_URL="https://github.com/${OWNER_GITHUB}/${PGSPIDER_PROJECT_GITHUB}/releases/download/${PGSPIDER_RELEASE_VERSION}" \
                  --build-arg SQLITE_FDW_RELEASE_VERSION=${SQLITE_FDW_RELEASE_VERSION} \
                  --build-arg SQLITE_VERSION=${SQLITE_VERSION} \
                  --build-arg SQLITE_RELEASE_VERSION=${SQLITE_RELEASE_VERSION} \
@@ -59,7 +58,7 @@ rm -f $RPM_ARTIFACT_DIR/*-debuginfo-*.rpm
 if [[ $location == [gG][iI][tT][lL][aA][bB] ]];
 then
     curl_command="curl --header \"PRIVATE-TOKEN: ${ACCESS_TOKEN}\" --insecure --upload-file"
-    package_uri="https://tccloud2.toshiba.co.jp/swc/gitlab/api/v4/projects/${SQLITE_FDW_PROJECT_ID}/packages/generic/rpm_${RPM_DISTRIBUTION_TYPE}/${PGSPIDER_BASE_POSTGRESQL_VERSION}"
+    package_uri="$API_V4_URL/projects/${SQLITE_FDW_PROJECT_ID}/packages/generic/rpm_${RPM_DISTRIBUTION_TYPE}/${PGSPIDER_BASE_POSTGRESQL_VERSION}"
 
     # sqlite
     eval "$curl_command ${RPM_ARTIFACT_DIR}/sqlite-${SQLITE_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
@@ -80,6 +79,8 @@ else
                             -H \"Authorization: Bearer ${ACCESS_TOKEN}\" \
                             -H \"X-GitHub-Api-Version: 2022-11-28\" \
                             -H \"Content-Type: application/octet-stream\" \
+                            --retry 20 \
+                            --retry-max-time 120 \
                             --insecure"
     assets_uri="https://uploads.github.com/repos/${OWNER_GITHUB}/${SQLITE_FDW_PROJECT_GITHUB}/releases/${SQLITE_FDW_RELEASE_ID}/assets"
     binary_dir="--data-binary \"@${RPM_ARTIFACT_DIR}\""

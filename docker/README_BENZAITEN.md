@@ -5,6 +5,7 @@ This directory contains the source code to create the sqlite_fdw rpm packages.
 
 Environment for creating rpm of sqlite_fdw
 =====================================
+The description below is used in the specific Linux distribution RockyLinux8.
 1. Docker
 	- Install Docker
 		```sh
@@ -64,6 +65,7 @@ Creating sqlite_fdw rpm packages
 		```sh
 		location=gitlab 					# Fill in <gitlab> or <github>. In this project, please use <gitlab>
 		ACCESS_TOKEN=						# Fill in the Access Token for authentication purposes to publish rpm packages to Package Registry
+		API_V4_URL=								# Fill in API v4 URL of this repo. In this project please use <https://tccloud2.toshiba.co.jp/swc/gitlab/api/v4>
 		SQLITE_FDW_PROJECT_ID=				# Fill in the ID of the sqlite_fdw project.		
 		PGSPIDER_PROJECT_ID=				# Fill in the ID of the PGSpider project to get PGSpider rpm packages
 		PGSPIDER_RPM_ID=					# Fill in the ID of PGSpider rpm packages
@@ -96,11 +98,11 @@ Usage of Run CI/CD pipeline
 	```sh
 	Menu TaskBar -> Build -> Pipelines
 	```
-2. Click `Run Pipeline` button
-![Alt text](images/pipeline_screen.PNG)
+2. Click `Run Pipeline` button  
+![Alt text](images/BENZAITEN/pipeline_screen.PNG)
 3. Choose `Branch` or `Tag` name
 4. Provide `Access Token` through `Variabes`
 	- Input variable key: ACCESS_TOKEN
 	- Input variable value: Your access token
 5. Click `Run Pipeline` button  
-![Alt text](images/run_pipeline.PNG)
+![Alt text](images/BENZAITEN/run_pipeline.PNG)
