@@ -8,9 +8,6 @@ default:
 
 # Global variable (can configure outside in gitlab web)
 variables:
-  PROXY: "http://proxy.toshiba.co.jp:8080"
-  NO_PROXY: "127.0.0.1,tccloud2.toshiba.co.jp,localhost,docker"
-  ACCESS_TOKEN: "J-CyStgYPMWeTFSY_Ubs"
   PGSPIDER_PROJECT_ID: "16"
   RPM_ARTIFACT_DIR: "fdw_rpm"
   PGSPIDER_RELEASE_VERSION: "4.0.0"
