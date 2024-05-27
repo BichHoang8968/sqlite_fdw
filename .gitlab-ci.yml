@@ -8,7 +8,6 @@ default:
 
 # Global variable (can configure outside in gitlab web)
 variables:
-  PGSPIDER_PROJECT_ID: "16"
   RPM_ARTIFACT_DIR: "fdw_rpm"
   PGSPIDER_RELEASE_VERSION: "4.0.0"
   PGSPIDER_BASE_POSTGRESQL_VERSION: "16"
