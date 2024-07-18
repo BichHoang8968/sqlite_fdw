@@ -4,18 +4,18 @@ on:
   workflow_dispatch:
 
 env:
-  ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  PGSPIDER_PROJECT_ID: "16"
-  RPM_ARTIFACT_DIR: "fdw_rpm"
-  PGSPIDER_RELEASE_VERSION: "4.0.0"
-  PGSPIDER_BASE_POSTGRESQL_VERSION: "16"
-  RPM_DISTRIBUTION_TYPE: "rhel8"
+  OWNER_GITHUB: "pgspider"                       # User name. For example: [user_name] in https://github.com/user_name/your_repository.git
+  PGSPIDER_PROJECT_GITHUB: "pgspider"            # PGSpider repository name. For example: [your_repository] in https://github.com/user_name/your_repository.git
+  RPM_ARTIFACT_DIR: "fdw_rpm"                    # Directory name of Artifact to contain rpm files temporary. Default is "fdw_rpm".
+  PGSPIDER_RELEASE_VERSION: "4.0.0"              # Release version. For example: 4.0.0.
+  PGSPIDER_BASE_POSTGRESQL_VERSION: "16"         # Main version of postgresql that pgspider based on it. For example: 16.
+  RPM_DISTRIBUTION_TYPE: "rhel8"                 # The distribution operating system name. Default is "rhel8".
   SQLITE_FDW_RELEASE_VERSION: "2.4.0"
-  PGSPIDER_RPM_ID: "11835"
   SQLITE_VERSION: "3420000"
   SQLITE_RELEASE_VERSION: "3.42.0"
 
 jobs:
+  # Job1: Build rpm files and upload them to Artifact
   project_build:
     runs-on: ubuntu-latest
     container:
@@ -33,52 +33,45 @@ jobs:
     - name: Before scripts
       run: |
         apk add wget
-        docker rm $(docker stop test) || true
-        docker rmi $IMAGE_TAG || true
-        echo "y" | docker system prune
 
     - name: Build RPM
       run: |
-        cd deps && chmod -R 777 ./
-        wget https://www.sqlite.org/2023/sqlite-autoconf-$SQLITE_VERSION.tar.gz --no-check-certificate 
-        cd ..
+        cd docker/deps && chmod -R 777 ./
+        wget https://www.sqlite.org/2023/sqlite-autoconf-$SQLITE_VERSION.tar.gz --no-check-certificate
+        cd ../..
         if [ $PGSPIDER_RPM_ID ]; then PGSPIDER_RPM_ID_POSTFIX="-$PGSPIDER_RPM_ID"; fi
         docker build -t $IMAGE_TAG \
           --build-arg DISTRIBUTION_TYPE=$RPM_DISTRIBUTION_TYPE \
           --build-arg PGSPIDER_BASE_POSTGRESQL_VERSION=$PGSPIDER_BASE_POSTGRESQL_VERSION \
           --build-arg PGSPIDER_RELEASE_VERSION=$PGSPIDER_RELEASE_VERSION \
-          --build-arg PGSPIDER_RPM_ID=$PGSPIDER_RPM_ID_POSTFIX \
-          --build-arg PGSPIDER_PROJECT_ID=$PGSPIDER_PROJECT_ID \
+          --build-arg PGSPIDER_RPM_URL="https://github.com/${{ env.OWNER_GITHUB }}/${{ env.PGSPIDER_PROJECT_GITHUB }}/releases/download/${{ env.PGSPIDER_RELEASE_VERSION }}" \
           --build-arg SQLITE_FDW_RELEASE_VERSION=$SQLITE_FDW_RELEASE_VERSION \
           --build-arg SQLITE_VERSION=$SQLITE_VERSION \
           --build-arg SQLITE_RELEASE_VERSION=$SQLITE_RELEASE_VERSION \
-          -f $DOCKERFILE .
+          -f docker/$DOCKERFILE .
 
     - name: Copy RPM Artifact
       run: |
-        mkdir -p $RPM_ARTIFACT_DIR
+        mkdir -p ${{ env.RPM_ARTIFACT_DIR}}
         docker run -d --name test $IMAGE_TAG /usr/sbin/init
-        docker cp test:/home/user1/rpmbuild/RPMS/x86_64 $RPM_ARTIFACT_DIR
+        docker cp test:/home/user1/rpmbuild/RPMS/x86_64 ${{ env.RPM_ARTIFACT_DIR}}
 
-    - name: Clean up
+    - name: Move rpm files
       run: |
-        docker rm $(docker stop test)
-        docker rmi $IMAGE_TAG
-        cp $RPM_ARTIFACT_DIR/x86_64/* $RPM_ARTIFACT_DIR
-        rm -rf $RPM_ARTIFACT_DIR/x86_64/
+        cp ${{ env.RPM_ARTIFACT_DIR}}/x86_64/* ${{ env.RPM_ARTIFACT_DIR }}
+        rm -rf ${{ env.RPM_ARTIFACT_DIR }}/x86_64/
 
     - name: Upload RPM Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: $RPM_ARTIFACT_DIR
-        path: $RPM_ARTIFACT_DIR
+        name: ${{ env.RPM_ARTIFACT_DIR }}
+        path: '${{ github.workspace }}/${{ env.RPM_ARTIFACT_DIR }}'
 
-    - name: Set SQLite FDW Version
-      run: |
-        echo "SQLITE_FDW_VERSION=$SQLITE_FDW_RELEASE_VERSION" >> $GITHUB_ENV
-
+  # Job 2: Publish rpm file
   project_publish:
+    needs: project_build
     runs-on: ubuntu-latest
+    permissions: write-all
 
     steps:
     - name: Checkout Repository
@@ -87,24 +80,61 @@ jobs:
     - name: Install curl
       run: sudo apt-get update -qq && sudo apt-get install -y -qq curl
 
-    - name: Publish RPM
-      run: |
-        echo "Publishing ....."
-        curl_command="curl -L \
-                            -X POST \
-                            -H \"Accept: application/vnd.github+json\" \
-                            -H \"Authorization: Bearer ${ACCESS_TOKEN}\" \
-                            -H \"X-GitHub-Api-Version: 2022-11-28\" \
-                            -H \"Content-Type: application/octet-stream\" \
-                            --insecure"
-        assets_uri="https://uploads.github.com/repos/${OWNER_GITHUB}/${SQLITE_FDW_PROJECT_GITHUB}/releases/${SQLITE_FDW_RELEASE_ID}/assets"
-        binary_dir="--data-binary \"@${RPM_ARTIFACT_DIR}\""
+    # Create release. After this step, source code is published.
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.SQLITE_FDW_RELEASE_VERSION }}
+        release_name: Release ${{ env.SQLITE_FDW_RELEASE_VERSION }}
+        draft: false
+        prerelease: false
 
-        eval "$curl_command $assets_uri?name=sqlite-${SQLITE_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
-                        $binary_dir/sqlite-${SQLITE_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm"
-        eval "$curl_command $assets_uri?name=sqlite_fdw_${PGSPIDER_BASE_POSTGRESQL_VERSION}-${SQLITE_FDW_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
-                            $binary_dir/sqlite_fdw_${PGSPIDER_BASE_POSTGRESQL_VERSION}-${SQLITE_FDW_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm"
-        eval "$curl_command $assets_uri?name=sqlite_fdw_${PGSPIDER_BASE_POSTGRESQL_VERSION}-debugsource-${SQLITE_FDW_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
-                            $binary_dir/sqlite_fdw_${PGSPIDER_BASE_POSTGRESQL_VERSION}-debugsource-${SQLITE_FDW_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm"
-        eval "$curl_command $assets_uri?name=sqlite_fdw_${PGSPIDER_BASE_POSTGRESQL_VERSION}-llvmjit-${SQLITE_FDW_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm \
-                            $binary_dir/sqlite_fdw_${PGSPIDER_BASE_POSTGRESQL_VERSION}-llvmjit-${SQLITE_FDW_RELEASE_VERSION}-${RPM_DISTRIBUTION_TYPE}.x86_64.rpm"
+    # Download rpm files from Artifact
+    - name: Download RPM Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ env.RPM_ARTIFACT_DIR }}
+
+    # Upload rpm files to release that is created in previous step
+    - name: Upload sqlite rpm
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./sqlite-${{ env.SQLITE_RELEASE_VERSION }}-${{ env.RPM_DISTRIBUTION_TYPE }}.x86_64.rpm
+        asset_name: sqlite-${{ env.SQLITE_RELEASE_VERSION }}-${{ env.RPM_DISTRIBUTION_TYPE }}.x86_64.rpm
+        asset_content_type: application/octet-stream
+
+    - name: Upload sqlite fdw rpm
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{ env.RPM_DISTRIBUTION_TYPE }}.x86_64.rpm
+        asset_name: sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{ env.RPM_DISTRIBUTION_TYPE }}.x86_64.rpm
+        asset_content_type: application/octet-stream
+
+    - name: Upload sqlite fdw debugsource rpm
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-debugsource-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{ env.RPM_DISTRIBUTION_TYPE }}.x86_64.rpm
+        asset_name: sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-debugsource-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{ env.RPM_DISTRIBUTION_TYPE }}.x86_64.rpm
+        asset_content_type: application/octet-stream
+
+    - name: Upload sqlite fdw llvmjit rpm
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-llvmjit-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{ env.RPM_DISTRIBUTION_TYPE }}.x86_64.rpm
+        asset_name: sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-llvmjit-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{ env.RPM_DISTRIBUTION_TYPE }}.x86_64.rpm
+        asset_content_type: application/octet-stream
