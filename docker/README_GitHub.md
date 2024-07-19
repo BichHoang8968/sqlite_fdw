@@ -47,18 +47,18 @@ The description below is used in the specific Linux distribution RockyLinux8.
 	git clone https://github.com/pgspider/sqlite_fdw.git
 	```
 
-Creating sqlite_fdw rpm packages
+Creating sqlite_fdw rpm packages for PGSpider
 =====================================
 1. File used here
 	- docker/deps/sqlite.spec
 	- docker/sqlite_fdw.spec
 	- docker/env_rpmbuild.conf
 	- docker/Dockerfile_rpm
-	- docker/create_rpm_binary.sh
+	- docker/create_rpm_binary_with_PGSpider.sh
 2. Configure `docker/env_rpmbuild.conf` file
 	- Configure proxy (optional)
 		```sh
-		proxy: The ip address of proxy server. 
+		proxy: The ip address of proxy server.
 		no_proxy: List of domains to exclude proxying.
 		```
 	- Configure the registry location to publish the package and version of the packages
@@ -87,8 +87,8 @@ Creating sqlite_fdw rpm packages
 		```
 3. Build execution
 	```sh
-	chmod +x docker/create_rpm_binary.sh
-	./docker/create_rpm_binary.sh
+	chmod +x docker/create_rpm_binary_with_PGSpider.sh
+	./docker/create_rpm_binary_with_PGSpider.sh
 	```
 4. Confirmation after finishing executing the script
 	- Terminal displays a success message. 
@@ -100,6 +100,35 @@ Creating sqlite_fdw rpm packages
 	- rpm Packages are stored on the assert of Release. For example:
 
 		![Alt text](images/GitHub/release_screen.PNG)
+
+Creating sqlite_fdw rpm packages for PostgreSQL
+=====================================
+1. File used here
+	- docker/deps/sqlite.spec
+	- docker/sqlite_fdw.spec
+	- docker/env_rpmbuild.conf
+	- docker/Dockerfile_rpm
+	- docker/create_rpm_binary_with_PostgreSQL.sh
+2. Configure `docker/env_rpmbuild.conf` file
+	- Configure proxy (optional)
+		```sh
+		proxy: The ip address of proxy server. 
+		no_proxy: List of domains to exclude proxying.
+		```
+	- Configure the registry location to publish the package and version of the packages
+		```sh
+		POSTGRESQL_BASE_VERSION=			# Base PostgreSQL version. For example: 16.
+		POSTGRESQL_RELEASE_VERSION=			# PostgreSQL rpm packages version. For example: 16.0-1PGDG.
+		RPM_DISTRIBUTION_TYPE=				# The distribution operating system name. The default value is "rhel8".
+		SQLITE_VERSION=						# Number of SQLite's version. For example: 3420000.
+		SQLITE_RELEASE_VERSION=				# Release version of SQLite. For example: 3.42.0.
+		SQLITE_FDW_RELEASE_VERSION= 		# Release version of sqlite_fdw. For example: 2.4.0.
+		```
+3. Build execution
+	```sh
+	chmod +x docker/create_rpm_binary_with_PostgreSQL.sh
+	./docker/create_rpm_binary_with_PostgreSQL.sh
+	```
 
 Usage of GitHub Actions
 =====================================
