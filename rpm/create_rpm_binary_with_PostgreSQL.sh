@@ -1,14 +1,14 @@
 #!/bin/bash
 
-source docker/env_rpmbuild.conf
+source rpm/env_rpmbuild.conf
 set -eE
 
 # get sqlite download version
-SQLITE_DOWNLOAD_VERSION=$(./docker/convert_sqlite_download_version.sh $SQLITE_VERSION)
+SQLITE_DOWNLOAD_VERSION=$(./rpm/convert_sqlite_download_version.sh $SQLITE_VERSION)
 
 # clone sqlite
-if [[ ! -f "docker/deps/sqlite-autoconf-${SQLITE_DOWNLOAD_VERSION}.tar.gz" ]]; then
-	cd docker/deps
+if [[ ! -f "rpm/deps/sqlite-autoconf-${SQLITE_DOWNLOAD_VERSION}.tar.gz" ]]; then
+	cd rpm/deps
 	chmod -R 777 ./
 	wget https://www.sqlite.org/${SQLITE_YEAR}/sqlite-autoconf-${SQLITE_DOWNLOAD_VERSION}.tar.gz
 	cd ../../
@@ -27,7 +27,7 @@ docker build -t $IMAGE_TAG \
                 --build-arg SQLITE_VERSION=${SQLITE_VERSION} \
                 --build-arg SQLITE_YEAR=${SQLITE_YEAR} \
                 --build-arg SQLITE_DOWNLOAD_VERSION=${SQLITE_DOWNLOAD_VERSION} \
-                -f docker/$DOCKERFILE .
+                -f rpm/$DOCKERFILE .
 
 # copy binary to outside
 mkdir -p $ARTIFACT_DIR_WITH_POSTGRES/$POSTGRESQL_BASE_VERSION

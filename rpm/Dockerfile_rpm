@@ -122,8 +122,8 @@ RUN echo "user1 ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 WORKDIR /home/user1
 RUN mkdir -p /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}
 COPY ./ /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}
-RUN cp /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}/docker/sqlite_fdw.spec .
-RUN cp /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}/docker/deps/sqlite.spec .
+RUN cp /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}/rpm/sqlite_fdw.spec .
+RUN cp /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}/rpm/deps/sqlite.spec .
 RUN rm -rf /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}/.git \
            /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}/deps \
            /home/user1/sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}/create_rpm_binary_with_PGSpider.sh \
@@ -136,7 +136,7 @@ USER user1
 WORKDIR /home/user1
 
 # Build sqlite
-COPY docker/deps/sqlite-autoconf-${SQLITE_DOWNLOAD_VERSION}.tar.gz .
+COPY rpm/deps/sqlite-autoconf-${SQLITE_DOWNLOAD_VERSION}.tar.gz .
 RUN rpmbuild -ba -D "_sourcedir $(pwd)" -D "sqlite_year ${SQLITE_YEAR}" -D "sqlite_download_version ${SQLITE_DOWNLOAD_VERSION}" -D "sqlite_version ${SQLITE_VERSION}" -D "dist rhel8" -D "package_release_version ${PACKAGE_RELEASE_VERSION}" sqlite.spec
 RUN sudo -E dnf localinstall -y ~/rpmbuild/RPMS/x86_64/sqlite*.rpm
 

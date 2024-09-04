@@ -1,14 +1,14 @@
 #!/bin/bash
 
-source docker/env_rpmbuild.conf
+source rpm/env_rpmbuild.conf
 set -eE
 
 # get sqlite download version
-SQLITE_DOWNLOAD_VERSION=$(./docker/convert_sqlite_download_version.sh $SQLITE_VERSION)
+SQLITE_DOWNLOAD_VERSION=$(./rpm/convert_sqlite_download_version.sh $SQLITE_VERSION)
 
 # clone sqlite
-if [[ ! -f "docker/deps/sqlite-autoconf-${SQLITE_DOWNLOAD_VERSION}.tar.gz" ]]; then
-	cd docker/deps
+if [[ ! -f "rpm/deps/sqlite-autoconf-${SQLITE_DOWNLOAD_VERSION}.tar.gz" ]]; then
+	cd rpm/deps
 	chmod -R 777 ./
 	wget https://www.sqlite.org/${SQLITE_YEAR}/sqlite-autoconf-${SQLITE_DOWNLOAD_VERSION}.tar.gz
 	cd ../../
@@ -18,46 +18,46 @@ if [[ ${PGSPIDER_RPM_ID} ]]; then
     PGSPIDER_RPM_ID_POSTFIX="-${PGSPIDER_RPM_ID}"
 fi
 
-# # create rpm on container environment
-# if [[ $location == [gG][iI][tT][lL][aA][bB] ]];
-# then 
-#     docker build -t $IMAGE_TAG \
-#                  --build-arg proxy=${proxy} \
-#                  --build-arg no_proxy=${no_proxy} \
-#                  --build-arg ACCESS_TOKEN=${ACCESS_TOKEN} \
-#                  --build-arg PACKAGE_RELEASE_VERSION=${PACKAGE_RELEASE_VERSION} \
-#                  --build-arg PGSPIDER_BASE_POSTGRESQL_VERSION=${PGSPIDER_BASE_POSTGRESQL_VERSION} \
-#                  --build-arg PGSPIDER_RELEASE_VERSION=${PGSPIDER_RELEASE_VERSION} \
-#                  --build-arg PGSPIDER_RPM_ID=${PGSPIDER_RPM_ID_POSTFIX} \
-#                  --build-arg PGSPIDER_RPM_URL="$API_V4_URL/projects/${PGSPIDER_PROJECT_ID}/packages/generic/rpm_rhel8/${PGSPIDER_BASE_POSTGRESQL_VERSION}" \
-#                  --build-arg SQLITE_FDW_RELEASE_VERSION=${SQLITE_FDW_RELEASE_VERSION} \
-#                  --build-arg SQLITE_VERSION=${SQLITE_VERSION} \
-#                  --build-arg SQLITE_YEAR=${SQLITE_YEAR} \
-#                  --build-arg SQLITE_DOWNLOAD_VERSION=${SQLITE_DOWNLOAD_VERSION} \
-#                  -f docker/$DOCKERFILE .
-# else
-#     docker build -t $IMAGE_TAG \
-#                  --build-arg proxy=${proxy} \
-#                  --build-arg no_proxy=${no_proxy} \
-#                  --build-arg PACKAGE_RELEASE_VERSION=${PACKAGE_RELEASE_VERSION} \
-#                  --build-arg PGSPIDER_BASE_POSTGRESQL_VERSION=${PGSPIDER_BASE_POSTGRESQL_VERSION} \
-#                  --build-arg PGSPIDER_RELEASE_VERSION=${PGSPIDER_RELEASE_VERSION} \
-#                  --build-arg PGSPIDER_RPM_URL="https://github.com/${OWNER_GITHUB}/${PGSPIDER_PROJECT_GITHUB}/releases/download/${PGSPIDER_RELEASE_VERSION}" \
-#                  --build-arg SQLITE_FDW_RELEASE_VERSION=${SQLITE_FDW_RELEASE_VERSION} \
-#                  --build-arg SQLITE_VERSION=${SQLITE_VERSION} \
-#                  --build-arg SQLITE_YEAR=${SQLITE_YEAR} \
-#                  --build-arg SQLITE_DOWNLOAD_VERSION=${SQLITE_DOWNLOAD_VERSION} \
-#                  -f docker/$DOCKERFILE .
-# fi
+# create rpm on container environment
+if [[ $location == [gG][iI][tT][lL][aA][bB] ]];
+then 
+    docker build -t $IMAGE_TAG \
+                 --build-arg proxy=${proxy} \
+                 --build-arg no_proxy=${no_proxy} \
+                 --build-arg ACCESS_TOKEN=${ACCESS_TOKEN} \
+                 --build-arg PACKAGE_RELEASE_VERSION=${PACKAGE_RELEASE_VERSION} \
+                 --build-arg PGSPIDER_BASE_POSTGRESQL_VERSION=${PGSPIDER_BASE_POSTGRESQL_VERSION} \
+                 --build-arg PGSPIDER_RELEASE_VERSION=${PGSPIDER_RELEASE_VERSION} \
+                 --build-arg PGSPIDER_RPM_ID=${PGSPIDER_RPM_ID_POSTFIX} \
+                 --build-arg PGSPIDER_RPM_URL="$API_V4_URL/projects/${PGSPIDER_PROJECT_ID}/packages/generic/rpm_rhel8/${PGSPIDER_BASE_POSTGRESQL_VERSION}" \
+                 --build-arg SQLITE_FDW_RELEASE_VERSION=${SQLITE_FDW_RELEASE_VERSION} \
+                 --build-arg SQLITE_VERSION=${SQLITE_VERSION} \
+                 --build-arg SQLITE_YEAR=${SQLITE_YEAR} \
+                 --build-arg SQLITE_DOWNLOAD_VERSION=${SQLITE_DOWNLOAD_VERSION} \
+                 -f rpm/$DOCKERFILE .
+else
+    docker build -t $IMAGE_TAG \
+                 --build-arg proxy=${proxy} \
+                 --build-arg no_proxy=${no_proxy} \
+                 --build-arg PACKAGE_RELEASE_VERSION=${PACKAGE_RELEASE_VERSION} \
+                 --build-arg PGSPIDER_BASE_POSTGRESQL_VERSION=${PGSPIDER_BASE_POSTGRESQL_VERSION} \
+                 --build-arg PGSPIDER_RELEASE_VERSION=${PGSPIDER_RELEASE_VERSION} \
+                 --build-arg PGSPIDER_RPM_URL="https://github.com/${OWNER_GITHUB}/${PGSPIDER_PROJECT_GITHUB}/releases/download/${PGSPIDER_RELEASE_VERSION}" \
+                 --build-arg SQLITE_FDW_RELEASE_VERSION=${SQLITE_FDW_RELEASE_VERSION} \
+                 --build-arg SQLITE_VERSION=${SQLITE_VERSION} \
+                 --build-arg SQLITE_YEAR=${SQLITE_YEAR} \
+                 --build-arg SQLITE_DOWNLOAD_VERSION=${SQLITE_DOWNLOAD_VERSION} \
+                 -f rpm/$DOCKERFILE .
+fi
 
-# # copy binary to outside
-# mkdir -p $ARTIFACT_DIR
-# docker run --rm -v $(pwd)/$ARTIFACT_DIR:/tmp \
-#                 -u "$(id -u $USER):$(id -g $USER)" \
-#                 -e LOCAL_UID=$(id -u $USER) \
-#                 -e LOCAL_GID=$(id -g $USER) \
-#                 $IMAGE_TAG /bin/sh -c "cp /home/user1/rpmbuild/RPMS/x86_64/*.rpm /tmp/"
-# rm -f $ARTIFACT_DIR/*-debuginfo-*.rpm
+# copy binary to outside
+mkdir -p $ARTIFACT_DIR
+docker run --rm -v $(pwd)/$ARTIFACT_DIR:/tmp \
+                -u "$(id -u $USER):$(id -g $USER)" \
+                -e LOCAL_UID=$(id -u $USER) \
+                -e LOCAL_GID=$(id -g $USER) \
+                $IMAGE_TAG /bin/sh -c "cp /home/user1/rpmbuild/RPMS/x86_64/*.rpm /tmp/"
+rm -f $ARTIFACT_DIR/*-debuginfo-*.rpm
 
 # Push binary on repo
 if [[ $location == [gG][iI][tT][lL][aA][bB] ]];
@@ -106,4 +106,4 @@ else
 fi
 
 # Clean
-# docker rmi $IMAGE_TAG
+docker rmi $IMAGE_TAG
