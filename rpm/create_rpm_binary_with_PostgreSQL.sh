@@ -15,14 +15,14 @@ if [[ ! -f "rpm/deps/sqlite-autoconf-${SQLITE_DOWNLOAD_VERSION}.tar.gz" ]]; then
 fi
 
 # get base PostgreSQL version
-POSTGRESQL_BASE_VERSION=$(echo "$POSTGRESQL_RELEASE_VERSION" | cut -d '.' -f 1)
+POSTGRESQL_BASE_VERSION=$(echo "$POSTGRESQL_VERSION" | cut -d '.' -f 1)
 
 docker build -t $IMAGE_TAG \
                 --build-arg proxy=${proxy} \
                 --build-arg no_proxy=${no_proxy} \
                 --build-arg PACKAGE_RELEASE_VERSION=${PACKAGE_RELEASE_VERSION} \
                 --build-arg POSTGRESQL_BASE_VERSION=${POSTGRESQL_BASE_VERSION} \
-                --build-arg POSTGRESQL_RELEASE_VERSION=${POSTGRESQL_RELEASE_VERSION} \
+                --build-arg POSTGRESQL_VERSION=${POSTGRESQL_VERSION} \
                 --build-arg SQLITE_FDW_RELEASE_VERSION=${SQLITE_FDW_RELEASE_VERSION} \
                 --build-arg SQLITE_VERSION=${SQLITE_VERSION} \
                 --build-arg SQLITE_YEAR=${SQLITE_YEAR} \

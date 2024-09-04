@@ -6,12 +6,12 @@ on:
 env:
   OWNER_GITHUB: "pgspider"                       # User name. For example: [user_name] in https://github.com/user_name/your_repository.git
   PGSPIDER_PROJECT_GITHUB: "pgspider"            # PGSpider repository name. For example: [your_repository] in https://github.com/user_name/your_repository.git
-  ARTIFACT_DIR: "fdw_rpm"                    # Directory name of Artifact to contain rpm files temporary. Default is "fdw_rpm".
-  PGSPIDER_RELEASE_VERSION: "4.0.0"              # Release version. For example: 4.0.0.
+  ARTIFACT_DIR: "fdw_rpm"                        # Directory name of Artifact to contain rpm files temporary. Default is "fdw_rpm".
+  PGSPIDER_RELEASE_VERSION: "4.0.0-1"              # Release version. For example: 4.0.0.
   PGSPIDER_BASE_POSTGRESQL_VERSION: "16"         # Main version of postgresql that pgspider based on it. For example: 16.
   SQLITE_FDW_RELEASE_VERSION: "2.4.0"
   SQLITE_VERSION: "3.42.0"
-  SQLITE_YEAR: "3.42.0"
+  SQLITE_YEAR: "2023"
   PACKAGE_RELEASE_VERSION: "1"
   
 
@@ -49,7 +49,6 @@ jobs:
           --build-arg PGSPIDER_RPM_URL="https://github.com/${{ env.OWNER_GITHUB }}/${{ env.PGSPIDER_PROJECT_GITHUB }}/releases/download/${{ env.PGSPIDER_RELEASE_VERSION }}" \
           --build-arg SQLITE_FDW_RELEASE_VERSION=$SQLITE_FDW_RELEASE_VERSION \
           --build-arg SQLITE_VERSION=$SQLITE_VERSION \
-          --build-arg SQLITE_RELEASE_VERSION=$SQLITE_RELEASE_VERSION \
           --build-arg SQLITE_YEAR=$SQLITE_YEAR \
           --build-arg SQLITE_DOWNLOAD_VERSION=$SQLITE_DOWNLOAD_VERSION \
           -f rpm/$DOCKERFILE .
@@ -109,8 +108,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./sqlite-${{ env.SQLITE_RELEASE_VERSION }}-${{PACKAGE_RELEASE_VERSION}}.rhel8.x86_64.rpm
-        asset_name: sqlite-${{ env.SQLITE_RELEASE_VERSION }}-${{PACKAGE_RELEASE_VERSION}}.rhel8.x86_64.rpm
+        asset_path: ./sqlite-${{ env.SQLITE_VERSION }}-${{PACKAGE_RELEASE_VERSION}}.rhel8.x86_64.rpm
+        asset_name: sqlite-${{ env.SQLITE_VERSION }}-${{PACKAGE_RELEASE_VERSION}}.rhel8.x86_64.rpm
         asset_content_type: application/octet-stream
 
     - name: Upload sqlite fdw rpm

@@ -15,7 +15,7 @@ ARG PACKAGE_RELEASE_VERSION
 ARG PGSPIDER_BASE_POSTGRESQL_VERSION
 ARG PGSPIDER_RELEASE_VERSION
 ARG POSTGRESQL_BASE_VERSION
-ARG POSTGRESQL_RELEASE_VERSION
+ARG POSTGRESQL_VERSION
 
 ARG SQLITE_FDW_RELEASE_VERSION
 ARG PGSPIDER_INS=/usr/pgsql-${PGSPIDER_BASE_POSTGRESQL_VERSION}
@@ -37,9 +37,9 @@ RUN dnf --enablerepo=powertools install -y perl-IPC-Run
 
 # Install PGSpider or PostgreSQL
 RUN if [[ -z ${ACCESS_TOKEN} ]]; then \
-        if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_RELEASE_VERSION} ]]; then \
-            wget -O /root/postgresql${POSTGRESQL_BASE_VERSION}-libs-${POSTGRESQL_RELEASE_VERSION}PGDG.rhel8.x86_64.rpm \
-            ${POSTGRESQL_RPM_URL}/postgresql${POSTGRESQL_BASE_VERSION}-libs-${POSTGRESQL_RELEASE_VERSION}PGDG.rhel8.x86_64.rpm --no-check-certificate ; \
+        if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_VERSION} ]]; then \
+            wget -O /root/postgresql${POSTGRESQL_BASE_VERSION}-libs-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm \
+            ${POSTGRESQL_RPM_URL}/postgresql${POSTGRESQL_BASE_VERSION}-libs-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm --no-check-certificate ; \
         else \
             wget -O /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-libs-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm \
             ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-libs-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm --no-check-certificate ; \
@@ -51,9 +51,9 @@ RUN if [[ -z ${ACCESS_TOKEN} ]]; then \
         --insecure ; \
     fi
 RUN if [[ -z ${ACCESS_TOKEN} ]]; then \
-        if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_RELEASE_VERSION} ]]; then \
-            wget -O /root/postgresql${POSTGRESQL_BASE_VERSION}-${POSTGRESQL_RELEASE_VERSION}PGDG.rhel8.x86_64.rpm \
-            ${POSTGRESQL_RPM_URL}/postgresql${POSTGRESQL_BASE_VERSION}-${POSTGRESQL_RELEASE_VERSION}PGDG.rhel8.x86_64.rpm --no-check-certificate ; \
+        if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_VERSION} ]]; then \
+            wget -O /root/postgresql${POSTGRESQL_BASE_VERSION}-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm \
+            ${POSTGRESQL_RPM_URL}/postgresql${POSTGRESQL_BASE_VERSION}-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm --no-check-certificate ; \
         else \
             wget -O /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm \
             ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm --no-check-certificate ; \
@@ -66,9 +66,9 @@ RUN if [[ -z ${ACCESS_TOKEN} ]]; then \
     fi
 
 RUN if [[ -z ${ACCESS_TOKEN} ]]; then \
-        if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_RELEASE_VERSION} ]]; then \
-            wget -O /root/postgresql${POSTGRESQL_BASE_VERSION}-devel-${POSTGRESQL_RELEASE_VERSION}PGDG.rhel8.x86_64.rpm \
-            ${POSTGRESQL_RPM_URL}/postgresql${POSTGRESQL_BASE_VERSION}-devel-${POSTGRESQL_RELEASE_VERSION}PGDG.rhel8.x86_64.rpm --no-check-certificate ; \
+        if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_VERSION} ]]; then \
+            wget -O /root/postgresql${POSTGRESQL_BASE_VERSION}-devel-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm \
+            ${POSTGRESQL_RPM_URL}/postgresql${POSTGRESQL_BASE_VERSION}-devel-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm --no-check-certificate ; \
         else \
             wget -O /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-devel-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm \
             ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-devel-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm --no-check-certificate ; \
@@ -81,9 +81,9 @@ RUN if [[ -z ${ACCESS_TOKEN} ]]; then \
     fi
 
 RUN if [[ -z ${ACCESS_TOKEN} ]]; then \
-        if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_RELEASE_VERSION} ]]; then \
-            wget -O /root/postgresql${POSTGRESQL_BASE_VERSION}-server-${POSTGRESQL_RELEASE_VERSION}PGDG.rhel8.x86_64.rpm \
-            ${POSTGRESQL_RPM_URL}/postgresql${POSTGRESQL_BASE_VERSION}-server-${POSTGRESQL_RELEASE_VERSION}PGDG.rhel8.x86_64.rpm --no-check-certificate ; \
+        if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_VERSION} ]]; then \
+            wget -O /root/postgresql${POSTGRESQL_BASE_VERSION}-server-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm \
+            ${POSTGRESQL_RPM_URL}/postgresql${POSTGRESQL_BASE_VERSION}-server-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm --no-check-certificate ; \
         else \
             wget -O /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-server-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm \
             ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-server-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm --no-check-certificate ; \
@@ -95,13 +95,13 @@ RUN if [[ -z ${ACCESS_TOKEN} ]]; then \
         --insecure ; \
     fi
 
-RUN if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_RELEASE_VERSION} ]]; then \
+RUN if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_VERSION} ]]; then \
         dnf -y localinstall \
             --setopt=skip_missing_names_on_install=False \
-            /root/postgresql${POSTGRESQL_BASE_VERSION}-libs-${POSTGRESQL_RELEASE_VERSION}PGDG.rhel8.x86_64.rpm \
-            /root/postgresql${POSTGRESQL_BASE_VERSION}-${POSTGRESQL_RELEASE_VERSION}PGDG.rhel8.x86_64.rpm \
-            /root/postgresql${POSTGRESQL_BASE_VERSION}-devel-${POSTGRESQL_RELEASE_VERSION}PGDG.rhel8.x86_64.rpm \
-            /root/postgresql${POSTGRESQL_BASE_VERSION}-server-${POSTGRESQL_RELEASE_VERSION}PGDG.rhel8.x86_64.rpm ; \
+            /root/postgresql${POSTGRESQL_BASE_VERSION}-libs-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm \
+            /root/postgresql${POSTGRESQL_BASE_VERSION}-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm \
+            /root/postgresql${POSTGRESQL_BASE_VERSION}-devel-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm \
+            /root/postgresql${POSTGRESQL_BASE_VERSION}-server-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm ; \
     else \
         dnf -y localinstall \
             --setopt=skip_missing_names_on_install=False \
@@ -142,7 +142,7 @@ RUN sudo -E dnf localinstall -y ~/rpmbuild/RPMS/x86_64/sqlite*.rpm
 
 # Build sqlite fdw
 RUN tar cvjf sqlite_fdw.tar.bz2 sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}
-RUN if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_RELEASE_VERSION} ]]; then \
+RUN if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_VERSION} ]]; then \
         sed -i "16s/PGSpider/PostgreSQL/g" sqlite_fdw.spec ; \
         sed -i "35s/PGSpider/PostgreSQL/g" sqlite_fdw.spec ; \
         sed -i "23s/pgspider/postgresql/g" sqlite_fdw.spec ; \
