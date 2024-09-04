@@ -16,7 +16,7 @@
 Summary:	SQLite Foreign Data Wrapper for PGSpider
 Name:		%{sname}_%{pgmajorversion}
 Version:	%{?release_version}
-Release:	%{?dist}
+Release:	%{?package_release_version}.%{?dist}
 License:	TOSHIBA CORPORATION
 URL:		https://github.com/pgspider/%{sname}
 Source0:	sqlite_fdw.tar.bz2

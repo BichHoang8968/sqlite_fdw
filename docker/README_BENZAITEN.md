@@ -1,7 +1,13 @@
 Usage of creating sqlite_fdw RPM packages
 =====================================
 
-This directory contains the source code to create the sqlite_fdw rpm packages.
+This document is about how to create and publish rpm packages of sqlite_fdw to Benzaiten. 
+- It provided 2 tools to create SQLite FDW RPMs.
+	- One is for creating RPMs with [PGSpider](#creating-sqlite_fdw-rpm-packages-for-pgspider).
+		- The PGSpider RPM package is required. It must be released on PGSpider repository first.
+	- Another is for creating RPMs with [PostgreSQL](#creating-sqlite_fdw-rpm-packages-for-postgresql).
+- Additionally, we also provide Gitlab CI/CD pipeline for creating sqlite_fdw RPM packages for [PGSpider](#usage-of-run-cicd-pipeline).
+
 
 Environment for creating rpm of sqlite_fdw
 =====================================
@@ -33,29 +39,22 @@ The description below is used in the specific Linux distribution RockyLinux8.
 		sudo systemctl daemon-reload
 		sudo systemctl restart docker
 		```
-2. rpm Tools
-	- rpmdevtools
-		```sh
-		sudo yum install -y rpmdevtools
-		```
-	- rpm-build
-		```sh
-		sudo yum install -y gcc gcc-c++ make automake autoconf rpm-build
-		```
-3. Get the required files  
+2. Get the required files  
 	```sh
 	git clone https://tccloud2.toshiba.co.jp/swc/gitlab/db/sqlite_fdw.git
 	```
 
 Creating sqlite_fdw rpm packages for PGSpider
 =====================================
-1. File used here
+1. Preconditions
+	PGSpider RPM packages are must-have packages. They need to be released first on the [pgspider](https://tccloud2.toshiba.co.jp/swc/gitlab/db/PGSpider/-/packages/22) repository.
+2. File used here
 	- docker/deps/sqlite.spec
 	- docker/sqlite_fdw.spec
 	- docker/env_rpmbuild.conf
 	- docker/Dockerfile_rpm
 	- docker/create_rpm_binary_with_PGSpider.sh
-2. Configure `docker/env_rpmbuild.conf` file
+3. Configure `docker/env_rpmbuild.conf` file
 	- Configure proxy
 		```sh
 		proxy=http://username:password@proxy:port
@@ -70,31 +69,36 @@ Creating sqlite_fdw rpm packages for PGSpider
 		PGSPIDER_PROJECT_ID=				# Fill in the ID of the PGSpider project to get PGSpider rpm packages
 		PGSPIDER_RPM_ID=					# Fill in the ID of PGSpider rpm packages
 		PGSPIDER_BASE_POSTGRESQL_VERSION=16 # Base Postgres version of PGSpider
-		PGSPIDER_RELEASE_VERSION=4.0.0		# PGSpider rpm packages version
-		RPM_DISTRIBUTION_TYPE="rhel8"		# Distribution version of RedHat that the PGSpider rpm packages supports.
-		SQLITE_VERSION=3420000				# Version to download sqlite source code
-		SQLITE_RELEASE_VERSION=3.42.0		# Version to build sqlite rpm package
+		PGSPIDER_RELEASE_VERSION=4.0.0-1	# PGSpider rpm packages version
+		PACKAGE_RELEASE_VERSION=1			# The number of times this version of the sqlite_fdw has been packaged.
+		SQLITE_VERSION=3.42.0				# Release version of SQLite. You can check in: https://www.sqlite.org/chronology.html.
+		SQLITE_YEAR=2023					# The year that the sqlite version was released. For example: 2023 for version 3.42.0. You can check in: https://www.sqlite.org/chronology.html.
 		SQLITE_FDW_RELEASE_VERSION=2.4.0	# Version of sqlite_fdw rpm package
 		```
-3. Build execution
+4. Build execution
 	```sh
 	chmod +x docker/create_rpm_binary_with_PGSpider.sh
 	./docker/create_rpm_binary_with_PGSpider.sh
 	```
-4. Confirmation after finishing executing the script
+5. Confirmation after finishing executing the script
 	- Terminal displays a success message. 
 		```
 		{"message":"201 Created"}
 		...
 		{"message":"201 Created"}
 		```
-	- rpm Packages are stored on the Package Registry of its repository
+	- RPM Packages are stored on the Package Registry of its repository
 		```sh
 		Menu TaskBar -> Deploy -> Package Registry
 		```
 
 Creating sqlite_fdw rpm packages for PostgreSQL
 =====================================
+This tool will create sqlite_fdw rpm using PostgreSQL with the difference from PGSpider:
+- Use script `create_rpm_binary_with_PostgreSQL.sh` instead of `create_rpm_binary_with_PGSpider.sh`.
+- Use the parameters `POSTGRESQL_RELEASE_VERSION`, `PACKAGE_RELEASE_VERSION`, `SQLITE_VERSION`, `SQLITE_YEAR`, `SQLITE_FDW_RELEASE_VERSION`.
+- The RPM packages after creation will be stored locally in the `fdw_rpm_with_postgres` directory and will not be uploaded to the repository.
+
 1. File used here
 	- docker/deps/sqlite.spec
 	- docker/sqlite_fdw.spec
@@ -109,18 +113,19 @@ Creating sqlite_fdw rpm packages for PostgreSQL
 		```
 	- Configure the registry location to publish the package and version of the packages
 		```sh
-		POSTGRESQL_BASE_VERSION=16 					# Base PostgreSQL version
-		POSTGRESQL_RELEASE_VERSION=16.0-1PGDG		# PostgreSQL rpm packages version
-		RPM_DISTRIBUTION_TYPE="rhel8"				# Distribution version of RedHat that the PostgreSQL rpm packages supports.
-		SQLITE_VERSION=3420000						# Version to download sqlite source code
-		SQLITE_RELEASE_VERSION=3.42.0				# Version to build sqlite rpm package
+		POSTGRESQL_RELEASE_VERSION=16.0-1			# PostgreSQL rpm packages version. You can check in: https://yum.postgresql.org/packages/.
+		PACKAGE_RELEASE_VERSION=1					# The number of times this version of the sqlite_fdw has been packaged.
+		SQLITE_VERSION=3.42.0						# Release version of SQLite. You can check in: https://www.sqlite.org/chronology.html.
+		SQLITE_YEAR=2023							# The year that the sqlite version was released. For example: 2023 for version 3.42.0. You can check in: https://www.sqlite.org/chronology.html.
 		SQLITE_FDW_RELEASE_VERSION=2.4.0			# Version of sqlite_fdw rpm package
 		```
 3. Build execution
+	- Execute the script.
 	```sh
 	chmod +x docker/create_rpm_binary_with_PostgreSQL.sh
 	./docker/create_rpm_binary_with_PostgreSQL.sh
 	```
+	- RPM Packages are stored on the `fdw_rpm_with_postgres` folder in the root directory.
 
 Usage of Run CI/CD pipeline
 =====================================

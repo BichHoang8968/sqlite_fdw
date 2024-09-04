@@ -1,12 +1,12 @@
 %global localdir /usr/local
 
 Name:           sqlite
-Version:        %{?sqlite_release_version}
-Release:        %{?dist}
+Version:        %{?sqlite_version}
+Release:        %{?package_release_version}.%{?dist}
 Summary:        Development sqlite files for SQLite
 License:        TOSHIBA CORPORATION
-URL:            https://www.sqlite.org/2023/sqlite-autoconf-%{?sqlite_version}.tar.gz
-Source0:        sqlite-autoconf-%{?sqlite_version}.tar.gz
+URL:            https://www.sqlite.org/%{?sqlite_year}/sqlite-autoconf-%{?sqlite_download_version}.tar.gz
+Source0:        sqlite-autoconf-%{?sqlite_download_version}.tar.gz
 
 BuildRequires:  gcc
 BuildRequires:  libtool
@@ -15,7 +15,7 @@ BuildRequires:  libtool
 This is SQLite for Rocky Linux 8
 
 %prep
-%autosetup -n sqlite-autoconf-%{?sqlite_version}
+%autosetup -n sqlite-autoconf-%{?sqlite_download_version}
 
 %build
 ./configure --prefix=/usr/local --enable-fts5
