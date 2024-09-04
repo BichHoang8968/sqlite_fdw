@@ -9,10 +9,10 @@ default:
 # Global variable (can configure outside in gitlab web)
 variables:
   ARTIFACT_DIR: "fdw_rpm"
-  PGSPIDER_RELEASE_VERSION: "4.0.0"
+  PGSPIDER_RELEASE_VERSION: "4.0.0-1"
   PGSPIDER_BASE_POSTGRESQL_VERSION: "16"
   SQLITE_FDW_RELEASE_VERSION: "2.4.0"
-  PGSPIDER_RPM_ID: "11956"
+  PGSPIDER_RPM_ID: "14659"
   SQLITE_YEAR: "2023"
   SQLITE_VERSION: "3.42.0"
   PACKAGE_RELEASE_VERSION: "1"
@@ -28,14 +28,16 @@ project_build:
   before_script:
     - export http_proxy=$PROXY && export https_proxy=$PROXY
     - export no_proxy=$NO_PROXY
-    - apk add wget
+    - apk add wget bash
     # handle if the previous pipeline error
     - docker rm $(docker stop test) || true
     - docker rmi $IMAGE_TAG || true
     - echo "y" | docker system prune
+    - echo "y" | docker volume prune
   script:
     - chmod a+x rpm/convert_sqlite_download_version.sh
-    - SQLITE_DOWNLOAD_VERSION=$(./rpm/convert_sqlite_download_version.sh $SQLITE_VERSION)
+    - bash ./rpm/convert_sqlite_download_version.sh $SQLITE_VERSION > sqlite_download_version.txt
+    - SQLITE_DOWNLOAD_VERSION=`cat sqlite_download_version.txt`
     - cd rpm/deps && chmod -R 777 ./
     - wget https://www.sqlite.org/$SQLITE_YEAR/sqlite-autoconf-$SQLITE_DOWNLOAD_VERSION.tar.gz --no-check-certificate 
     - cd ../../
@@ -83,8 +85,8 @@ project_publish:
   script:
     - echo "Publishing ....."
     # sqlite
-    - eval "$curl_command $ARTIFACT_DIR/sqlite-$SQLITE_RELEASE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64.rpm
-                          $package_uri/sqlite-$SQLITE_RELEASE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64-$CI_PIPELINE_ID.rpm"
+    - eval "$curl_command $ARTIFACT_DIR/sqlite-$SQLITE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64.rpm
+                          $package_uri/sqlite-$SQLITE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64-$CI_PIPELINE_ID.rpm"
     # sqlite_fdw
     - eval "$curl_command $ARTIFACT_DIR/sqlite_fdw_$PGSPIDER_BASE_POSTGRESQL_VERSION-$SQLITE_FDW_RELEASE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64.rpm
                           $package_uri/sqlite_fdw_$PGSPIDER_BASE_POSTGRESQL_VERSION-$SQLITE_FDW_RELEASE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64-$CI_PIPELINE_ID.rpm"
