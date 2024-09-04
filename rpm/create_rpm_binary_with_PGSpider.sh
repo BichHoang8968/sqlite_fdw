@@ -1,7 +1,26 @@
 #!/bin/bash
 
+# Save the list of existing environment variables before sourcing the env_rpmbuild.conf file.
+before_vars=$(compgen -v)
+
 source rpm/env_rpmbuild.conf
+
+# Save the list of environment variables after sourcing the env_rpmbuild.conf file
+after_vars=$(compgen -v)
+
+# Find new variables created from configuration file
+new_vars=$(comm -13 <(echo "$before_vars" | sort) <(echo "$after_vars" | sort))
+
+# Export variables so that scripts or child processes can access them
+for var in $new_vars; do
+    export "$var"
+done
+
 set -eE
+
+# validate parameters
+chmod a+x rpm/validate_parameters.sh
+./rpm/validate_parameters.sh location SQLITE_VERSION SQLITE_YEAR PGSPIDER_RPM_ID IMAGE_TAG DOCKERFILE ARTIFACT_DIR proxy no_proxy PACKAGE_RELEASE_VERSION PGSPIDER_BASE_POSTGRESQL_VERSION PGSPIDER_RELEASE_VERSION SQLITE_FDW_RELEASE_VERSION
 
 # get sqlite download version
 SQLITE_DOWNLOAD_VERSION=$(./rpm/convert_sqlite_download_version.sh $SQLITE_VERSION)
@@ -21,6 +40,7 @@ fi
 # create rpm on container environment
 if [[ $location == [gG][iI][tT][lL][aA][bB] ]];
 then 
+    ./rpm/validate_parameters.sh ACCESS_TOKEN API_V4_URL PGSPIDER_PROJECT_ID SQLITE_FDW_PROJECT_ID
     docker build -t $IMAGE_TAG \
                  --build-arg proxy=${proxy} \
                  --build-arg no_proxy=${no_proxy} \
@@ -36,6 +56,7 @@ then
                  --build-arg SQLITE_DOWNLOAD_VERSION=${SQLITE_DOWNLOAD_VERSION} \
                  -f rpm/$DOCKERFILE .
 else
+    ./rpm/validate_parameters.sh OWNER_GITHUB PGSPIDER_PROJECT_GITHUB SQLITE_FDW_PROJECT_GITHUB SQLITE_FDW_RELEASE_ID
     docker build -t $IMAGE_TAG \
                  --build-arg proxy=${proxy} \
                  --build-arg no_proxy=${no_proxy} \

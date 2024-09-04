@@ -12,9 +12,20 @@
 #
 ################################################################################
 
-# Normalize the version number x.x.x.x into exactly 7 digits.
+# Check if input version is provided
+if [ -z "$1" ]; then
+  echo "Error: SQLITE_VERSION is required."
+  echo "Usage: ./convert_sqlite_download_version.sh SQLITE_VERSION"
+  exit 1
+fi
 
 version=$1
+
+# Validate version format: Should be in the form of x.x.x.x, where x is a non-negative integer
+if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+  echo "Error: Invalid SQLITE_VERSION format. Expected format: x.x.x.x (where x is a non-negative integer)."
+  exit 1
+fi
 
 # Separate version parts
 IFS='.' read -r major minor patch extra <<< "$version"

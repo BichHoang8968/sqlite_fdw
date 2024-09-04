@@ -1,7 +1,26 @@
 #!/bin/bash
 
+# Save the list of existing environment variables before sourcing the env_rpmbuild.conf file.
+before_vars=$(compgen -v)
+
 source rpm/env_rpmbuild.conf
+
+# Save the list of environment variables after sourcing the env_rpmbuild.conf file
+after_vars=$(compgen -v)
+
+# Find new variables created from configuration file
+new_vars=$(comm -13 <(echo "$before_vars" | sort) <(echo "$after_vars" | sort))
+
+# Export variables so that scripts or child processes can access them
+for var in $new_vars; do
+    export "$var"
+done
+
 set -eE
+
+# validate parameters
+chmod a+x rpm/validate_parameters.sh
+./rpm/validate_parameters.sh SQLITE_VERSION SQLITE_YEAR IMAGE_TAG DOCKERFILE ARTIFACT_DIR_WITH_POSTGRES proxy no_proxy PACKAGE_RELEASE_VERSION POSTGRESQL_VERSION SQLITE_FDW_RELEASE_VERSION
 
 # get sqlite download version
 SQLITE_DOWNLOAD_VERSION=$(./rpm/convert_sqlite_download_version.sh $SQLITE_VERSION)
