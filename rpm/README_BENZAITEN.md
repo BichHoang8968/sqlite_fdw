@@ -137,7 +137,7 @@ Usage of Run CI/CD pipeline
 2. Click `Run Pipeline` button  
 ![Alt text](images/BENZAITEN/pipeline_screen.PNG)
 3. Choose `Branch` or `Tag` name
-4. Provide `Access Token` through `Variabes`
+4. Provide `Access Token` through `Variables`
 	- Input variable key: ACCESS_TOKEN
 	- Input variable value: Your access token
 5. Click `Run Pipeline` button  

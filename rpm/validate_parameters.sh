@@ -29,12 +29,6 @@ number_vars=(
 "SQLITE_YEAR"
 )
 
-# List of variables to check for PGSpider and PostgreSQL version format
-pg_version_vars=(
-"POSTGRESQL_VERSION"
-"PGSPIDER_RELEASE_VERSION"
-)
-
 # List of variables to check for package version format
 version_vars=(
 "SQLITE_VERSION"
@@ -48,6 +42,22 @@ missing_vars=()
 for var in "${required_vars[@]}"; do
   if [[ "$var" == "PGSPIDER_RPM_ID" ]]; then
     continue
+  fi
+
+  if [[ "$var" == "POSTGRESQL_VERSION" ]]; then
+    # Check if the value does not conform to the expected version format
+    if ! [[ "${!var}" =~ ^[0-9]+\.[0-9]+-[0-9]+$ ]]; then
+      echo "Error: Variable '$var' with value '${!var}' is not in valid version format x.y-z."
+      missing_vars+=("$var")
+    fi
+  fi
+
+  if [[ "$var" == "PGSPIDER_RELEASE_VERSION" ]]; then
+    # Check if the value does not conform to the expected version format
+    if ! [[ "${!var}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+$ ]]; then
+      echo "Error: Variable '$var' with value '${!var}' is not in valid version format x.y.z-w."
+      missing_vars+=("$var")
+    fi
   fi
 
   if [ -z "${!var}" ]; then
@@ -68,15 +78,6 @@ for var in "${required_vars[@]}"; do
       # Check if value is not a number
       if ! [[ "${!var}" =~ ^[0-9]+$ ]]; then
         echo "Error: Variable '$var' with value '${!var}' is not a valid number."
-        missing_vars+=("$var")
-      fi
-    fi
-
-    # Check if variable is in list to check PGSpider and PostgreSQL version format
-    if [[ " ${pg_version_vars[@]} " =~ " $var " ]]; then
-      # Check if the value does not conform to the expected version format
-      if ! [[ "${!var}" =~ ^[0-9]+(\.[0-9]+){1,2}-[0-9]+$ ]]; then
-        echo "Error: Variable '$var' with value '${!var}' is not in valid version format (x.y-z or x.y.z-w)."
         missing_vars+=("$var")
       fi
     fi
