@@ -5,7 +5,7 @@ This document is about how to create and publish rpm packages of sqlite_fdw to G
 - It provided 2 tools to create SQLite FDW RPMs.
 	- One is for creating RPMs with [PGSpider](#creating-sqlite_fdw-rpm-packages-for-pgspider).
 		- The PGSpider RPM package is required. It must be released on PGSpider repository first.
-		- The SQLite FDW RPM package have released on PGSpider [Assets of Release](https://github.com/pgspider/pgspider/releases).
+		- The PGSpider RPM package have released on PGSpider [Assets of Release](https://github.com/pgspider/pgspider/releases).
 	- Another is for creating RPMs with [PostgreSQL](#creating-sqlite_fdw-rpm-packages-for-postgresql).
 - Additionally, we also provide Github Actions for creating sqlite_fdw RPM packages for [PGSpider](#usage-of-github-actions).
 
@@ -122,8 +122,8 @@ This tool will create sqlite_fdw rpm using PostgreSQL with the difference from P
 		```
 	- Configure the registry location to publish the package and version of the packages
 		```sh
-		POSTGRESQL_VERSION=			# PostgreSQL rpm packages version. For example: 16.0-1. You can check in: https://yum.postgresql.org/packages/.
-		PACKAGE_RELEASE_VERSION=1					# The number of times this version of the sqlite_fdw has been packaged.
+		POSTGRESQL_VERSION=					# PostgreSQL rpm packages version. For example: 16.0-1. You can check in: https://yum.postgresql.org/packages/.
+		PACKAGE_RELEASE_VERSION=1			# The number of times this version of the sqlite_fdw has been packaged.
 		SQLITE_VERSION=						# Release version of SQLite. For example: 3.42.0. You can check in: https://www.sqlite.org/chronology.html.
 		SQLITE_YEAR=						# The year that the sqlite version was released. For example: 2023 for version 3.42.0. You can check in: https://www.sqlite.org/chronology.html.
 		SQLITE_FDW_RELEASE_VERSION= 		# Release version of sqlite_fdw. For example: 2.4.0.
