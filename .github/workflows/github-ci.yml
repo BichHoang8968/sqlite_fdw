@@ -43,9 +43,9 @@ jobs:
         wget https://www.sqlite.org/$SQLITE_YEAR/sqlite-autoconf-$SQLITE_DOWNLOAD_VERSION.tar.gz --no-check-certificate
         cd ../..
         docker build -t $IMAGE_TAG \
-          --build-arg PACKAGE_RELEASE_VERSION=$PACKAGE_RELEASE_VERSION \
-          --build-arg PGSPIDER_BASE_POSTGRESQL_VERSION=$PGSPIDER_BASE_POSTGRESQL_VERSION \
-          --build-arg PGSPIDER_RELEASE_VERSION=$PGSPIDER_RELEASE_VERSION \
+          --build-arg PACKAGE_RELEASE_VERSION=${{ env.PACKAGE_RELEASE_VERSION }} \
+          --build-arg PGSPIDER_RELEASE_VERSION=${{ env.PGSPIDER_RELEASE_VERSION }} \
+          --build-arg PGSPIDER_BASE_POSTGRESQL_VERSION=${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }} \
           --build-arg PGSPIDER_RPM_URL="https://github.com/${{ env.OWNER_GITHUB }}/${{ env.PGSPIDER_PROJECT_GITHUB }}/releases/download/${{ env.PGSPIDER_RELEASE_VERSION }}" \
           --build-arg SQLITE_FDW_RELEASE_VERSION=$SQLITE_FDW_RELEASE_VERSION \
           --build-arg SQLITE_VERSION=$SQLITE_VERSION \
@@ -108,8 +108,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./sqlite-${{ env.SQLITE_VERSION }}-${{PACKAGE_RELEASE_VERSION}}.rhel8.x86_64.rpm
-        asset_name: sqlite-${{ env.SQLITE_VERSION }}-${{PACKAGE_RELEASE_VERSION}}.rhel8.x86_64.rpm
+        asset_path: ./sqlite-${{ env.SQLITE_VERSION }}-${{ env.PACKAGE_RELEASE_VERSION }}.rhel8.x86_64.rpm
+        asset_name: sqlite-${{ env.SQLITE_VERSION }}-${{ env.PACKAGE_RELEASE_VERSION }}.rhel8.x86_64.rpm
         asset_content_type: application/octet-stream
 
     - name: Upload sqlite fdw rpm
@@ -118,8 +118,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{PACKAGE_RELEASE_VERSION}}.rhel8.x86_64.rpm
-        asset_name: sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{PACKAGE_RELEASE_VERSION}}.rhel8.x86_64.rpm
+        asset_path: ./sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{ env.PACKAGE_RELEASE_VERSION }}.rhel8.x86_64.rpm
+        asset_name: sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{ env.PACKAGE_RELEASE_VERSION }}.rhel8.x86_64.rpm
         asset_content_type: application/octet-stream
 
     - name: Upload sqlite fdw debugsource rpm
@@ -128,8 +128,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-debugsource-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{PACKAGE_RELEASE_VERSION}}.rhel8.x86_64.rpm
-        asset_name: sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-debugsource-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{PACKAGE_RELEASE_VERSION}}.rhel8.x86_64.rpm
+        asset_path: ./sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-debugsource-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{ env.PACKAGE_RELEASE_VERSION }}.rhel8.x86_64.rpm
+        asset_name: sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-debugsource-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{ env.PACKAGE_RELEASE_VERSION }}.rhel8.x86_64.rpm
         asset_content_type: application/octet-stream
 
     - name: Upload sqlite fdw llvmjit rpm
@@ -138,6 +138,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-llvmjit-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{PACKAGE_RELEASE_VERSION}}.rhel8.x86_64.rpm
-        asset_name: sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-llvmjit-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{PACKAGE_RELEASE_VERSION}}.rhel8.x86_64.rpm
+        asset_path: ./sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-llvmjit-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{ env.PACKAGE_RELEASE_VERSION }}.rhel8.x86_64.rpm
+        asset_name: sqlite_fdw_${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }}-llvmjit-${{ env.SQLITE_FDW_RELEASE_VERSION }}-${{ env.PACKAGE_RELEASE_VERSION }}.rhel8.x86_64.rpm
         asset_content_type: application/octet-stream
