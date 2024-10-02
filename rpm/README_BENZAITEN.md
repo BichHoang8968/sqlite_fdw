@@ -2,7 +2,10 @@ Usage of creating sqlite_fdw RPM packages
 =====================================
 
 This document is about how to create and publish rpm packages of sqlite_fdw to Benzaiten. 
-- It provided 2 tools to create SQLite FDW RPMs.
+- It provided 2 tools to create SQLite FDW RPMs.  
+Both tools use the sqlite_fdw.spec file from the Postgres community as a base.  
+The community spec file can generate RPM files for a given sqlite_fdw version.  
+But this tool can generate any version of sqlite_fdw. Refer [pgrpms](https://git.postgresql.org/gitweb/?p=pgrpms.git;a=blob;f=rpm/redhat/main/non-common/sqlite_fdw/main/sqlite_fdw.spec;h=c958692646ae9275f9b3aa17040df22095a58f41;hb=2aa9f88e9fec8c0f41b13b7cc5fb6dae42428ead)
 	- One is for creating RPMs with [PGSpider](#creating-sqlite_fdw-rpm-packages-for-pgspider).
 		- The PGSpider RPM package is required. It must be released on PGSpider repository first.
 		- The PGSpider RPM package have released on PGSpider [package registry](https://tccloud2.toshiba.co.jp/swc/gitlab/db/PGSpider/-/packages/22).
@@ -51,7 +54,7 @@ Creating sqlite_fdw rpm packages for PGSpider
 	PGSpider RPM packages are must-have packages. They need to be released first on the [pgspider](https://tccloud2.toshiba.co.jp/swc/gitlab/db/PGSpider/-/packages/22) repository.
 2. File used here
 	- rpm/deps/sqlite.spec
-	- rpm/sqlite_fdw.spec
+	- rpm/sqlite_fdw_spec_pgspider.patch
 	- rpm/env_rpmbuild.conf
 	- rpm/Dockerfile_rpm
 	- rpm/create_rpm_binary_with_PGSpider.sh
@@ -102,7 +105,7 @@ This tool will create sqlite_fdw rpm using PostgreSQL with the difference from P
 
 1. File used here
 	- rpm/deps/sqlite.spec
-	- rpm/sqlite_fdw.spec
+	- rpm/sqlite_fdw_spec_postgres.patch
 	- rpm/env_rpmbuild.conf
 	- rpm/Dockerfile_rpm
 	- rpm/create_rpm_binary_with_PostgreSQL.sh
