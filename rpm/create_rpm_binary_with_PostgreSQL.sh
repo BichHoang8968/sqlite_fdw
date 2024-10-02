@@ -36,6 +36,15 @@ fi
 # get base PostgreSQL version
 POSTGRESQL_BASE_VERSION=$(echo "$POSTGRESQL_VERSION" | cut -d '.' -f 1)
 
+# clone sqlite_fdw spec
+## At this moment, we based on commit:df216ffca23020a436ca964a294e229a9073f4a8 on https://git.postgresql.org/gitweb/?p=pgrpms.git;a=summary
+cd rpm
+rm -rf sqlite_fdw.spec
+wget "https://git.postgresql.org/gitweb/?p=pgrpms.git;a=blob_plain;f=rpm/redhat/main/non-common/sqlite_fdw/main/sqlite_fdw.spec;h=864e7ce58825eea3a7658b55305fb1365d51e917;hb=df216ffca23020a436ca964a294e229a9073f4a8" -O sqlite_fdw.spec
+## apply patch
+patch -u sqlite_fdw.spec -i sqlite_fdw_spec_postgres.patch
+cd ..
+
 docker build -t $IMAGE_TAG \
                 --build-arg proxy=${proxy} \
                 --build-arg no_proxy=${no_proxy} \

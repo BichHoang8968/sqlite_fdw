@@ -37,6 +37,15 @@ if [[ ${PGSPIDER_RPM_ID} ]]; then
     PGSPIDER_RPM_ID_POSTFIX="-${PGSPIDER_RPM_ID}"
 fi
 
+# clone sqlite_fdw spec
+## At this moment, we based on commit:df216ffca23020a436ca964a294e229a9073f4a8 on https://git.postgresql.org/gitweb/?p=pgrpms.git;a=summary
+cd rpm
+rm -rf sqlite_fdw.spec
+wget "https://git.postgresql.org/gitweb/?p=pgrpms.git;a=blob_plain;f=rpm/redhat/main/non-common/sqlite_fdw/main/sqlite_fdw.spec;h=864e7ce58825eea3a7658b55305fb1365d51e917;hb=df216ffca23020a436ca964a294e229a9073f4a8" -O sqlite_fdw.spec
+## apply patch
+patch -u sqlite_fdw.spec -i sqlite_fdw_spec_pgspider.patch
+cd ..
+
 # create rpm on container environment
 if [[ $location == [gG][iI][tT][lL][aA][bB] ]];
 then 

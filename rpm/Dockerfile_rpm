@@ -143,12 +143,6 @@ RUN sudo -E dnf localinstall -y ~/rpmbuild/RPMS/x86_64/sqlite*.rpm
 # Build sqlite fdw
 RUN tar cvjf sqlite_fdw.tar.bz2 sqlite_fdw-${SQLITE_FDW_RELEASE_VERSION}
 RUN if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_VERSION} ]]; then \
-        sed -i "16s/PGSpider/PostgreSQL/g" sqlite_fdw.spec ; \
-        sed -i "35s/PGSpider/PostgreSQL/g" sqlite_fdw.spec ; \
-        sed -i "23s/pgspider/postgresql/g" sqlite_fdw.spec ; \
-        sed -i "24s/pgspider/postgresql/g" sqlite_fdw.spec ; \
-        sed -i "26s/pgspider/postgresql/g" sqlite_fdw.spec ; \
-        sed -i '/USE_PGXS=1 PATH=%{pginstdir}\/bin\/:\$PATH %{__make} %{?_smp_mflags}/ s/$/ BITCODE_CFLAGS=\"-fno-strict-aliasing -fwrapv -Xclang -Wno-unused-command-line-argument -Wno-compound-token-split-by-macro -O2\"/' sqlite_fdw.spec ; \
         rpmbuild -ba -D "_sourcedir $(pwd)" -D "release_version ${SQLITE_FDW_RELEASE_VERSION}" -D "dist rhel8" -D "package_release_version ${PACKAGE_RELEASE_VERSION}" -D "pgmajorversion ${POSTGRESQL_BASE_VERSION}" -D "pginstdir ${POSTGRESQL_INS}" sqlite_fdw.spec ; \
     else \
         rpmbuild -ba -D "_sourcedir $(pwd)" -D "release_version ${SQLITE_FDW_RELEASE_VERSION}" -D "dist rhel8" -D "package_release_version ${PACKAGE_RELEASE_VERSION}" -D "pgmajorversion ${PGSPIDER_BASE_POSTGRESQL_VERSION}" -D "pginstdir ${PGSPIDER_INS}" sqlite_fdw.spec ; \
