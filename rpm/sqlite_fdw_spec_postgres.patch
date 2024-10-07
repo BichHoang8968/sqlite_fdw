@@ -19,17 +19,3 @@
  Requires:	postgresql%{pgmajorversion}-server
  %if 0%{?fedora} >= 27
  Requires:	sqlite-libs
-@@ -65,11 +66,11 @@
- 
- %build
- 
--USE_PGXS=1 PATH=%{pginstdir}/bin/:$PATH %{__make} %{?_smp_mflags}
-+USE_PGXS=1 PATH=%{pginstdir}/bin/:$PATH %{__make} %{?_smp_mflags} BITCODE_CFLAGS="-fno-strict-aliasing -fwrapv -Xclang -Wno-unused-command-line-argument -Wno-compound-token-split-by-macro -O2"
- 
- %install
- %{__rm} -rf %{buildroot}
--USE_PGXS=1 PATH=%{pginstdir}/bin/:$PATH %{__make} %{?_smp_mflags} install DESTDIR=%{buildroot}
-+USE_PGXS=1 PATH=%{pginstdir}/bin/:$PATH %{__make} %{?_smp_mflags} install DESTDIR=%{buildroot} BITCODE_CFLAGS="-fno-strict-aliasing -fwrapv -Xclang -Wno-unused-command-line-argument -Wno-compound-token-split-by-macro -O2"
- # Install README and howto file under PostgreSQL installation directory:
- %{__install} -d %{buildroot}%{pginstdir}/doc/extension
- %{__install} -m 644 README.md %{buildroot}%{pginstdir}/doc/extension/README-%{sname}.md
