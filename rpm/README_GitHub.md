@@ -4,8 +4,7 @@ Usage of creating sqlite_fdw RPM packages
 This document is about how to create and publish rpm packages of sqlite_fdw to GitHub. 
 - It provided 2 tools to create SQLite FDW RPMs.  
 Both tools use the sqlite_fdw.spec file from the Postgres community as a base.  
-The community spec file can generate RPM files for a given sqlite_fdw version.  
-But this tool can generate any version of sqlite_fdw. Refer [pgrpms](https://git.postgresql.org/gitweb/?p=pgrpms.git;a=blob;f=rpm/redhat/main/non-common/sqlite_fdw/main/sqlite_fdw.spec;h=c958692646ae9275f9b3aa17040df22095a58f41;hb=2aa9f88e9fec8c0f41b13b7cc5fb6dae42428ead)
+Community's spec file will download source code of sqlite_fdw from Internet and build it. Therefore, if you wants to build rpm file of a stable version of sqlite_fdw automatically, you can use community's spec file. In case of you already have source code of sqlite_fdw (possibly with some custom modification), and want to build rpm file from current source code, you can use this tool. Refer [pgrpms](https://git.postgresql.org/gitweb/?p=pgrpms.git;a=blob;f=rpm/redhat/main/non-common/sqlite_fdw/main/sqlite_fdw.spec;h=864e7ce58825eea3a7658b55305fb1365d51e917;hb=df216ffca23020a436ca964a294e229a9073f4a8)
 	- One is for creating RPMs with [PGSpider](#creating-sqlite_fdw-rpm-packages-for-pgspider).
 		- The PGSpider RPM package is required. It must be released on PGSpider repository first.
 		- The PGSpider RPM package have released on PGSpider [Assets of Release](https://github.com/pgspider/pgspider/releases).
