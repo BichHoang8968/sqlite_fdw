@@ -22,7 +22,7 @@ fi
 version=$1
 
 # Validate version format: Should be in the form of x.x.x.x, where x is a non-negative integer
-if ! [ "$version" ==~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$ ]; then
+if  [ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$ ]; then
   echo "Error: Invalid SQLITE_VERSION format. Expected format: x.x.x or x.x.x.x (where x is a non-negative integer)."
   exit 1
 fi
