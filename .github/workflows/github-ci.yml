@@ -54,7 +54,7 @@ jobs:
           --build-arg PGSPIDER_RELEASE_PACKAGE_VERSION=${{ env.PGSPIDER_RELEASE_PACKAGE_VERSION }} \
           --build-arg PGSPIDER_RELEASE_VERSION=${{ env.PGSPIDER_RELEASE_VERSION }} \
           --build-arg PGSPIDER_BASE_POSTGRESQL_VERSION=${{ env.PGSPIDER_BASE_POSTGRESQL_VERSION }} \
-          --build-arg PGSPIDER_RPM_URL="https://github.com/${{ env.OWNER_GITHUB }}/${{ env.PGSPIDER_PROJECT_GITHUB }}/releases/download/${{ env.PGSPIDER_RELEASE_VERSION }}" \
+          --build-arg PGSPIDER_RPM_URL="https://github.com/${{ env.OWNER_GITHUB }}/${{ env.PGSPIDER_PROJECT_GITHUB }}/releases/download/${{ env.PGSPIDER_RELEASE_PACKAGE_VERSION }}" \
           --build-arg SQLITE_FDW_RELEASE_VERSION=$SQLITE_FDW_RELEASE_VERSION \
           --build-arg SQLITE_VERSION=$SQLITE_VERSION \
           --build-arg PGSPIDER_RPM_ID= \
