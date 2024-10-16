@@ -20,7 +20,7 @@ set -eE
 
 # validate parameters
 chmod a+x rpm/validate_parameters.sh
-./rpm/validate_parameters.sh location SQLITE_VERSION SQLITE_YEAR PGSPIDER_RPM_ID IMAGE_TAG DOCKERFILE ARTIFACT_DIR proxy no_proxy PACKAGE_RELEASE_VERSION PGSPIDER_BASE_POSTGRESQL_VERSION PGSPIDER_RELEASE_VERSION SQLITE_FDW_RELEASE_VERSION
+./rpm/validate_parameters.sh location SQLITE_VERSION SQLITE_YEAR PGSPIDER_RPM_ID IMAGE_TAG DOCKERFILE ARTIFACT_DIR proxy no_proxy PACKAGE_RELEASE_VERSION PGSPIDER_BASE_POSTGRESQL_VERSION PGSPIDER_RELEASE_VERSION PGSPIDER_RELEASE_PACKAGE_VERSION SQLITE_FDW_RELEASE_VERSION
 
 # get sqlite download version
 SQLITE_DOWNLOAD_VERSION=$(./rpm/convert_sqlite_download_version.sh $SQLITE_VERSION)
@@ -72,7 +72,7 @@ else
                  --build-arg PACKAGE_RELEASE_VERSION=${PACKAGE_RELEASE_VERSION} \
                  --build-arg PGSPIDER_BASE_POSTGRESQL_VERSION=${PGSPIDER_BASE_POSTGRESQL_VERSION} \
                  --build-arg PGSPIDER_RELEASE_VERSION=${PGSPIDER_RELEASE_VERSION} \
-                 --build-arg PGSPIDER_RPM_URL="https://github.com/${OWNER_GITHUB}/${PGSPIDER_PROJECT_GITHUB}/releases/download/${PGSPIDER_RELEASE_VERSION}" \
+                 --build-arg PGSPIDER_RPM_URL="https://github.com/${OWNER_GITHUB}/${PGSPIDER_PROJECT_GITHUB}/releases/download/${PGSPIDER_RELEASE_PACKAGE_VERSION}" \
                  --build-arg SQLITE_FDW_RELEASE_VERSION=${SQLITE_FDW_RELEASE_VERSION} \
                  --build-arg SQLITE_VERSION=${SQLITE_VERSION} \
                  --build-arg SQLITE_YEAR=${SQLITE_YEAR} \

@@ -60,6 +60,14 @@ for var in "${required_vars[@]}"; do
     fi
   fi
 
+  if [[ "$var" == "PGSPIDER_RELEASE_PACKAGE_VERSION" ]]; then
+    # Check if the value does not conform to the expected version format
+    if ! [[ "${!var}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      echo "Error: Variable '$var' with value '${!var}' is not in valid version format x.y.z."
+      missing_vars+=("$var")
+    fi
+  fi
+
   if [ -z "${!var}" ]; then
     echo "Error: Required variable '$var' is not set or empty."
     missing_vars+=("$var")

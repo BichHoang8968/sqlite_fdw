@@ -65,17 +65,18 @@ Creating sqlite_fdw rpm packages for PGSpider
 		```
 	- Configure the registry location to publish the package and version of the packages
 		```sh
-		location=gitlab 					# Fill in <gitlab> or <github>. In this project, please use <gitlab>
-		ACCESS_TOKEN=						# Fill in the Access Token for authentication purposes to publish rpm packages to Package Registry
-		API_V4_URL=							# Fill in API v4 URL of this repo. In this project please use <https://tccloud2.toshiba.co.jp/swc/gitlab/api/v4>
-		SQLITE_FDW_PROJECT_ID=				# Fill in the ID of the sqlite_fdw project.		
-		PGSPIDER_PROJECT_ID=				# Fill in the ID of the PGSpider project to get PGSpider rpm packages
-		PGSPIDER_RPM_ID=					# Fill in the ID of PGSpider rpm packages
-		PGSPIDER_BASE_POSTGRESQL_VERSION=16 # Base Postgres version of PGSpider
-		PGSPIDER_RELEASE_VERSION=4.0.0-1	# PGSpider rpm packages version
-		PACKAGE_RELEASE_VERSION=1			# The number of times this version of the sqlite_fdw has been packaged.
-		SQLITE_VERSION=3.42.0				# Release version of SQLite. You can check in: https://www.sqlite.org/chronology.html.
-		SQLITE_YEAR=2023					# The year that the sqlite version was released. For example: 2023 for version 3.42.0. You can check in: https://www.sqlite.org/chronology.html.
+		location=gitlab 						# Fill in <gitlab> or <github>. In this project, please use <gitlab>
+		ACCESS_TOKEN=							# Fill in the Access Token for authentication purposes to publish rpm packages to Package Registry
+		API_V4_URL=								# Fill in API v4 URL of this repo. In this project please use <https://tccloud2.toshiba.co.jp/swc/gitlab/api/v4>
+		SQLITE_FDW_PROJECT_ID=					# Fill in the ID of the sqlite_fdw project.		
+		PGSPIDER_PROJECT_ID=					# Fill in the ID of the PGSpider project to get PGSpider rpm packages
+		PGSPIDER_RPM_ID=						# Fill in the ID of PGSpider rpm packages
+		PGSPIDER_BASE_POSTGRESQL_VERSION=16 	# Base Postgres version of PGSpider
+		PGSPIDER_RELEASE_VERSION=4.0.0-1		# PGSpider rpm packages version
+		PGSPIDER_RELEASE_PACKAGE_VERSION=4.0.0  # Release package version
+		PACKAGE_RELEASE_VERSION=1				# The number of times this version of the sqlite_fdw has been packaged.
+		SQLITE_VERSION=3.42.0					# Release version of SQLite. You can check in: https://www.sqlite.org/chronology.html.
+		SQLITE_YEAR=2023						# The year that the sqlite version was released. For example: 2023 for version 3.42.0. You can check in: https://www.sqlite.org/chronology.html.
 		SQLITE_FDW_RELEASE_VERSION=2.4.0	# Version of sqlite_fdw rpm package
 		```
 4. Build execution
