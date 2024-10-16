@@ -36,9 +36,9 @@ RUN dnf install -y bzip2 rpm-build pgdg-srpm-macros-1.0.40-1PGDG.rhel8.noarch su
 RUN dnf --enablerepo=powertools install -y perl-IPC-Run
 
 RUN if [[ -z ${ACCESS_TOKEN} ]]; then \
-        export PARAM_CURL_OPTS='--insecure' ; \
+        export PARAM_CURL_OPTS='--insecure' -L ; \
     else \
-        export PARAM_CURL_OPTS='--header "PRIVATE-TOKEN: '${ACCESS_TOKEN}'" --insecure' ; \
+        export PARAM_CURL_OPTS='--header "PRIVATE-TOKEN: '${ACCESS_TOKEN}'" --insecure' -L ; \
     fi && \
     echo "PARAM_CURL_OPTS='${PARAM_CURL_OPTS}'" > /tmp/params.txt
 
@@ -47,12 +47,12 @@ RUN if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_VERSION} ]]; then \
         . /tmp/params.txt && \
         eval curl ${PARAM_CURL_OPTS} \
             ${POSTGRESQL_RPM_URL}/postgresql${POSTGRESQL_BASE_VERSION}-libs-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm \
-            -o /root/postgresql${POSTGRESQL_BASE_VERSION}-libs-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm -L; \
+            -o /root/postgresql${POSTGRESQL_BASE_VERSION}-libs-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm; \
     else \
         . /tmp/params.txt && \
         eval curl ${PARAM_CURL_OPTS} \
             ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-libs-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64${PGSPIDER_RPM_ID}.rpm \
-            -o /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-libs-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm -L; \
+            -o /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-libs-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm; \
     fi
 
 # Download PostgreSQL/PGSpider core
@@ -60,12 +60,12 @@ RUN if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_VERSION} ]]; then \
         . /tmp/params.txt && \
         eval curl ${PARAM_CURL_OPTS} \
             ${POSTGRESQL_RPM_URL}/postgresql${POSTGRESQL_BASE_VERSION}-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm \
-            -o /root/postgresql${POSTGRESQL_BASE_VERSION}-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm -L; \
+            -o /root/postgresql${POSTGRESQL_BASE_VERSION}-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm; \
     else \
         . /tmp/params.txt && \
         eval curl ${PARAM_CURL_OPTS} \
             ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64${PGSPIDER_RPM_ID}.rpm \
-            -o /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm -L; \
+            -o /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm; \
     fi
 
 # Download PostgreSQL/PGSpider server
@@ -73,12 +73,12 @@ RUN if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_VERSION} ]]; then \
         . /tmp/params.txt && \
         eval curl ${PARAM_CURL_OPTS} \
             ${POSTGRESQL_RPM_URL}/postgresql${POSTGRESQL_BASE_VERSION}-server-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm \
-            -o /root/postgresql${POSTGRESQL_BASE_VERSION}-server-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm -L; \
+            -o /root/postgresql${POSTGRESQL_BASE_VERSION}-server-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm; \
     else \
         . /tmp/params.txt && \
         eval curl ${PARAM_CURL_OPTS} \
             ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-server-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64${PGSPIDER_RPM_ID}.rpm \
-            -o /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-server-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm -L; \
+            -o /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-server-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm; \
     fi
 
 # Download PostgreSQL/PGSpider devel
@@ -86,12 +86,12 @@ RUN if [[ -n ${POSTGRESQL_BASE_VERSION} && -n ${POSTGRESQL_VERSION} ]]; then \
         . /tmp/params.txt && \
         eval curl ${PARAM_CURL_OPTS} \
             ${POSTGRESQL_RPM_URL}/postgresql${POSTGRESQL_BASE_VERSION}-devel-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm \
-            -o /root/postgresql${POSTGRESQL_BASE_VERSION}-devel-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm -L; \
+            -o /root/postgresql${POSTGRESQL_BASE_VERSION}-devel-${POSTGRESQL_VERSION}PGDG.rhel8.x86_64.rpm; \
     else \
         . /tmp/params.txt && \
         eval curl ${PARAM_CURL_OPTS} \
             ${PGSPIDER_RPM_URL}/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-devel-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64${PGSPIDER_RPM_ID}.rpm \
-            -o /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-devel-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm -L; \
+            -o /root/pgspider${PGSPIDER_BASE_POSTGRESQL_VERSION}-devel-${PGSPIDER_RELEASE_VERSION}.rhel8.x86_64.rpm; \
     fi
 
 # Install PostgreSQL/PGSpider
