@@ -20,7 +20,7 @@ set -eE
 
 # validate parameters
 chmod a+x rpm/validate_parameters.sh
-./rpm/validate_parameters.sh location SQLITE_VERSION SQLITE_YEAR PGSPIDER_RPM_ID IMAGE_TAG DOCKERFILE ARTIFACT_DIR proxy no_proxy PACKAGE_RELEASE_VERSION PGSPIDER_BASE_POSTGRESQL_VERSION PGSPIDER_RELEASE_VERSION PGSPIDER_RELEASE_PACKAGE_VERSION SQLITE_FDW_RELEASE_VERSION
+./rpm/validate_parameters.sh location SQLITE_VERSION SQLITE_YEAR PGSPIDER_RPM_ID IMAGE_TAG DOCKERFILE ARTIFACT_DIR proxy no_proxy PACKAGE_RELEASE_VERSION PGSPIDER_BASE_POSTGRESQL_VERSION PGSPIDER_RELEASE_VERSION SQLITE_FDW_RELEASE_VERSION
 
 # get sqlite download version
 SQLITE_DOWNLOAD_VERSION=$(./rpm/convert_sqlite_download_version.sh $SQLITE_VERSION)
@@ -65,7 +65,7 @@ then
                  --build-arg SQLITE_DOWNLOAD_VERSION=${SQLITE_DOWNLOAD_VERSION} \
                  -f rpm/$DOCKERFILE .
 else
-    ./rpm/validate_parameters.sh OWNER_GITHUB PGSPIDER_PROJECT_GITHUB SQLITE_FDW_PROJECT_GITHUB SQLITE_FDW_RELEASE_ID
+    ./rpm/validate_parameters.sh OWNER_GITHUB PGSPIDER_PROJECT_GITHUB SQLITE_FDW_PROJECT_GITHUB SQLITE_FDW_RELEASE_ID PGSPIDER_RELEASE_PACKAGE_VERSION
     docker build -t $IMAGE_TAG \
                  --build-arg proxy=${proxy} \
                  --build-arg no_proxy=${no_proxy} \
