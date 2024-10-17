@@ -1,0 +1,104 @@
+stages:
+  - build
+  - publish
+
+default:
+  tags:
+    - benzaiten-autoscale
+
+# Global variable (can configure outside in gitlab web)
+variables:
+  ARTIFACT_DIR: "fdw_rpm"
+  PGSPIDER_RELEASE_VERSION: "4.0.0-1"
+  PGSPIDER_BASE_POSTGRESQL_VERSION: "16"
+  SQLITE_FDW_RELEASE_VERSION: "2.4.0"
+  PGSPIDER_RPM_ID: "14997"
+  SQLITE_YEAR: "2023"
+  SQLITE_VERSION: "3.42.0"
+  PACKAGE_RELEASE_VERSION: "1"
+
+project_build:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  variables:
+    IMAGE_TAG: "fdw_build"
+    DOCKERFILE: "Dockerfile_rpm"
+  before_script:
+    - export http_proxy=$PROXY && export https_proxy=$PROXY
+    - export no_proxy=$NO_PROXY
+    - apk add wget bash patch
+    # handle if the previous pipeline error
+    - docker rm $(docker stop test) || true
+    - docker rmi $IMAGE_TAG || true
+    - echo "y" | docker system prune
+    - echo "y" | docker volume prune
+  script:
+    - chmod a+x rpm/convert_sqlite_download_version.sh
+    - bash ./rpm/convert_sqlite_download_version.sh $SQLITE_VERSION > sqlite_download_version.txt
+    - SQLITE_DOWNLOAD_VERSION=`cat sqlite_download_version.txt`
+    - cd rpm/deps && chmod -R 777 ./
+    - wget https://www.sqlite.org/$SQLITE_YEAR/sqlite-autoconf-$SQLITE_DOWNLOAD_VERSION.tar.gz --no-check-certificate 
+    - cd ..
+    - rm -rf sqlite_fdw.spec
+    - wget "https://git.postgresql.org/gitweb/?p=pgrpms.git;a=blob_plain;f=rpm/redhat/main/non-common/sqlite_fdw/main/sqlite_fdw.spec;h=864e7ce58825eea3a7658b55305fb1365d51e917;hb=df216ffca23020a436ca964a294e229a9073f4a8" -O sqlite_fdw.spec
+    - patch -u sqlite_fdw.spec -i sqlite_fdw_spec_pgspider.patch
+    - cd ..
+    - echo "Building RPM ....."
+    - if [ $PGSPIDER_RPM_ID ]; then PGSPIDER_RPM_ID_POSTFIX="-$PGSPIDER_RPM_ID"; fi
+    - docker build -t $IMAGE_TAG
+                  --build-arg proxy=$PROXY
+                  --build-arg no_proxy=$NO_PROXY
+                  --build-arg ACCESS_TOKEN=$ACCESS_TOKEN
+                  --build-arg PACKAGE_RELEASE_VERSION=$PACKAGE_RELEASE_VERSION
+                  --build-arg PGSPIDER_BASE_POSTGRESQL_VERSION=$PGSPIDER_BASE_POSTGRESQL_VERSION
+                  --build-arg PGSPIDER_RELEASE_VERSION=$PGSPIDER_RELEASE_VERSION
+                  --build-arg PGSPIDER_RPM_ID=$PGSPIDER_RPM_ID_POSTFIX
+                  --build-arg PGSPIDER_RPM_URL="$CI_API_V4_URL/projects/$PGSPIDER_PROJECT_ID/packages/generic/rpm_rhel8/$PGSPIDER_BASE_POSTGRESQL_VERSION"
+                  --build-arg SQLITE_FDW_RELEASE_VERSION=$SQLITE_FDW_RELEASE_VERSION
+                  --build-arg SQLITE_VERSION=$SQLITE_VERSION
+                  --build-arg SQLITE_YEAR=$SQLITE_YEAR
+                  --build-arg SQLITE_DOWNLOAD_VERSION=$SQLITE_DOWNLOAD_VERSION
+                  -f rpm/$DOCKERFILE .
+    # get rpm file from docker image
+    - mkdir -p $ARTIFACT_DIR
+    - docker run -d --name test $IMAGE_TAG /usr/sbin/init
+    - docker cp test:/home/user1/rpmbuild/RPMS/x86_64 $ARTIFACT_DIR
+    # clean-up: delete docker image
+    - docker rm $(docker stop test)
+    - docker rmi $IMAGE_TAG
+    - cp $ARTIFACT_DIR/x86_64/* $ARTIFACT_DIR
+    - rm -rf $ARTIFACT_DIR/x86_64/
+  artifacts:
+    paths:
+      - $ARTIFACT_DIR
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+# Push RPM to Registry job
+project_publish:
+  stage: publish
+  before_script:
+    - export http_proxy=$PROXY && export https_proxy=$PROXY
+    - export no_proxy=$NO_PROXY
+    - apt-get update -qq && apt-get install -y -qq curl
+  variables:
+    curl_command: "curl --header \"PRIVATE-TOKEN: $ACCESS_TOKEN\" --insecure --upload-file"
+    package_uri: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/rpm_rhel8/$PGSPIDER_BASE_POSTGRESQL_VERSION"
+  script:
+    - echo "Publishing ....."
+    # sqlite
+    - eval "$curl_command $ARTIFACT_DIR/sqlite-$SQLITE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64.rpm
+                          $package_uri/sqlite-$SQLITE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64-$CI_PIPELINE_ID.rpm"
+    # sqlite_fdw
+    - eval "$curl_command $ARTIFACT_DIR/sqlite_fdw_$PGSPIDER_BASE_POSTGRESQL_VERSION-$SQLITE_FDW_RELEASE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64.rpm
+                          $package_uri/sqlite_fdw_$PGSPIDER_BASE_POSTGRESQL_VERSION-$SQLITE_FDW_RELEASE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64-$CI_PIPELINE_ID.rpm"
+    # debugsource
+    - eval "$curl_command $ARTIFACT_DIR/sqlite_fdw_$PGSPIDER_BASE_POSTGRESQL_VERSION-debugsource-$SQLITE_FDW_RELEASE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64.rpm
+                          $package_uri/sqlite_fdw_$PGSPIDER_BASE_POSTGRESQL_VERSION-debugsource-$SQLITE_FDW_RELEASE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64-$CI_PIPELINE_ID.rpm"
+    # llvmjit
+    - eval "$curl_command $ARTIFACT_DIR/sqlite_fdw_$PGSPIDER_BASE_POSTGRESQL_VERSION-llvmjit-$SQLITE_FDW_RELEASE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64.rpm
+                          $package_uri/sqlite_fdw_$PGSPIDER_BASE_POSTGRESQL_VERSION-llvmjit-$SQLITE_FDW_RELEASE_VERSION-$PACKAGE_RELEASE_VERSION.rhel8.x86_64-$CI_PIPELINE_ID.rpm"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
